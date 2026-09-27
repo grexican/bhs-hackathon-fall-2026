@@ -493,6 +493,15 @@
       "patches": [
         "authored; pattern from .claude/agents/testing/production-validator.md (no mocks/stubs/fake completeness left behind); no ruflo runtime/MCP"
       ]
+    },
+    {
+      "name": "use-railway",
+      "kind": "skill",
+      "source": "https://github.com/railwayapp/railway-skills",
+      "path": "plugins/railway/skills/use-railway",
+      "ref": "ca21b2a1f9237163291a3a936b1cbb86752f4895",
+      "license": "MIT",
+      "patches": []
     }
   ]
 }

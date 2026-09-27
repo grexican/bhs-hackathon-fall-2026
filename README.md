@@ -8,7 +8,7 @@ You don't need to know how to code. You need an idea and opinions about it.
 ## What to install (all free)
 
 1. **Cursor** ([cursor.com](https://cursor.com)) or **Claude Code** ([claude.com/download](https://claude.com/download))
-2. **Node.js 22+** ([nodejs.org](https://nodejs.org))
+2. **Node.js 22.18+** ([nodejs.org](https://nodejs.org))
 3. **Git** ([git-scm.com/downloads](https://git-scm.com/downloads))
 4. **Python 3** (optional, [python.org](https://python.org)), which powers the design search
 
@@ -43,8 +43,16 @@ it works.
 | `/caveman` | Short answers, to save credits |
 
 Everything else (design direction, animation, 3D, games, testing, security) kicks in by
-itself when you need it. See [`.claude/skills/CATALOG.md`](.claude/skills/CATALOG.md) for
-the full list.
+itself when you need it. See [`.claude/skills/CATALOG.md`](.claude/skills/CATALOG.md) for the full list.
+
+## How your app is built
+
+- **Works on day one, with no accounts.** Anything your app talks to (WhatsApp, payments, email)
+  starts as a **simulator** inside your app, labelled "Simulated", so you can test everything now
+  and switch to the real service later with one setting.
+- **AI by job, not by brand.** Your app asks for a *kind* of model (`fast`, `smart`, `vision`…).
+  Try it: `npm run ai -- models`, `npm run ai -- ask fast "hi"`, `npm run ai -- decide "i was charged twice"`.
+- **Deploy** to Railway (apps with a server) or GitHub Pages (static sites).
 
 ## Rules of the road
 

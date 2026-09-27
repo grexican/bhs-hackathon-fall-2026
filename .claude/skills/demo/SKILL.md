@@ -89,14 +89,19 @@ Work only inside `full.path` (an empty worktree on its own branch). Use the skil
 1. **`stack-picker`** chooses the stack for this product. Scaffold non-interactively.
 2. **`design-director`** is mandatory. Commit to the direction the student chose, then type,
    palette, layout, and one memorable moment.
-3. Build **the one moment** from question 2, polished, with real content (not lorem ipsum).
+3. **`providers-and-services`**: any outside capability (WhatsApp, payments, email, maps…) gets a
+   provider interface and a **simulator**, visible and labelled in the app. Seed data fills every screen.
+4. **AI features** use `kit/ai` (copy it into the app's server code; the repo-root `.env` key is
+   found automatically): `fast` for anything the visitor waits on, **Jev** for any decision or routing.
+   Show Jev's confidence on screen, because it demos beautifully.
+5. Build **the one moment** from question 2, polished, with real content (not lorem ipsum).
    One great screen beats five half-done ones.
-4. The dev server must run on `full.port`: the `dev` script accepts `--port <n>`, or reads `PORT`.
-5. **`verify-in-browser`**: start it, then run `npm run shot -- <full.url>` from the repo root,
+6. The dev server must run on `full.port`: the `dev` script accepts `--port <n>`, or reads `PORT`.
+7. **`verify-in-browser`**: start it, then run `npm run shot -- <full.url>` from the repo root,
    look at both screenshots, and fix what's ugly or broken. Zero console errors.
-6. Write `DEMO.md` in `full.path` **last**, because it's the done signal: the idea, the answers,
+8. Write `DEMO.md` in `full.path` **last**, because it's the done signal: the idea, the answers,
    the stack, and which skills shaped what.
-7. Commit on its branch: `git -C <full.path> add -A`, then `git -C <full.path> commit -m "<idea>"`.
+9. Commit on its branch: `git -C <full.path> add -A`, then `git -C <full.path> commit -m "<idea>"`.
 
 Keep the student in the loop in one-line updates ("Setting up React… choosing your colors…").
 
@@ -120,6 +125,6 @@ thing they could ask for next. End with: "If you're at the hackathon, this is da
 
 - Never share interview answers with the control agent. Never edit the control's folder.
 - Never touch `main` or another demo's folder. Each demo lives only in `builds/<slug>/`.
-- No accounts, API keys or paid services in a fair build. If the idea needs them, fake the
-  *boundary* visibly ("sign-in comes later"), never the data it claims to show.
+- No student accounts or third-party sign-ups in a fair build. Outside services run as **labelled
+  simulators** behind providers; AI runs through `kit/ai` on the organizer's key. Never fake data as real.
 - If something breaks, say what broke in one sentence, fix it, and keep going. The show goes on.

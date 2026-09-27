@@ -7,9 +7,10 @@ const step = (label, cmd) => {
   execSync(cmd, { stdio: "inherit" });
 };
 
-const [major] = process.versions.node.split(".").map(Number);
-if (major < 22) {
-  console.error(`Node ${process.versions.node} is too old. Install Node 22 or newer from nodejs.org.`);
+// 22.18+ runs TypeScript files directly (the AI kit and its CLI rely on it).
+const [major, minor] = process.versions.node.split(".").map(Number);
+if (major < 22 || (major === 22 && minor < 18)) {
+  console.error(`Node ${process.versions.node} is too old. Install Node 22.18 or newer from nodejs.org.`);
   process.exit(1);
 }
 step("Installing tools", "npm install --no-audit --no-fund");
