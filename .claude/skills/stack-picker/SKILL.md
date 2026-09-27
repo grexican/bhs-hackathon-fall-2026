@@ -17,6 +17,11 @@ command that never stops to ask a question.
 - **Non-interactive scaffolds only.** Every command below has flags that skip prompts.
   If a CLI still asks a question, add its `--yes` flag or scaffold a plain template instead.
 - **No nested git.** Scaffold with git turned off (`--no-git`, `--disable-git`).
+- **Same shape in every stack:** `src/providers/` (interface + simulator per outside capability),
+  `src/services/` (the app's rules), `src/seed/`. See `providers-and-services`. AI goes through a copy
+  of `kit/ai` in server code (`ai-kit`). A stack with no server (plain Vite) gets a tiny server
+  route for AI and real providers.
+- **Deploys to Railway** (anything with a server) or GitHub Pages (pure static). See `use-railway`.
 - **Check versions when in doubt.** `npm view <package> version` and the official docs
   beat memory. Use the `search-first` skill for any extra library.
 

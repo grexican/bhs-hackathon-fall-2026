@@ -11,6 +11,9 @@ What earlier hackathons taught us, and what this template changes because of it.
 | Design quality was the most visible gap between "made with AI" and "made well". | `design-director` is mandatory for any UI, backed by ui-ux-pro-max data, impeccable, taste, motion, GSAP and three.js skills. |
 | "It works" was often claimed and not true. | `verify-in-browser` plus `npm run shot`: screenshots and zero console errors before "done". |
 | The hygiene rules held up: cheap model by default, a fresh chat at feature boundaries, the exact error before guessing, the smallest version first, plain-English comments, commit when it works. | Kept, as skills that trigger on their own. |
-| Handing out API credits and keys took real organizer time. | Fair builds need no keys. `.env.example` lists only key names; the commit check blocks keys anywhere else. |
+| Handing out API credits and keys took real organizer time. | Students need no keys to start: AI runs on one organizer key in the root `.env` (or the simulator), and every other service is simulated. The commit check blocks keys anywhere but `.env`. |
+| Ideas that needed WhatsApp, payments or email stalled on accounts and keys, or got faked. | Providers + Services + labelled **simulators** are core doctrine. Everything runs and tests locally with zero keys. |
+| Model choices got hard-coded and never revisited. | `kit/ai` tier router (`MODEL_<TIER>` in `.env`), `npm run ai -- bench` to compare, and Jev for every decision-shaped call. |
+| Heavy cloud hosting was overkill for student apps. | Railway for anything with a server; GitHub Pages for static. |
 
 Add to this after every event (on `main`).

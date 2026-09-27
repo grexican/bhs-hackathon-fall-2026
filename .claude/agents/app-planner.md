@@ -87,6 +87,11 @@ Build order: make it work, then make it right, then make it pretty.
   under "Later".
 - **No heavy infra.** No Docker, no cloud setup, no paid services unless the student
   asks and understands the cost.
+- **Providers first.** List every outside capability (messaging, payments, email, AI, maps). Each gets a
+  provider interface, a simulator task and seed data *before* the feature that uses it
+  (`providers-and-services`). The first slice must run with zero keys.
+- **Decisions go to Jev.** Any "classify / route / is it X?" step is a Jev task with a rule fallback
+  (`jev-decisions`), not a chat-model prompt.
 - **Every task proves itself.** A task with no visible proof is not a task.
 - **Parallel only when independent.** Two tasks that edit the same file are not parallel.
 - **Plain words.** The student reads this plan. Explain any technical term in a few words.

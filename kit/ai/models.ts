@@ -1,0 +1,69 @@
+// The model router: code asks for a KIND of model ("fast", "smart"…), never a model id.
+// Swap any tier without touching code: set MODEL_<TIER>=<openrouter model id> in .env,
+// e.g. MODEL_FAST=z-ai/glm-5.3-flash. `npm run ai -- models` shows what each tier resolves to.
+
+export type Tier = "lite" | "fast" | "smart" | "thinking" | "vision" | "image" | "auto";
+
+export interface TierConfig {
+  model: string;
+  /** What this tier is for, in one line. Shown by `npm run ai -- models`. */
+  use: string;
+  /** Reasoning effort sent to models that think; "none" keeps fast tiers fast. */
+  reasoning?: "none" | "minimal" | "low" | "medium" | "high";
+  /** Which OpenRouter host to prefer when a model has several. */
+  sort?: "latency" | "throughput" | "price";
+}
+
+// Chosen 2026-09 from OpenRouter's live catalog. Re-benchmark with `npm run ai -- bench`.
+export const TIERS: Record<Tier, TierConfig> = {
+  lite: {
+    model: "openai/gpt-6-luna",
+    use: "Bulk and background work: tagging, summaries, cheap first drafts",
+    reasoning: "minimal",
+    sort: "latency",
+  },
+  fast: {
+    model: "openai/gpt-oss-120b",
+    use: "Anything a user waits on: chat replies, rewrites, quick JSON",
+    reasoning: "low",
+    sort: "latency",
+  },
+  smart: {
+    model: "anthropic/claude-sonnet-5",
+    use: "Quality writing, tool use, tricky structured output",
+    reasoning: "low",
+  },
+  thinking: {
+    model: "anthropic/claude-opus-5.5",
+    use: "Hard reasoning: planning, math, judging other models' work",
+    reasoning: "high",
+  },
+  vision: {
+    model: "google/gemini-3.8-flash",
+    use: "Reading images, screenshots, PDFs, video frames",
+    reasoning: "low",
+    sort: "latency",
+  },
+  image: {
+    model: "google/gemini-3.1-flash-image",
+    use: "Generating or editing images",
+  },
+  auto: {
+    model: "typesafe/jev-router",
+    use: "Let a router pick the model and effort per request (good default when unsure)",
+  },
+};
+
+/** Jev (a decision model, not a chat model) lives in jev.ts; its id is configurable too. */
+export const JEV_MODEL = (): string => env("MODEL_DECIDE") ?? "~typesafe/jev-latest";
+
+export function resolveTier(tier: Tier): TierConfig {
+  const base = TIERS[tier];
+  if (!base) throw new Error(`Unknown model tier "${tier}". Tiers: ${Object.keys(TIERS).join(", ")}`);
+  return { ...base, model: env(`MODEL_${tier.toUpperCase()}`) ?? base.model };
+}
+
+export function env(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
+}

@@ -25,6 +25,8 @@ and one line on **why it matters**. Only ask questions whose answers change the 
 - What makes it **different** from what exists?
 - A **hard trade-off** with a cost on each side (fun or realistic, solo or shared, saved or instant).
 - Does it need to **remember** things (accounts, saved data)? Default: no, not in version 1.
+- Does it talk to the **outside world** (WhatsApp, payments, email)? Explain that we'll build a
+  simulator first so they can test everything today.
 - How will we know it works? "A friend can ___ in 30 seconds."
 
 Push back once on vague answers. Write the result to `docs/idea.md`: the decisions, what was
@@ -41,17 +43,25 @@ from `npm run port` so it never collides with anything else running.
 Use **`design-director`**: the chosen direction, then type, palette and layout. Pick one
 memorable moment. No default look.
 
-## 4. Build the smallest impressive version
+## 4. Architect it: providers, services, simulators
+
+Before feature code, use **`providers-and-services`**: list every outside capability the idea touches
+(messaging, payments, email, AI, maps…). Each gets a provider interface and a **simulator** that works
+today, plus seed data. If it uses AI, copy `kit/ai` into the server code (`ai-kit`); decisions and
+routing go to Jev (`jev-decisions`). Tell the student which parts are simulated and what "going real"
+will take later.
+
+## 5. Build the smallest impressive version
 
 Build the **one thing** from the interview, with real content, and polish it. Stop there and show
 it. (`start-simple`)
 
-## 5. Prove it
+## 6. Prove it
 
 Use **`verify-in-browser`**: run it, take screenshots at desktop and phone size, check for zero
 console errors, and fix what looks wrong. Then show the student the screenshots and ask:
 "What's the next thing you want it to do?"
 
-## 6. Save
+## 7. Save
 
 Suggest `/wrap` to commit. The student's branch, never `main`.
