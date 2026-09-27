@@ -1,0 +1,35 @@
+{
+  "name": "ai-builder-hackathon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Starter for AI builder hackathons: skills, workflows and tools that help students ship something real, fast.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "onboard": "node scripts/onboard.mjs",
+    "port": "node scripts/port.mjs",
+    "shot": "node scripts/shot.mjs",
+    "demo:new": "node scripts/demo.mjs new",
+    "demo:list": "node scripts/demo.mjs list",
+    "demo:status": "node scripts/demo.mjs status",
+    "demo:up": "node scripts/demo.mjs up",
+    "demo:reveal": "node scripts/demo.mjs reveal",
+    "demo:down": "node scripts/demo.mjs down",
+    "demo:clean": "node scripts/demo.mjs clean",
+    "agents:sync": "node scripts/sync-agents.mjs",
+    "agents:check": "node scripts/sync-agents.mjs --check",
+    "skills:sync": "node scripts/sync-skills.mjs",
+    "skills:outdated": "node scripts/sync-skills.mjs --check",
+    "check": "node scripts/check.mjs",
+    "check:names": "node scripts/check-provenance.mjs --all",
+    "scan:agents": "agentshield scan --path . --min-severity medium"
+  },
+  "devDependencies": {
+    "@playwright/cli": "^0.1.21",
+    "ecc-agentshield": "^1.6.0",
+    "playwright": "^1.55.0"
+  }
+}

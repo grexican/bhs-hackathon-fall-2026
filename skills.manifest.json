@@ -1,0 +1,498 @@
+{
+  "description": "Vendored agent skills. Each entry: copy <source>@<ref>:<path> to .claude/skills/<name>/, drop \"exclude\", re-apply \"patches\".",
+  "skills": [
+    {
+      "name": "design-director",
+      "source": "local",
+      "path": ".claude/skills/design-director",
+      "ref": null,
+      "license": "same as repo"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "path": ".claude/skills/ui-ux-pro-max",
+      "ref": "09170eec67eefd46a7ae85de61b40c194020f997",
+      "license": "MIT",
+      "exclude": [
+        "scripts/tests/"
+      ],
+      "patches": [
+        "SKILL.md: replace \"${CLAUDE_PLUGIN_ROOT}/.claude/skills/ui-ux-pro-max/scripts/search.py\" with .claude/skills/ui-ux-pro-max/scripts/search.py",
+        "data/stacks/{react-native,swiftui,avalonia,jetpack-compose}.csv + data/phosphor-icons-upstream.json: provenance rewording (re-run scripts/check-provenance.mjs after sync and reword any hit)"
+      ]
+    },
+    {
+      "name": "design-system",
+      "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "path": ".claude/skills/design-system",
+      "ref": "09170eec67eefd46a7ae85de61b40c194020f997",
+      "license": "MIT",
+      "exclude": [
+        "scripts/tests/"
+      ]
+    },
+    {
+      "name": "ui-styling",
+      "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "path": ".claude/skills/ui-styling",
+      "ref": "09170eec67eefd46a7ae85de61b40c194020f997",
+      "license": "MIT",
+      "exclude": [
+        "canvas-fonts/",
+        "scripts/tests/",
+        "scripts/.coverage"
+      ],
+      "patches": [
+        "references/canvas-design-system.md: ./canvas-fonts -> .claude/skills/canvas-design/canvas-fonts (fonts deduped; identical copy lives in canvas-design)"
+      ]
+    },
+    {
+      "name": "slides",
+      "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "path": ".claude/skills/slides",
+      "ref": "09170eec67eefd46a7ae85de61b40c194020f997",
+      "license": "MIT"
+    },
+    {
+      "name": "impeccable",
+      "source": "https://github.com/pbakaus/impeccable",
+      "path": ".claude/skills/impeccable",
+      "ref": "9d715cc4f5564a990ca8345abfdd5df6dc9b41c8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "frontend-design",
+      "source": "https://github.com/anthropics/skills",
+      "path": "skills/frontend-design",
+      "ref": "33375500bcea98d610eb30ce10ac4e59b89c390d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "canvas-design",
+      "source": "https://github.com/anthropics/skills",
+      "path": "skills/canvas-design",
+      "ref": "33375500bcea98d610eb30ce10ac4e59b89c390d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "algorithmic-art",
+      "source": "https://github.com/anthropics/skills",
+      "path": "skills/algorithmic-art",
+      "ref": "33375500bcea98d610eb30ce10ac4e59b89c390d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "design-taste-frontend",
+      "source": "https://github.com/Leonxlnx/taste-skill",
+      "path": "skills/taste-skill",
+      "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "license": "MIT",
+      "patches": [
+        "SKILL.md: one brand-name example reworded for provenance (re-run scripts/check-provenance.mjs after sync)"
+      ]
+    },
+    {
+      "name": "high-end-visual-design",
+      "source": "https://github.com/Leonxlnx/taste-skill",
+      "path": "skills/soft-skill",
+      "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "license": "MIT"
+    },
+    {
+      "name": "minimalist-ui",
+      "source": "https://github.com/Leonxlnx/taste-skill",
+      "path": "skills/minimalist-skill",
+      "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "license": "MIT"
+    },
+    {
+      "name": "industrial-brutalist-ui",
+      "source": "https://github.com/Leonxlnx/taste-skill",
+      "path": "skills/brutalist-skill",
+      "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "license": "MIT"
+    },
+    {
+      "name": "emil-design-eng",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/emil-design-eng",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "animate",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/animate",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "review-animations",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/review-animations",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "animation-vocabulary",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/animation-vocabulary",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "mobile-native",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/mobile-native",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "prototype",
+      "source": "https://github.com/emilkowalski/skills",
+      "path": "skills/prototype",
+      "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-core",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-core",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-timeline",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-timeline",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-scrolltrigger",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-scrolltrigger",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-react",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-react",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-plugins",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-plugins",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-performance",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-performance",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "gsap-utils",
+      "source": "https://github.com/greensock/gsap-skills",
+      "path": "skills/gsap-utils",
+      "ref": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "license": "MIT"
+    },
+    {
+      "name": "threejs-animation",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-animation",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-fundamentals",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-fundamentals",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-geometry",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-geometry",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-interaction",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-interaction",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-lighting",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-lighting",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-loaders",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-loaders",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-materials",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-materials",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-postprocessing",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-postprocessing",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-shaders",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-shaders",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "threejs-textures",
+      "source": "https://github.com/CloudAI-X/threejs-skills",
+      "path": "skills/threejs-textures",
+      "ref": "b1c623076c661fc9b03dac19292e825a5d106823",
+      "license": "MIT (per README; no LICENSE file)"
+    },
+    {
+      "name": "modern-web-guidance",
+      "source": "https://github.com/GoogleChrome/modern-web-guidance",
+      "path": "skills/modern-web-guidance",
+      "ref": "22ab18dfb50a5d7e3bdcf471c14076a5534eae4e",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "game-feel",
+      "source": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+      "path": "skills/disciplines/game-feel",
+      "ref": "d4b0e35550c55ae70bdfcab4ef5a0e94610438a9",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "game-ui-ux",
+      "source": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+      "path": "skills/disciplines/game-ui-ux",
+      "ref": "d4b0e35550c55ae70bdfcab4ef5a0e94610438a9",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "verification-loop",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/verification-loop",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "description sharpened",
+        "replace /verify + hooks section with verify-in-browser pairing"
+      ]
+    },
+    {
+      "name": "e2e-testing",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/e2e-testing",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT"
+      ]
+    },
+    {
+      "name": "security-review",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/security-review",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "exclude": [
+        "cloud-infrastructure-security.md"
+      ],
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "description sharpened",
+        "exclude cloud-infrastructure-security.md"
+      ]
+    },
+    {
+      "name": "search-first",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/search-first",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "description sharpened",
+        "~/.claude paths -> .claude/, researcher agent -> scout, integration section rewritten for app-planner/stack-picker"
+      ]
+    },
+    {
+      "name": "react-patterns",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/react-patterns",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "remove links to upstream rules/, react-testing, react-performance, frontend-patterns, angular-developer; point Related at local skills/agents"
+      ]
+    },
+    {
+      "name": "vite-patterns",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/vite-patterns",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT"
+      ]
+    },
+    {
+      "name": "api-design",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/api-design",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT"
+      ]
+    },
+    {
+      "name": "accessibility",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/accessibility",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "description rewritten (upstream had a dangling continuation line)"
+      ]
+    },
+    {
+      "name": "click-path-audit",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/click-path-audit",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin (community), add license: MIT"
+      ]
+    },
+    {
+      "name": "nextjs-turbopack",
+      "kind": "skill",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/skills/nextjs-turbopack",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "description sharpened"
+      ]
+    },
+    {
+      "name": "playwright-cli",
+      "kind": "skill",
+      "source": "https://github.com/microsoft/playwright-cli",
+      "path": ".claude/skills/playwright-cli",
+      "ref": "74354ecc7a43da16d91a9bc54fa8db8283a3fcf5",
+      "license": "Apache-2.0",
+      "patches": [
+        "description sharpened; body and references/ verbatim; LICENSE copied"
+      ]
+    },
+    {
+      "name": "code-reviewer",
+      "kind": "agent",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/agents/code-reviewer.md",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "heading \"v1.8 AI-Generated...\" -> \"AI-Generated...\""
+      ]
+    },
+    {
+      "name": "build-error-resolver",
+      "kind": "agent",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/agents/build-error-resolver.md",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "When NOT to Use: point at local agents/skills"
+      ]
+    },
+    {
+      "name": "e2e-runner",
+      "kind": "agent",
+      "source": "https://github.com/affaan-m/ecc",
+      "path": ".claude/agents/e2e-runner.md",
+      "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
+      "license": "MIT",
+      "patches": [
+        "Agent Browser replaced by playwright-cli + npm run shot; CI artifact upload wording softened"
+      ]
+    },
+    {
+      "name": "app-planner",
+      "kind": "agent",
+      "source": "https://github.com/ruvnet/ruflo",
+      "path": ".claude/agents/app-planner.md",
+      "ref": "b14c79e6f7793a358f13b7e3f9b5eb27317b4988",
+      "license": "MIT",
+      "patches": [
+        "authored; patterns from .claude/agents/core/planner.md + sparc/specification.md (task graph, critical path, Given/When/Then acceptance); no ruflo runtime/MCP"
+      ]
+    },
+    {
+      "name": "scout",
+      "kind": "agent",
+      "source": "https://github.com/ruvnet/ruflo",
+      "path": ".claude/agents/scout.md",
+      "ref": "b14c79e6f7793a358f13b7e3f9b5eb27317b4988",
+      "license": "MIT",
+      "patches": [
+        "authored; patterns from .claude/agents/core/researcher.md + hive-mind/scout-explorer.md (broad-to-narrow, structured findings, gaps); no ruflo runtime/MCP"
+      ]
+    },
+    {
+      "name": "reality-checker",
+      "kind": "agent",
+      "source": "https://github.com/ruvnet/ruflo",
+      "path": ".claude/agents/reality-checker.md",
+      "ref": "b14c79e6f7793a358f13b7e3f9b5eb27317b4988",
+      "license": "MIT",
+      "patches": [
+        "authored; pattern from .claude/agents/testing/production-validator.md (no mocks/stubs/fake completeness left behind); no ruflo runtime/MCP"
+      ]
+    }
+  ]
+}

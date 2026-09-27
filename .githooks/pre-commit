@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks commits that carry secrets or malformed skills. Installed by `npm run setup`.
+node scripts/check.mjs --staged || exit 1

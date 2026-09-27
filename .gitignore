@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.next/
+.astro/
+.vite/
+coverage/
+playwright-report/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+tmp/*
+!tmp/.gitkeep
+# Demo build worktrees — each is its own branch, never part of the template
+builds/*
+!builds/.gitkeep
+.demo/
+# Local-only guard lists
+.provenance-terms
+.provenance-allow

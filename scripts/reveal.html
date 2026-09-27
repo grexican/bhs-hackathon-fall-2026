@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  /* Chalkboard lab: control on the left in chalk, the experiment on the right in highlighter. */
+  :root {
+    --slate: #1f2e29;
+    --slate-deep: #16211d;
+    --slate-line: #34463f;
+    --chalk: #eef2ea;
+    --chalk-dim: #a9b8ad;
+    --marker: #f6d04d;
+    --marker-ink: #231d05;
+    --control: #9fb3c8;
+    --split: 50%;
+    --display: "Syne", system-ui, sans-serif;
+    --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--slate);
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(255,255,255,.05), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(0,0,0,.25), transparent 50%);
+    color: var(--chalk);
+    font: 17px/1.5 var(--body);
+    display: flex;
+    flex-direction: column;
+  }
+  #app { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--marker); outline-offset: 2px; }
+
+  header.bar {
+    display: flex; align-items: flex-end; gap: 24px; justify-content: space-between;
+    padding: 20px 28px 16px;
+  }
+  .idea {
+    font-family: var(--display); font-weight: 800; letter-spacing: -0.02em;
+    font-size: clamp(26px, 3.4vw, 52px); line-height: 1.02; margin: 0; max-width: 28ch;
+  }
+  .who { color: var(--chalk-dim); margin: 6px 0 0; }
+  .tools { display: flex; gap: 8px; flex-shrink: 0; }
+  .tools button, .tools a {
+    background: transparent; border: 1.5px solid var(--slate-line); border-radius: 999px;
+    padding: 7px 14px; text-decoration: none; font-size: 15px;
+  }
+  .tools button[aria-pressed="true"] { background: var(--chalk); color: var(--slate-deep); border-color: var(--chalk); }
+
+  main.stage {
+    flex: 1; min-height: 0; display: grid;
+    grid-template-columns: var(--split) 14px 1fr;
+    padding: 0 20px 20px;
+  }
+  main.stage[data-view="control"] { grid-template-columns: 1fr 0 0; }
+  main.stage[data-view="experiment"] { grid-template-columns: 0 0 1fr; }
+  main.stage[data-view="control"] .pane.experiment,
+  main.stage[data-view="experiment"] .pane.control,
+  main.stage:not([data-view="both"]) .divider { display: none; }
+
+  .pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .pane h2 {
+    font-family: var(--display); font-weight: 700; font-size: 20px; margin: 0 0 8px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .pane h2 small { font-family: var(--body); font-weight: 400; font-size: 15px; color: var(--chalk-dim); }
+  .control h2 { color: var(--control); }
+  .experiment h2 span {
+    background: var(--marker); color: var(--marker-ink); padding: 0 8px; border-radius: 3px;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+  .frame {
+    flex: 1; min-height: 0; border-radius: 10px; overflow: hidden; background: #fff; position: relative;
+    border: 2px solid var(--slate-line);
+  }
+  .experiment .frame { border-color: var(--marker); box-shadow: 0 0 0 6px rgba(246,208,77,.12); }
+  iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+  .waiting {
+    position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px;
+    background: var(--slate-deep); color: var(--chalk-dim); padding: 24px;
+  }
+  .waiting strong { font-family: var(--display); color: var(--chalk); font-size: 22px; }
+  .waiting button { justify-self: center; background: var(--chalk); color: var(--slate-deep); border: 0; border-radius: 999px; padding: 8px 18px; font-weight: 700; }
+
+  .prompt {
+    margin-top: 10px; background: var(--slate-deep); border-radius: 8px; padding: 10px 14px;
+    color: var(--chalk-dim); font-size: 15px; max-height: 30vh; overflow: auto;
+  }
+  .prompt b { color: var(--chalk); }
+  .prompt summary { cursor: pointer; color: var(--chalk); }
+  .prompt ol { margin: 8px 0 0; padding-left: 20px; }
+  .prompt li { margin-bottom: 6px; }
+  .prompt .a { color: var(--marker); }
+
+  .divider { cursor: col-resize; display: grid; place-items: center; touch-action: none; }
+  .divider::before { content: ""; width: 4px; height: 56px; border-radius: 4px; background: var(--slate-line); }
+  .divider:hover::before, .divider:focus-visible::before { background: var(--marker); }
+
+  /* Gallery */
+  .gallery { padding: 8px 28px 40px; max-width: 1100px; }
+  .gallery h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 72px); line-height: 1; margin: 12px 0 8px; letter-spacing: -0.03em; }
+  .gallery p.lede { color: var(--chalk-dim); margin: 0 0 28px; max-width: 60ch; }
+  .row {
+    display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+    padding: 16px 0; border-top: 1.5px solid var(--slate-line); text-decoration: none;
+  }
+  .row:hover .row-idea { color: var(--marker); }
+  .row-idea { font-family: var(--display); font-weight: 700; font-size: 22px; }
+  .row-meta { color: var(--chalk-dim); font-size: 15px; }
+  .pill { font-size: 14px; border: 1.5px solid var(--slate-line); border-radius: 999px; padding: 3px 10px; margin-left: 6px; white-space: nowrap; }
+  .pill.done { border-color: var(--marker); color: var(--marker); }
+  .empty { color: var(--chalk-dim); border-top: 1.5px solid var(--slate-line); padding-top: 20px; }
+
+  @media (max-width: 800px) {
+    header.bar { flex-direction: column; align-items: flex-start; }
+    main.stage, main.stage[data-view] { grid-template-columns: 1fr; grid-auto-rows: minmax(60vh, auto); gap: 20px; }
+    main.stage .divider { display: none; }
+    main.stage[data-view] .pane { display: flex !important; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .experiment .frame { transition: box-shadow .4s ease; }
+    .experiment .frame.arrived { animation: arrive 1.2s ease-out 1; }
+    @keyframes arrive { 0% { box-shadow: 0 0 0 0 rgba(246,208,77,.7); } 100% { box-shadow: 0 0 0 26px rgba(246,208,77,0); } }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  const app = document.getElementById("app");
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  // Pulls "**Q:** … / **A:** …" pairs out of brief.md so the experiment's prompt reads as a conversation.
+  function interview(brief) {
+    const pairs = [];
+    const re = /\*\*Q\d*[:.]?\*\*\s*([\s\S]*?)\n\s*\*\*A\d*[:.]?\*\*\s*([\s\S]*?)(?=\n\s*\*\*Q|\n#|$)/g;
+    let m;
+    while ((m = re.exec(brief))) pairs.push([m[1].trim(), m[2].trim()]);
+    return pairs;
+  }
+
+  async function gallery() {
+    document.title = "Two builds, one idea";
+    const demos = await fetch("/api/demos").then((r) => r.json());
+    app.innerHTML = `
+      <section class="gallery">
+        <h1>Same idea. Two builds.</h1>
+        <p class="lede">On the left of every comparison: the AI with one sentence and nothing else. On the right: the same AI with our skills, our playbook, and the answers you gave it.</p>
+        ${demos.length ? demos.map((d) => `
+          <a class="row" href="/d/${esc(d.slug)}">
+            <div><div class="row-idea">${esc(d.idea)}</div>
+              <div class="row-meta">${d.student ? esc(d.student) + ", " : ""}${new Date(d.created).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div></div>
+            <div><span class="pill ${d.bareDone ? "done" : ""}">just the AI ${d.bareDone ? "ready" : "building"}</span><span class="pill ${d.fullDone ? "done" : ""}">with skills ${d.fullDone ? "ready" : "building"}</span></div>
+          </a>`).join("") : `<p class="empty">No builds yet. Start one in the editor with <b>/demo</b>.</p>`}
+      </section>`;
+  }
+
+  async function compare(slug) {
+    const d = await fetch(`/api/demo/${slug}`).then((r) => r.json());
+    document.title = d.idea;
+    const qa = interview(d.brief);
+    app.innerHTML = `
+      <header class="bar">
+        <div><h1 class="idea">${esc(d.idea)}</h1><p class="who">${d.student ? `${esc(d.student)}'s idea` : "Today's idea"}. <a href="/">See all builds</a></p></div>
+        <div class="tools" role="group" aria-label="View">
+          <button data-view="control">Just the AI</button>
+          <button data-view="both" aria-pressed="true">Side by side</button>
+          <button data-view="experiment">With skills</button>
+          <button id="reload" title="Reload both builds">Reload</button>
+        </div>
+      </header>
+      <main class="stage" data-view="both">
+        <section class="pane control">
+          <h2>Just the AI <small>one sentence, no skills</small></h2>
+          <div class="frame" data-side="bare"></div>
+          <div class="prompt"><b>What it was told:</b> “${esc(d.idea)}”</div>
+        </section>
+        <div class="divider" tabindex="0" role="separator" aria-label="Resize panes" aria-orientation="vertical"></div>
+        <section class="pane experiment">
+          <h2><span>With skills + your answers</span></h2>
+          <div class="frame" data-side="full"></div>
+          <div class="prompt">
+            <details ${qa.length ? "" : "open"}><summary><b>What it was told:</b> “${esc(d.idea)}” plus ${qa.length || "your"} answers</summary>
+              ${qa.length ? `<ol>${qa.map(([q, a]) => `<li>${esc(q)}<br><span class="a">${esc(a)}</span></li>`).join("")}</ol>` : `<p>The interview is still in progress.</p>`}
+            </details>
+          </div>
+        </section>
+      </main>`;
+
+    for (const side of ["bare", "full"]) paint(d, side);
+    wireControls(slug);
+    if ((!d.bare.running && d.bare.hasPackage) || (!d.full.running && d.full.hasPackage) || (!d.bare.running && d.bare.done) || (!d.full.running && d.full.done)) {
+      await fetch(`/api/up/${slug}`, { method: "POST" });
+      poll(slug);
+    } else if (!d.bare.done || !d.full.done) poll(slug);
+  }
+
+  function paint(d, side) {
+    const frame = app.querySelector(`.frame[data-side="${side}"]`);
+    const s = d[side];
+    if (s.running) {
+      if (!frame.querySelector("iframe")) {
+        frame.innerHTML = `<iframe src="${s.url}" title="${side === "bare" ? "Build with just the AI" : "Build with skills"}"></iframe>`;
+        if (side === "full") { frame.classList.remove("arrived"); void frame.offsetWidth; frame.classList.add("arrived"); }
+      }
+      return;
+    }
+    frame.innerHTML = `<div class="waiting"><strong>${s.done ? "Starting it up" : "Still building"}</strong>
+      <span>${s.done ? "The build is finished and its server is booting." : `${s.files} file${s.files === 1 ? "" : "s"} written so far.`}</span>
+      <button type="button" data-start>Try to start it</button></div>`;
+    frame.querySelector("[data-start]").onclick = async () => { await fetch(`/api/up/${d.slug}`, { method: "POST" }); refresh(d.slug); };
+  }
+
+  async function refresh(slug) {
+    const d = await fetch(`/api/demo/${slug}`).then((r) => r.json());
+    for (const side of ["bare", "full"]) paint(d, side);
+    return d;
+  }
+
+  function poll(slug) {
+    const t = setInterval(async () => {
+      const d = await refresh(slug);
+      if (d.bare.running && d.full.running) clearInterval(t);
+      else if ((d.bare.done && !d.bare.running) || (d.full.done && !d.full.running)) fetch(`/api/up/${slug}`, { method: "POST" });
+    }, 4000);
+  }
+
+  function wireControls() {
+    const stage = app.querySelector(".stage");
+    app.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => {
+      if (b.tagName !== "BUTTON") return;
+      stage.dataset.view = b.dataset.view;
+      app.querySelectorAll("button[data-view]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+    app.querySelector("#reload").onclick = () => app.querySelectorAll("iframe").forEach((f) => (f.src = f.src));
+    const divider = app.querySelector(".divider");
+    const setSplit = (pct) => document.documentElement.style.setProperty("--split", `${Math.min(80, Math.max(20, pct))}%`);
+    divider.addEventListener("pointerdown", (e) => {
+      divider.setPointerCapture(e.pointerId);
+      app.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = "none"));
+      const move = (ev) => { const r = stage.getBoundingClientRect(); setSplit(((ev.clientX - r.left) / r.width) * 100); };
+      divider.addEventListener("pointermove", move);
+      divider.addEventListener("pointerup", () => {
+        divider.removeEventListener("pointermove", move);
+        app.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = ""));
+      }, { once: true });
+    });
+    divider.addEventListener("keydown", (e) => {
+      const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--split"));
+      if (e.key === "ArrowLeft") setSplit(cur - 5);
+      if (e.key === "ArrowRight") setSplit(cur + 5);
+    });
+  }
+
+  const m = location.pathname.match(/^\/d\/([\w-]+)/);
+  m ? compare(m[1]) : gallery();
+</script>
+</body>
+</html>
