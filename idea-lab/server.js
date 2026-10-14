@@ -5,6 +5,7 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { randomUUID, createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { initDb, createShowcase, getShowcase, counts } from "./lib/db.js";
 import { runResearch, answer, retryBuild, SLOTS } from "./lib/flow.js";
 import { renderShowcase } from "./lib/showcase.js";
@@ -97,8 +98,23 @@ app.post("/api/session/:id/retry", async (c) => {
 app.get("/api/session/:id", async (c) => {
   const row = await getShowcase(c.req.param("id"));
   if (!row) return c.json({ error: "Not found" }, 404);
-  return c.json({ status: row.status, spec: row.spec, url: row.status === "ready" ? `/s/${row.id}` : null, error: row.status === "failed" ? "The build didn't finish." : null });
+  return c.json({
+    status: row.status,
+    spec: row.spec,
+    url: row.status === "ready" ? `/s/${row.id}` : null,
+    error: row.status === "failed" ? "The build didn't finish." : null,
+    // Enough to redraw the chat after a refresh of /c/<id>.
+    idea: row.idea,
+    firstName: row.first_name,
+    step: row.step,
+    research: row.research,
+    transcript: row.transcript,
+  });
 });
+
+// Each chat has its own address, so a refresh lands back in it. Same page as /, the script restores it.
+const indexHtml = readFileSync(new URL("./public/index.html", import.meta.url), "utf8");
+app.get("/c/:id", (c) => c.html(indexHtml));
 
 // The showcase page (unlisted: only reachable by its UUID).
 app.get("/s/:id", async (c) => {

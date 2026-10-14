@@ -230,6 +230,7 @@ function toChat() {
 }
 function restart(keepIdea) {
   clearTimeout(pollTimer);
+  history.replaceState(null, "", "/");
   stopWait();
   $("log").replaceChildren();
   $("chat").hidden = true;
@@ -265,6 +266,7 @@ async function start(e) {
     stopWait();
     state.id = res.id;
     store.set({ id: res.id });
+    history.replaceState(null, "", `/c/${res.id}`);
     researchCard(res.research);
     showQuestion(res.question, res.step ?? 0);
   } catch (err) {
@@ -279,24 +281,54 @@ async function resume() {
   if (!saved?.id) return;
   try {
     const s = await api(`/api/session/${saved.id}`);
-    if (s.status === "building") {
-      state.id = saved.id;
-      toChat();
-      startBuild(saved.t || Date.now());
+    if (s.status === "building" || s.status === "interview" || s.status === "failed") {
+      $("resume-text").textContent = s.status === "building" ? "Your last prototype is still building." : "You have an unfinished idea.";
+      $("resume-link").textContent = "Continue it";
+      $("resume-link").href = `/c/${saved.id}`;
+      $("resume").hidden = false;
     } else if (s.status === "ready" && s.url) {
       $("resume-text").textContent = s.spec?.name ? `Your last prototype, ${s.spec.name}, is ready.` : "Your last prototype is ready.";
       $("resume-link").href = s.url;
       $("resume").hidden = false;
-    } else if (s.status === "failed") {
-      state.id = saved.id;
-      toChat();
-      buildFailed("Your last build didn't finish.");
     } else {
       store.clear();
     }
   } catch {
     store.clear();
   }
+}
+
+/** Redraws a chat from its saved transcript, then picks up wherever it stopped. */
+async function restore(id) {
+  let s;
+  try {
+    s = await api(`/api/session/${id}`);
+  } catch {
+    history.replaceState(null, "", "/");
+    return resume();
+  }
+  if (s.status === "ready" && s.url) return location.replace(s.url);
+  Object.assign(state, { id, idea: s.idea, first: s.firstName || "", step: s.step });
+  store.set({ id });
+  toChat();
+  youSay(s.idea, s.firstName || null);
+  const items = s.transcript || [];
+  let step = 0;
+  items.forEach((t, i) => {
+    if (t.kind === "research") researchCard(t);
+    else if (t.kind === "answer") youSay(t.text);
+    else if (t.kind === "question") {
+      const open = s.status === "interview" && i === items.length - 1;
+      if (open) showQuestion(t, step);
+      else $("log").append(el("div", { class: "ai q msg", style: "--c:var(--green)" },
+        el("p", { class: "count", text: `Question ${step + 1} of ${state.config.questions || 4}` }),
+        el("h2", { text: t.question })));
+      step++;
+    }
+  });
+  if (s.status === "building") startBuild(Date.now());
+  else if (s.status === "failed") { station(3); buildFailed("The build didn't finish."); }
+  else if (!items.some((t) => t.kind === "question")) restart(true); // research never finished: start over with the idea kept
 }
 
 async function init() {
@@ -315,6 +347,8 @@ async function init() {
     station(5);
     return;
   }
+  const chat = location.pathname.match(/^\/c\/([0-9a-f-]{36})$/i);
+  if (chat) return restore(chat[1]);
   resume();
 }
 init();
