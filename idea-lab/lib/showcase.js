@@ -55,6 +55,7 @@ ${metro()}
     <h1>${esc(name)}</h1>
     ${spec.tagline ? `<p class="tagline">${esc(spec.tagline)}</p>` : ""}
     ${row.first_name ? `<p class="by">Imagined by ${esc(row.first_name)}</p>` : ""}
+    <p class="by"><a href="/c/${esc(row.id)}">See the chat that built this</a></p>
   </header>
 
   <div class="show-grid">

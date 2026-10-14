@@ -305,9 +305,8 @@ async function restore(id) {
     s = await api(`/api/session/${id}`);
   } catch {
     history.replaceState(null, "", "/");
-    return resume();
+    return state.config.open === false ? showClosed() : resume();
   }
-  if (s.status === "ready" && s.url) return location.replace(s.url);
   Object.assign(state, { id, idea: s.idea, first: s.firstName || "", step: s.step });
   store.set({ id });
   toChat();
@@ -326,9 +325,26 @@ async function restore(id) {
       step++;
     }
   });
+  if (s.status === "ready" && s.url) {
+    // A finished chat stays a chat, so it can be shared as "how I got here". It ends at the prototype.
+    station(4);
+    $("log").append(el("div", { class: "ai msg", style: "--c:var(--yellow)" },
+      el("h2", { text: s.spec?.name ? `${s.spec.name} is ready.` : "The prototype is ready." }),
+      el("p", {}, el("a", { class: "btn btn-red", href: s.url, text: "Open the prototype" }))));
+    return;
+  }
+  if (state.config.open === false) return showClosed();
   if (s.status === "building") startBuild(Date.now());
   else if (s.status === "failed") { station(3); buildFailed("The build didn't finish."); }
   else if (!items.some((t) => t.kind === "question")) restart(true); // research never finished: start over with the idea kept
+}
+
+function showClosed() {
+  $("hero").hidden = true;
+  $("facts").hidden = true;
+  $("chat").hidden = true;
+  $("closed").hidden = false;
+  station(5);
 }
 
 async function init() {
@@ -340,15 +356,10 @@ async function init() {
   }
   const signup = safeUrl(state.config.signupUrl);
   if (signup) $("signup").href = signup;
-  if (!state.config.open) {
-    $("hero").hidden = true;
-    $("facts").hidden = true;
-    $("closed").hidden = false;
-    station(5);
-    return;
-  }
+  // Finished chats stay readable after the lab closes; restore() decides.
   const chat = location.pathname.match(/^\/c\/([0-9a-f-]{36})$/i);
   if (chat) return restore(chat[1]);
+  if (!state.config.open) return showClosed();
   resume();
 }
 init();
