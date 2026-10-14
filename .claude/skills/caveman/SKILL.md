@@ -10,7 +10,7 @@ description: >
 
 # Caveman Mode
 
-A way to make every Claude reply ~75% shorter without losing any of the technical substance. Useful late in the hackathon when the API budget is running low and the student is iterating fast.
+A way to make every agent reply ~75% shorter without losing any of the technical substance. Useful late in the hackathon when the Cursor plan usage is running low and the student is iterating fast.
 
 ## Activation
 

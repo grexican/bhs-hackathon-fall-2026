@@ -22,21 +22,27 @@ description: How apps here use AI. Ask for a KIND of model (lite, fast, smart, t
    (Node 22.18+).
 2. **Call it only from the server.** A route handler or API endpoint; never a React component. The key
    must never reach the browser. A Vite single-page app gets a tiny server route for AI calls.
-3. **Pick the tier by job:**
+3. **Pick the tier by what the model is asked to DO** (not by how important the feature feels):
 
-| Tier | Use it for | Measured (2026-09) |
+| Tier | Use it for | $ per M tokens in/out (2026-10) |
 |---|---|---|
-| `lite` | Bulk and background: tagging, short summaries, drafts | ~1.4 s, ~$0.00002/call |
-| `fast` | Anything a user waits on: chat replies, quick JSON | ~0.3–0.9 s, ~$0.00004 |
-| `smart` | Quality writing, tool use, strict structured output | ~2.9 s, ~$0.0005 |
-| `thinking` | Hard reasoning, planning, judging other outputs | ~7 s, ~$0.004 |
-| `vision` | Reading images, screenshots, PDFs | ~1.3 s |
-| `image` | Generating images | ~10 s, **~$0.07 per image**: cache results, never loop |
+| `lite` | Mechanical sub-steps: classify, extract, tag, reformat, route; bulk/background | 0.03 / 0.13 |
+| `fast` | Anything a user waits on: chat replies, quick JSON | 0.10 / 0.50 |
+| `smart` | Quality writing, tool use, tricky structured output | 0.32 / 1.28 |
+| `thinking` | Planning and judging only | 0.66 / 1.98 |
+| `vision` | Reading images, screenshots, PDFs | 0.15 / 0.47 |
+| `image` | Generating images: **cache results, never loop** | per image |
 | `auto` | Let a router pick model + effort per request | varies |
 | (`jev.ts`) | Yes/no, pick-one, scales: routing, guards, triage | ~0.5 s, ~$0.00002 |
 
-**Start at `fast`.** Move up only when you can *see* the output isn't good enough; move down for
-volume. Decisions (labels, booleans, scores) go to Jev, not to a chat tier.
+## Routing doctrine
+
+- **Start `lite`.** It's a prototype. Most steps never need more.
+- **Fan-out / bulk loops set the cheap tier explicitly.** A loop on a big tier pays N times.
+- **Escalate one tier at a time**, only after the cheaper one failed **twice on the same task**.
+- Bigger models (`anthropic/claude-sonnet-5.5`, `anthropic/claude-opus-5.5`) only with an organizer,
+  via `.env`, after the cheap tier visibly failed.
+- Decisions (labels, booleans, scores) go to Jev, not a chat tier.
 
 ## Swapping models (experiments)
 

@@ -3,7 +3,7 @@ name: fresh-chat-coach
 description: >
   At natural transitions — finishing a feature, moving to a new section of the
   app, after a long debug session — proactively suggest the student start a
-  new Claude Code chat. Provide a one-paragraph summary and the current state
+  new chat. Provide a one-paragraph summary and the current state
   of key files so they can paste it into the next session. Trigger when: a
   feature ships, the conversation crosses ~20 turns, or the student says
   "moving on to…", "next I want to…", "now let's build…".
@@ -11,7 +11,7 @@ description: >
 
 # Fresh Chat Coach
 
-Long Claude Code conversations get **expensive and slow**. Every message includes the entire history, so message #50 costs 5–10× message #5. Fresh chats reset the cost.
+Long chat conversations get **expensive and slow**. Every message includes the entire history, so message #50 costs 5–10× message #5. Fresh chats reset the cost.
 
 ## When to suggest a fresh chat
 
@@ -46,7 +46,7 @@ Don't be preachy. One short suggestion + a paste-ready handoff:
 > - apps/server/src/routes/cards.ts (already has GET, need POST)
 > ```
 >
-> _Open a new Claude Code chat and paste that as your first message. I'll pick up where I left off._
+> _Open a new chat and paste that as your first message. I'll pick up where I left off._
 
 ## How to format the handoff
 

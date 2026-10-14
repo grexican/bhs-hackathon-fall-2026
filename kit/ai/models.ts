@@ -14,38 +14,41 @@ export interface TierConfig {
   sort?: "latency" | "throughput" | "price";
 }
 
-// Chosen 2026-09 from OpenRouter's live catalog. Re-benchmark with `npm run ai -- bench`.
+// Chosen 2026-10 from OpenRouter's live catalog: the cheapest tier that does the job.
+// Re-benchmark with `npm run ai -- bench`. Pick the tier by what the model DOES (see ai-kit).
+// Moving up (only with an organizer, after the cheap tier visibly failed twice):
+//   smart → anthropic/claude-sonnet-5.5   thinking → anthropic/claude-opus-5.5
 export const TIERS: Record<Tier, TierConfig> = {
   lite: {
-    model: "openai/gpt-6-luna",
-    use: "Bulk and background work: tagging, summaries, cheap first drafts",
+    model: "qwen/qwen3.7-flash", // $0.03 / $0.13 per M tokens in/out
+    use: "Bulk and background: tagging, extraction, classification, reformatting",
     reasoning: "minimal",
     sort: "latency",
   },
   fast: {
-    model: "openai/gpt-oss-120b",
+    model: "openai/gpt-6-luna", // $0.10 / $0.50
     use: "Anything a user waits on: chat replies, rewrites, quick JSON",
     reasoning: "low",
     sort: "latency",
   },
   smart: {
-    model: "anthropic/claude-sonnet-5",
+    model: "qwen/qwen3.7-plus", // $0.32 / $1.28
     use: "Quality writing, tool use, tricky structured output",
     reasoning: "low",
   },
   thinking: {
-    model: "anthropic/claude-opus-5.5",
-    use: "Hard reasoning: planning, math, judging other models' work",
+    model: "deepseek/deepseek-v4-pro-0813", // $0.66 / $1.98
+    use: "Planning, hard reasoning, judging other models' work",
     reasoning: "high",
   },
   vision: {
-    model: "google/gemini-3.8-flash",
+    model: "qwen/qwen3.8-omni-flash", // $0.15 / $0.47
     use: "Reading images, screenshots, PDFs, video frames",
     reasoning: "low",
     sort: "latency",
   },
   image: {
-    model: "google/gemini-3.1-flash-image",
+    model: "google/gemini-3.1-flash-lite-image",
     use: "Generating or editing images",
   },
   auto: {

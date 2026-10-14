@@ -15,5 +15,7 @@ What earlier hackathons taught us, and what this template changes because of it.
 | Ideas that needed WhatsApp, payments or email stalled on accounts and keys, or got faked. | Providers + Services + labelled **simulators** are core doctrine. Everything runs and tests locally with zero keys. |
 | Model choices got hard-coded and never revisited. | `kit/ai` tier router (`MODEL_<TIER>` in `.env`), `npm run ai -- bench` to compare, and Jev for every decision-shaped call. |
 | Heavy cloud hosting was overkill for student apps. | Railway for anything with a server; GitHub Pages for static. |
+| Students didn't read long docs. | One-page everything; setup is one sentence pasted into Cursor (`SETUP.md`). |
+| Organizer-funded AI keys. | One OpenRouter key per student, cheap model tiers by default; move up only with an organizer. |
 
 Add to this after every event (on `main`).
