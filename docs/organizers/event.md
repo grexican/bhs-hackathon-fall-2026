@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Student fair demo | 2026-09-28 (`/demo`, see `fair-demo.md`) |
-| Hackathon dates | Sat Oct 24 – Sun Oct 25, 2026 |
+| Hackathon dates | Sat Oct 24, 10:00–20:00 and Sun Oct 25, 11:00–16:00, 2026 (no overnight) |
 | Place | Barcelona High School (BHS) |
 | Format | Build an app you care about, demo it at the end, keep building after |
 | Student repo | https://github.com/grexican/bhs-hackathon-fall-2026 (this branch, pushed as `main`) |
@@ -15,12 +15,13 @@
 | Sat 10:00 | Kickoff + intro |
 | Sat, after intro | Setup & config: paste the setup line into Cursor (`SETUP.md`), hand out OpenRouter keys |
 | Sat 11:00 | Everyone is building product |
-| Sun end | TBD |
+| Sat 20:00 | Day 1 ends |
+| Sun 11:00–16:00 | Build, polish, demos |
 
 ## Requirements (send to students)
 
 - A laptop that is **unlocked** (you can install software), Windows or Mac.
-- **Cursor** installed, signed in on at least the **Plus** plan ($8/mo); **Premium** ($30/mo) preferred.
+- **Cursor** installed, signed in on at least the **Plus** plan ($8/mo); **Premium** ($30/mo) preferred. Buy at cursor.com/pricing.
   Cancel or downgrade after the hackathon.
 
 ## AI keys

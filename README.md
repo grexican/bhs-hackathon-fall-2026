@@ -1,12 +1,12 @@
 # AI Builder Hackathon
 
-**BHS Hackathon · Sat Oct 24 – Sun Oct 25, 2026 · Barcelona High School**
+**BHS Hackathon · Sat Oct 24 (10:00–20:00) – Sun Oct 25 (11:00–16:00), 2026 · Barcelona High School**
 
 > AI agent asked to set a student up: clone this repo and follow [`SETUP.md`](SETUP.md).
 
 ## Start here (3 steps)
 
-1. **Install [Cursor](https://cursor.com)** and sign in. Plan: **Plus** at least, **Premium** if you can (cancel after).
+1. **Install [Cursor](https://cursor.com/download)** and sign in. Buy a plan at [cursor.com/pricing](https://cursor.com/pricing): **Plus** ($8/mo) at least, **Premium** ($30/mo) if you can (cancel after).
 2. **Open an empty folder** in Cursor (File → Open Folder), then open the **Agent** chat.
 3. **Paste this** and press Enter:
 

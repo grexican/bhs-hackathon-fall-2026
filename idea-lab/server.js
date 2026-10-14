@@ -1,0 +1,121 @@
+// BHS Hackathon idea lab: a student types an app idea, answers 4 quick questions, and gets a
+// clickable prototype at an unlisted /s/<uuid> page. Linked only from the sign-up form.
+// It switches itself off after the hackathon weekend (CLOSES_AT); showcases stay viewable.
+import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
+import { Hono } from "hono";
+import { randomUUID, createHash } from "node:crypto";
+import { initDb, createShowcase, getShowcase, counts } from "./lib/db.js";
+import { runResearch, answer, SLOTS } from "./lib/flow.js";
+import { renderShowcase } from "./lib/showcase.js";
+
+export const CONFIG = {
+  closesAt: new Date(process.env.CLOSES_AT || "2026-10-26T00:00:00+01:00"),
+  signupUrl: process.env.SIGNUP_URL || "https://forms.gle/REPLACE",
+  perIpPerHour: Number(process.env.PER_IP_PER_HOUR || 6),
+  buildsPerDay: Number(process.env.BUILDS_PER_DAY || 300),
+};
+
+const isClosed = () => Date.now() >= +CONFIG.closesAt;
+const ipHash = (c) =>
+  createHash("sha256")
+    .update((c.req.header("x-forwarded-for") ?? "local").split(",")[0].trim() + (process.env.IP_SALT ?? "bhs"))
+    .digest("hex")
+    .slice(0, 16);
+
+const app = new Hono();
+
+// Security headers for our own pages. The generated prototype has its own, stricter route below.
+app.use("*", async (c, next) => {
+  await next();
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Referrer-Policy", "no-referrer");
+  if (!c.req.path.endsWith("/app")) c.header("X-Frame-Options", "DENY");
+});
+
+app.get("/healthz", (c) => c.text("ok"));
+
+// Public config the page needs: is it open, where to sign up.
+app.get("/api/config", (c) =>
+  c.json({ open: !isClosed(), closesAt: CONFIG.closesAt.toISOString(), signupUrl: CONFIG.signupUrl, questions: SLOTS.length }),
+);
+
+// Everything that spends AI credits goes through this gate.
+app.use("/api/session/*", async (c, next) => {
+  if (c.req.method !== "GET" && isClosed()) return c.json({ error: "The idea lab is closed. The hackathon is over, thanks for building!" }, 410);
+  await next();
+});
+app.post("/api/session", async (c) => {
+  if (isClosed()) return c.json({ error: "The idea lab is closed. The hackathon is over, thanks for building!" }, 410);
+  const body = await c.req.json().catch(() => ({}));
+  const idea = String(body.idea ?? "").trim().slice(0, 400);
+  const firstName = String(body.firstName ?? "").trim().slice(0, 40);
+  if (idea.length < 8) return c.json({ error: "Tell me a bit more: one sentence about the app you want." }, 400);
+  const hash = ipHash(c);
+  const { ipLastHour, buildsToday } = await counts(hash);
+  if (ipLastHour >= CONFIG.perIpPerHour) return c.json({ error: "That's a lot of ideas in one hour. Try again a little later." }, 429);
+  if (buildsToday >= CONFIG.buildsPerDay) return c.json({ error: "The idea lab hit today's limit. Try again tomorrow." }, 429);
+
+  const id = randomUUID();
+  await createShowcase({ id, idea, first_name: firstName, ip_hash: hash, transcript: [{ role: "user", kind: "idea", text: idea }] });
+  try {
+    const question = await runResearch(id);
+    const row = await getShowcase(id);
+    return c.json({ id, research: row.research, question, step: 0 });
+  } catch (err) {
+    console.error(`[session ${id}]`, err);
+    return c.json({ error: "The AI didn't answer. Give it another try in a moment." }, 502);
+  }
+});
+
+app.post("/api/session/:id/answer", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row) return c.json({ error: "Not found" }, 404);
+  if (row.status !== "interview") return c.json({ error: "This one is already building." }, 409);
+  const body = await c.req.json().catch(() => ({}));
+  const text = String(body.answer ?? "").trim().slice(0, 300);
+  if (!text) return c.json({ error: "Pick an option or type your own answer." }, 400);
+  try {
+    const question = await answer(row.id, text);
+    return c.json(question ? { question, step: row.step + 1 } : { building: true });
+  } catch (err) {
+    console.error(`[answer ${row.id}]`, err);
+    return c.json({ error: "The AI didn't answer. Try sending that again." }, 502);
+  }
+});
+
+// Polled while the prototype builds.
+app.get("/api/session/:id", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row) return c.json({ error: "Not found" }, 404);
+  return c.json({ status: row.status, spec: row.spec, url: row.status === "ready" ? `/s/${row.id}` : null, error: row.status === "failed" ? "The build didn't finish." : null });
+});
+
+// The showcase page (unlisted: only reachable by its UUID).
+app.get("/s/:id", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row || row.status !== "ready") return c.html(notFound(), 404);
+  return c.html(renderShowcase(row, CONFIG));
+});
+
+// The raw prototype, shown inside a sandboxed iframe (no same-origin, so its script can't touch us).
+app.get("/s/:id/app", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row?.html) return c.text("Not found", 404);
+  c.header(
+    "Content-Security-Policy",
+    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'; sandbox allow-scripts",
+  );
+  return c.html(row.html);
+});
+
+app.use("/*", serveStatic({ root: "./public" }));
+
+function notFound() {
+  return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not found</title>
+<body style="font-family:system-ui;padding:40px;max-width:480px;margin:auto"><h1>Nothing here</h1><p>This prototype doesn't exist, or it's still being built.</p><p><a href="/">Try your own idea</a></p></body>`;
+}
+
+await initDb();
+const port = Number(process.env.PORT || 4321);
+serve({ fetch: app.fetch, port }, () => console.log(`idea lab on http://localhost:${port} (closes ${CONFIG.closesAt.toISOString()})`));
