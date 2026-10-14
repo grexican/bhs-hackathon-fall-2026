@@ -331,6 +331,12 @@ async function restore(id) {
     $("log").append(el("div", { class: "ai msg", style: "--c:var(--yellow)" },
       el("h2", { text: s.spec?.name ? `${s.spec.name} is ready.` : "The prototype is ready." }),
       el("p", {}, el("a", { class: "btn btn-red", href: s.url, text: "Open the prototype" }))));
+    if (state.config.open !== false) {
+      $("log").append(el("div", { class: "ai msg", style: "--c:var(--green)" },
+        el("h2", { text: "Got an idea of your own?" }),
+        el("p", { text: "Answer 4 quick questions and get a clickable prototype in about 3 minutes." }),
+        el("p", {}, el("a", { class: "btn btn-line", href: "/", text: "Try your own idea" }))));
+    }
     return;
   }
   if (state.config.open === false) return showClosed();

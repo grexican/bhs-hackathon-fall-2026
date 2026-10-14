@@ -285,6 +285,14 @@ textarea:focus, input[type="text"]:focus { border-color: var(--fg); outline: non
 .cta .btn-line { color: var(--bg); border-color: var(--bg); }
 .cta .btn-line:hover { background: transparent; opacity: .85; }
 .cta p { margin: 14px 0 0; opacity: .8; }
+.try {
+  border-left: 6px solid var(--green); padding: 4px 0 4px 20px; margin: 0 0 36px;
+}
+.try h2 {
+  font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 75;
+  font-size: clamp(28px, 6vw, 40px); line-height: 1; margin: 0 0 10px;
+}
+.try p { margin: 0 0 16px; color: var(--muted); max-width: 46ch; }
 .foot { color: var(--muted); font-size: 15px; padding: 0 0 40px; margin: 0; }
 
 @media (min-width: 900px) {

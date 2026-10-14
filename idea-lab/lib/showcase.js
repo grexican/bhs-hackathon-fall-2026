@@ -33,6 +33,7 @@ export function renderShowcase(row, config) {
   const examples = (row.research?.examples ?? []).filter((e) => safeUrl(e.url));
   const appUrl = `/s/${esc(row.id)}/app`;
   const signup = safeUrl(config.signupUrl) ?? "#";
+  const open = Date.now() < +config.closesAt;
 
   return `<!doctype html>
 <html lang="en">
@@ -88,6 +89,11 @@ ${metro()}
         <p>Paste this link in the sign-up form.</p>
         <p class="sr-only" id="copied" aria-live="polite"></p>
       </section>
+      ${open ? `<section class="try">
+        <h2>Got an idea of your own?</h2>
+        <p>Answer 4 quick questions and get a clickable prototype like this one in about 3 minutes.</p>
+        <a class="btn btn-red" href="/">Try your own idea</a>
+      </section>` : ""}
     </div>
   </div>
   <p class="foot">This is a prototype with simulated data. Nothing here is real yet.</p>
