@@ -93,12 +93,21 @@ export async function answer(id, text) {
   const step = row.step + 1;
   await updateShowcase(id, { step, transcript: [...row.transcript, { role: "user", kind: "answer", text }] });
   if (step < SLOTS.length) return nextQuestion(id);
-  await updateShowcase(id, { status: "building" });
+  await startBuild(id);
+  return null;
+}
+
+/** Re-runs the build for a failed showcase; the interview answers are already saved. */
+export async function retryBuild(id) {
+  await startBuild(id);
+}
+
+async function startBuild(id) {
+  await updateShowcase(id, { status: "building", error: null });
   build(id).catch(async (err) => {
     console.error(`[build ${id}]`, err);
     await updateShowcase(id, { status: "failed", error: String(err.message ?? err).slice(0, 500) });
   });
-  return null;
 }
 
 function answersSoFar(row) {

@@ -6,7 +6,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { randomUUID, createHash } from "node:crypto";
 import { initDb, createShowcase, getShowcase, counts } from "./lib/db.js";
-import { runResearch, answer, SLOTS } from "./lib/flow.js";
+import { runResearch, answer, retryBuild, SLOTS } from "./lib/flow.js";
 import { renderShowcase } from "./lib/showcase.js";
 
 export const CONFIG = {
@@ -82,6 +82,15 @@ app.post("/api/session/:id/answer", async (c) => {
     console.error(`[answer ${row.id}]`, err);
     return c.json({ error: "The AI didn't answer. Try sending that again." }, 502);
   }
+});
+
+// A failed build keeps every answer, so it can be rebuilt without redoing the interview.
+app.post("/api/session/:id/retry", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row) return c.json({ error: "Not found" }, 404);
+  if (row.status !== "failed") return c.json({ error: "Only a failed build can be retried." }, 409);
+  await retryBuild(row.id);
+  return c.json({ building: true });
 });
 
 // Polled while the prototype builds.

@@ -211,8 +211,15 @@ function poll() {
 }
 function buildFailed(message) {
   stopWait();
-  store.clear();
-  $("log").append(errorBox(`${message} Your idea is still here, so you can try again.`, "Start again", () => restart(true)));
+  // Keep the session: the answers are saved, so "Build it again" skips the questions.
+  $("log").append(errorBox(`${message} Your answers are saved, so you can build it again.`, "Build it again", async () => {
+    try {
+      await api(`/api/session/${state.id}/retry`, {});
+      startBuild(Date.now());
+    } catch (err) {
+      buildFailed(err.message);
+    }
+  }));
 }
 
 // ---------- flow ----------
@@ -280,6 +287,10 @@ async function resume() {
       $("resume-text").textContent = s.spec?.name ? `Your last prototype, ${s.spec.name}, is ready.` : "Your last prototype is ready.";
       $("resume-link").href = s.url;
       $("resume").hidden = false;
+    } else if (s.status === "failed") {
+      state.id = saved.id;
+      toChat();
+      buildFailed("Your last build didn't finish.");
     } else {
       store.clear();
     }
