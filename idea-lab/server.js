@@ -7,7 +7,8 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { randomUUID, createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { initDb, createShowcase, getShowcase, counts, listShowcases } from "./lib/db.js";
+import { initDb, createShowcase, getShowcase, counts, listShowcases, listExamples } from "./lib/db.js";
+import { renderExamples } from "./lib/examples.js";
 import { renderAdmin } from "./lib/admin.js";
 import { runResearch, answer, retryBuild, SLOTS } from "./lib/flow.js";
 import { renderShowcase } from "./lib/showcase.js";
@@ -40,6 +41,10 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/healthz", (c) => c.text("ok"));
+
+// Public list of the Idea Lab's own example prototypes, for students who don't know what to build.
+// It only reads finished pages, so it stays up after the lab closes.
+app.get("/examples", async (c) => c.html(renderExamples(await listExamples(), CONFIG)));
 
 // Organizer list of every idea. Exists only when ADMIN_KEY is set, and only at /admin/<that key>.
 app.get("/admin/:key", async (c) => {

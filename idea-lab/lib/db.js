@@ -108,3 +108,12 @@ export async function listShowcases() {
   );
   return rows;
 }
+
+/** Finished Idea Lab examples for the public /examples page, oldest first so the list reads as a set. */
+export async function listExamples() {
+  if (!pool) return [...memory.values()].filter((r) => r.status === "ready" && r.first_name === "Idea Lab").map((r) => ({ ...r, has_shot: Boolean(r.shots) }));
+  const { rows } = await pool.query(
+    "select id, idea, spec, created_at, shots is not null as has_shot from showcases where status = 'ready' and first_name = 'Idea Lab' order by created_at",
+  );
+  return rows;
+}
