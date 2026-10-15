@@ -188,7 +188,7 @@ function startBuild(startedAt) {
   const steps = el("ol", { class: "buildlog" });
   const head = el("div", { class: "ai build msg", style: "--c:var(--yellow)" },
     el("h2", { tabindex: "-1", text: "Building your prototype" }),
-    el("p", { text: "This takes 1 to 3 minutes. It gets tested in a real browser before you see it." }),
+    el("p", { text: "This may take a few minutes. It gets tested in a real browser before you see it." }),
     steps);
   $("log").append(head);
   wait("build", { color: "var(--yellow)", clockFrom: startedAt });

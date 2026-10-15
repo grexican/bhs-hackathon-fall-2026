@@ -53,7 +53,7 @@ ${row.shots?.desktop ? `<meta property="og:image" content="${esc(base)}/s/${esc(
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700..800&display=swap">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/style.css?v=3">
 </head>
 <body>
 ${metro()}

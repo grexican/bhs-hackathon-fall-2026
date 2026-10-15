@@ -190,7 +190,8 @@ app.get("/s/:id/app", async (c) => {
   return c.html(row.html);
 });
 
-app.use("/*", serveStatic({ root: "./public" }));
+// no-cache = "check with us first", so a deploy reaches open tabs instead of an old cached app.js.
+app.use("/*", serveStatic({ root: "./public", onFound: (_path, c) => c.header("Cache-Control", "no-cache") }));
 
 function notFound() {
   return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not found</title>
