@@ -4,17 +4,21 @@
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
+import { streamSSE } from "hono/streaming";
 import { randomUUID, createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { initDb, createShowcase, getShowcase, counts } from "./lib/db.js";
 import { runResearch, answer, retryBuild, SLOTS } from "./lib/flow.js";
 import { renderShowcase } from "./lib/showcase.js";
+import { APP_CSP } from "./lib/csp.js";
+import { bus } from "./lib/events.js";
 
 export const CONFIG = {
   closesAt: new Date(process.env.CLOSES_AT || "2026-10-26T00:00:00+01:00"),
   signupUrl: process.env.SIGNUP_URL || "https://forms.gle/REPLACE",
   perIpPerHour: Number(process.env.PER_IP_PER_HOUR || 6),
   buildsPerDay: Number(process.env.BUILDS_PER_DAY || 300),
+  publicUrl: process.env.PUBLIC_URL || "",
 };
 
 const isClosed = () => Date.now() >= +CONFIG.closesAt;
@@ -109,6 +113,50 @@ app.get("/api/session/:id", async (c) => {
     step: row.step,
     research: row.research,
     transcript: row.transcript,
+    log: row.log ?? [],
+  });
+});
+
+// Live build progress as server-sent events: replays the stored log, then streams new lines
+// (plus short-lived "Writing code: N lines" ticks) until the build is ready or failed.
+app.get("/api/session/:id/events", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  if (!row) return c.json({ error: "Not found" }, 404);
+  return streamSSE(c, async (stream) => {
+    const queue = [];
+    let wake = null;
+    const onEvent = (e) => {
+      queue.push(e);
+      wake?.();
+    };
+    bus.on(row.id, onEvent);
+    stream.onAbort(() => bus.off(row.id, onEvent));
+    try {
+      for (const e of row.log ?? []) await stream.writeSSE({ event: "progress", data: JSON.stringify(e) });
+      // The build may already be over (or may finish between the read above and subscribing).
+      const now = await getShowcase(row.id);
+      if (now.status !== "building") {
+        await stream.writeSSE({ event: "status", data: JSON.stringify({ status: now.status, url: now.status === "ready" ? `/s/${row.id}` : null }) });
+        return;
+      }
+      const deadline = Date.now() + 10 * 60_000;
+      while (Date.now() < deadline && !stream.aborted) {
+        if (!queue.length) {
+          // Wake on the next event, or every 15s to send a keep-alive through proxies.
+          await new Promise((r) => { wake = r; setTimeout(r, 15_000); });
+          wake = null;
+          if (!queue.length) {
+            await stream.writeSSE({ event: "ping", data: "{}" });
+            continue;
+          }
+        }
+        const e = queue.shift();
+        await stream.writeSSE({ event: e.type, data: JSON.stringify(e) });
+        if (e.type === "status" && e.status !== "building") return;
+      }
+    } finally {
+      bus.off(row.id, onEvent);
+    }
   });
 });
 
@@ -123,14 +171,22 @@ app.get("/s/:id", async (c) => {
   return c.html(renderShowcase(row, CONFIG));
 });
 
+// Screenshots from the build's browser test. The desktop one doubles as the link-preview image.
+app.get("/s/:id/shot/:kind{(mobile|desktop)\\.jpg}", async (c) => {
+  const row = await getShowcase(c.req.param("id"));
+  const kind = c.req.param("kind").replace(".jpg", "");
+  const b64 = row?.status === "ready" ? row.shots?.[kind] : null;
+  if (!b64) return c.text("Not found", 404);
+  c.header("Content-Type", "image/jpeg");
+  c.header("Cache-Control", "public, max-age=86400");
+  return c.body(Buffer.from(b64, "base64"));
+});
+
 // The raw prototype, shown inside a sandboxed iframe (no same-origin, so its script can't touch us).
 app.get("/s/:id/app", async (c) => {
   const row = await getShowcase(c.req.param("id"));
   if (!row?.html) return c.text("Not found", 404);
-  c.header(
-    "Content-Security-Policy",
-    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'; sandbox allow-scripts",
-  );
+  c.header("Content-Security-Policy", APP_CSP);
   return c.html(row.html);
 });
 

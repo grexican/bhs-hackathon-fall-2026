@@ -227,6 +227,12 @@ textarea:focus, input[type="text"]:focus { border-color: var(--fg); outline: non
 .wait .dots i:nth-child(2) { animation-delay: .18s; }
 .wait .dots i:nth-child(3) { animation-delay: .36s; }
 .wait .status { font-weight: 500; color: var(--fg); }
+.buildlog { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; color: var(--muted); font-size: 15px; }
+.buildlog li { display: flex; gap: 10px; align-items: baseline; }
+.buildlog li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--fg)); transform: translateY(-1px); }
+.buildlog li.s-test::before { background: var(--blue); }
+.buildlog li.s-done::before { background: var(--green); }
+.buildlog li.s-failed { color: var(--red); }
 .wait .clock { font-variant-numeric: tabular-nums; margin-left: auto; }
 @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
 

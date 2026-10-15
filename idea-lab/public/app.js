@@ -76,7 +76,12 @@ function wait(kind, { color, clockFrom } = {}) {
   tick();
   const rot = setInterval(() => { i = (i + 1) % lines.length; status.textContent = lines[i]; }, 3200);
   const clk = clock ? setInterval(tick, 1000) : null;
-  waiter = { node, stop: () => { clearInterval(rot); clearInterval(clk); node.remove(); } };
+  waiter = {
+    node,
+    // Real progress arrived: stop rotating placeholder lines and show the real one.
+    say: (text) => { clearInterval(rot); status.textContent = text; },
+    stop: () => { clearInterval(rot); clearInterval(clk); node.remove(); },
+  };
   return node;
 }
 function stopWait() { waiter?.stop(); waiter = null; }
@@ -180,28 +185,51 @@ let pollTimer = null;
 function startBuild(startedAt) {
   station(3);
   store.set({ id: state.id, t: startedAt });
+  const steps = el("ol", { class: "buildlog" });
   const head = el("div", { class: "ai build msg", style: "--c:var(--yellow)" },
     el("h2", { tabindex: "-1", text: "Building your prototype" }),
-    el("p", { text: "This takes 1 to 3 minutes. Keep this page open." }));
+    el("p", { text: "This takes 1 to 3 minutes. It gets tested in a real browser before you see it." }),
+    steps);
   $("log").append(head);
   wait("build", { color: "var(--yellow)", clockFrom: startedAt });
   head.querySelector("h2").focus({ preventScroll: true });
   scrollTo(head);
-  poll();
+  listen(steps);
 }
+
+// Live progress from the server (server-sent events). Falls back to polling if the stream drops.
+function listen(steps) {
+  if (!("EventSource" in window)) return poll();
+  const es = new EventSource(`/api/session/${state.id}/events`);
+  const data = (e) => JSON.parse(e.data);
+  es.addEventListener("progress", (e) => {
+    const d = data(e);
+    steps.append(el("li", { class: `s-${d.stage}`, text: d.text }));
+    waiter?.say(d.text);
+  });
+  es.addEventListener("tick", (e) => waiter?.say(data(e).text));
+  es.addEventListener("status", (e) => {
+    const d = data(e);
+    if (d.status === "ready") { es.close(); opened(d.url || `/s/${state.id}`); }
+    else if (d.status === "failed") { es.close(); buildFailed("The build didn't finish."); }
+  });
+  es.onerror = () => { es.close(); poll(); };
+}
+
+function opened(url) {
+  stopWait();
+  station(4);
+  $("log").append(el("p", { class: "msg", text: "Ready. Opening it now." }));
+  setTimeout(() => location.assign(url), reduced ? 0 : 600);
+}
+
 function poll() {
   clearTimeout(pollTimer);
   pollTimer = setTimeout(async () => {
     try {
       const s = await api(`/api/session/${state.id}`);
-      if (s.status === "ready" && s.url) {
-        stopWait();
-        station(4);
-        $("log").append(el("p", { class: "msg", text: "Ready. Opening it now." }));
-        setTimeout(() => location.assign(s.url), reduced ? 0 : 600);
-        return;
-      }
-      if (s.status === "failed") return buildFailed(s.error || "The build didn't finish.");
+      if (s.status === "ready" && s.url) return opened(s.url);
+      if (s.status === "failed") return buildFailed("The build didn't finish.");
     } catch (err) {
       if (err.status === 404) return buildFailed("That prototype can't be found anymore.");
       // network blips: keep polling

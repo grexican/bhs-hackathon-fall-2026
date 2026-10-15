@@ -4,8 +4,8 @@
 //   select id, first_name, idea, status, created_at from showcases order by created_at desc;
 import pg from "pg";
 
-const COLUMNS = ["first_name", "idea", "status", "step", "transcript", "research", "spec", "html", "error", "ip_hash", "usage"];
-const JSON_COLUMNS = new Set(["transcript", "research", "spec", "usage"]);
+const COLUMNS = ["first_name", "idea", "status", "step", "transcript", "research", "spec", "html", "error", "ip_hash", "usage", "log", "shots", "checks"];
+const JSON_COLUMNS = new Set(["transcript", "research", "spec", "usage", "log", "shots", "checks"]);
 
 let pool;
 const memory = new Map();
@@ -33,6 +33,10 @@ export async function initDb() {
       ip_hash text,
       usage jsonb not null default '[]'
     );
+    -- Build progress (shown live), browser-test screenshots, and what the test found.
+    alter table showcases add column if not exists log jsonb not null default '[]';
+    alter table showcases add column if not exists shots jsonb;
+    alter table showcases add column if not exists checks jsonb;
     create index if not exists showcases_created_idx on showcases (created_at desc);
     create index if not exists showcases_ip_idx on showcases (ip_hash, created_at desc);
   `);
@@ -40,7 +44,7 @@ export async function initDb() {
 }
 
 export async function createShowcase(row) {
-  const record = { transcript: [], usage: [], status: "interview", step: 0, ...row, created_at: new Date() };
+  const record = { transcript: [], usage: [], log: [], status: "interview", step: 0, ...row, created_at: new Date() };
   if (!pool) {
     memory.set(record.id, record);
     return record;
