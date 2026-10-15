@@ -99,3 +99,12 @@ export async function counts(ipHash) {
   );
   return rows[0];
 }
+
+/** Every showcase, newest first, without the heavy columns (for the organizer list). */
+export async function listShowcases() {
+  if (!pool) return [...memory.values()].sort((a, b) => b.created_at - a.created_at);
+  const { rows } = await pool.query(
+    "select id, created_at, first_name, idea, status, spec, checks, usage from showcases order by created_at desc",
+  );
+  return rows;
+}

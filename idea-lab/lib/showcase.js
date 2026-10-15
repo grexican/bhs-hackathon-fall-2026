@@ -1,6 +1,6 @@
 // The /s/<id> showcase page: the student's prototype in a phone frame, the short spec around it,
 // and the push to sign up. Every string from the row is AI or student written, so all of it is escaped.
-const esc = (v) =>
+export const esc = (v) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const safeUrl = (u) => (/^https?:\/\//i.test(String(u ?? "")) ? String(u) : null);
 

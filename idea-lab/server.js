@@ -7,7 +7,8 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { randomUUID, createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { initDb, createShowcase, getShowcase, counts } from "./lib/db.js";
+import { initDb, createShowcase, getShowcase, counts, listShowcases } from "./lib/db.js";
+import { renderAdmin } from "./lib/admin.js";
 import { runResearch, answer, retryBuild, SLOTS } from "./lib/flow.js";
 import { renderShowcase } from "./lib/showcase.js";
 import { APP_CSP } from "./lib/csp.js";
@@ -39,6 +40,14 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/healthz", (c) => c.text("ok"));
+
+// Organizer list of every idea. Exists only when ADMIN_KEY is set, and only at /admin/<that key>.
+app.get("/admin/:key", async (c) => {
+  const key = process.env.ADMIN_KEY;
+  if (!key || key.length < 16 || c.req.param("key") !== key) return c.text("Not found", 404);
+  c.header("Cache-Control", "no-store");
+  return c.html(renderAdmin(await listShowcases()));
+});
 
 // Public config the page needs: is it open, where to sign up.
 app.get("/api/config", (c) =>
