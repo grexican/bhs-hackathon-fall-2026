@@ -121,7 +121,7 @@ function questionCard(q, step) {
   const total = state.config.questions || 4;
   const title = el("h2", { tabindex: "-1", text: q.question });
   const opts = el("div", { class: "opts" });
-  const own = el("input", { type: "text", maxlength: "300", placeholder: "Or type your own", "aria-label": "Or type your own answer", enterkeyhint: "send" });
+  const own = el("input", { type: "text", maxlength: "600", placeholder: "Or type your own", "aria-label": "Or type your own answer", enterkeyhint: "send" });
   const send = el("button", { class: "btn btn-red btn-small", type: "submit", text: "Send" });
   const form = el("form", { class: "own" }, own, send);
   const card = el("div", { class: "ai q msg", style: "--c:var(--green)" },

@@ -62,7 +62,7 @@ app.use("/api/session/*", async (c, next) => {
 app.post("/api/session", async (c) => {
   if (isClosed()) return c.json({ error: "The idea lab is closed. The hackathon is over, thanks for building!" }, 410);
   const body = await c.req.json().catch(() => ({}));
-  const idea = String(body.idea ?? "").trim().slice(0, 400);
+  const idea = String(body.idea ?? "").trim().slice(0, 2000); // detail helps: a specific idea gets a better build
   const firstName = String(body.firstName ?? "").trim().slice(0, 40);
   if (idea.length < 8) return c.json({ error: "Tell me a bit more: one sentence about the app you want." }, 400);
   const hash = ipHash(c);
@@ -87,7 +87,7 @@ app.post("/api/session/:id/answer", async (c) => {
   if (!row) return c.json({ error: "Not found" }, 404);
   if (row.status !== "interview") return c.json({ error: "This one is already building." }, 409);
   const body = await c.req.json().catch(() => ({}));
-  const text = String(body.answer ?? "").trim().slice(0, 300);
+  const text = String(body.answer ?? "").trim().slice(0, 600);
   if (!text) return c.json({ error: "Pick an option or type your own answer." }, 400);
   try {
     const question = await answer(row.id, text);
