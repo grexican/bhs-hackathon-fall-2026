@@ -15,7 +15,7 @@ function browser() {
 
 // A cheap fingerprint of the page, including classes and inline styles, so a tab that only swaps
 // an "active" class still counts as responding.
-const SNAPSHOT = () => {
+export const SNAPSHOT = () => {
   const s = document.body.outerHTML;
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
@@ -24,7 +24,7 @@ const SNAPSHOT = () => {
 
 // Every visible thing a person would try to tap: real controls, plus anything with a pointer cursor.
 // Nested matches collapse to the outermost one, so a card and the text inside it count once.
-const FIND_CLICKABLE = () => {
+export const FIND_CLICKABLE = () => {
   const visible = (el) => {
     const r = el.getBoundingClientRect();
     const st = getComputedStyle(el);
@@ -34,7 +34,33 @@ const FIND_CLICKABLE = () => {
     if (el.matches("button, [role=button], [role=tab], a[href^='#'], [onclick], input[type=checkbox], input[type=radio], select, summary, label")) return visible(el) && !el.disabled;
     return getComputedStyle(el).cursor === "pointer" && visible(el);
   });
-  return candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el) && getComputedStyle(other).cursor === "pointer"));
+  // Real controls always count. A pointer-styled container counts only if it holds no controls of
+  // its own (a tappable card), and nested pointer containers collapse to the outermost one.
+  const CONTROL = "button, [role=button], [role=tab], a[href^='#'], [onclick], input, select, summary, label";
+  const targets = candidates.filter((el) => {
+    if (el.matches(CONTROL)) return true;
+    if (el.querySelector(CONTROL)) return false;
+    return !candidates.some((other) => other !== el && other.contains(el) && !other.matches(CONTROL) && !other.querySelector(CONTROL));
+  });
+  // Variety over volume: at most two of each kind, so a long list of cards can't use up every click.
+  const perKind = new Map();
+  // Returned as CSS paths, not elements: many apps redraw with innerHTML on every tap, which leaves
+  // saved element references pointing at nodes that are gone. A path finds the redrawn one.
+  const path = (el) => {
+    const parts = [];
+    for (let e = el; e && e !== document.body; e = e.parentElement) {
+      const same = [...e.parentElement.children].filter((c) => c.tagName === e.tagName);
+      parts.unshift(`${e.tagName.toLowerCase()}:nth-of-type(${same.indexOf(e) + 1})`);
+    }
+    return "body > " + parts.join(" > ");
+  };
+  return targets
+    .filter((el) => {
+      const kind = el.tagName + "." + [...el.classList].filter((c) => !/^(active|on|selected|added|is-)/.test(c)).sort().join(".");
+      perKind.set(kind, (perKind.get(kind) ?? 0) + 1);
+      return perKind.get(kind) <= 2;
+    })
+    .map(path);
 };
 
 const VISIBLE_TEXT = () => {
@@ -101,24 +127,32 @@ export async function browserTest(html) {
     // Click through what a person would click, one at a time, and watch whether anything changes.
     // "Clickable" means a pointer cursor, not just <button>: apps are often built from tappable
     // cards, rows and chips, and a test that only looked for buttons once passed an app untested.
-    const found = await page.evaluateHandle(FIND_CLICKABLE);
-    const total = Math.min(await found.evaluate((list) => list.length), 16);
+    const paths = (await page.evaluate(FIND_CLICKABLE)).slice(0, 16);
+    const total = paths.length;
     let changed = 0;
     let tried = 0; // only clicks that actually landed are judged
-    for (let i = 0; i < total; i++) {
-      const target = (await found.evaluateHandle((list, n) => list[n], i)).asElement();
-      if (!target || !(await target.evaluate((el) => el.isConnected && el.getClientRects().length > 0))) continue;
-      const before = await page.evaluate(SNAPSHOT);
-      const errCount = errors.length;
-      try {
-        await target.click({ timeout: 1500 });
-      } catch {
-        continue; // covered or moved by the previous click; not a bug in itself
+    for (const path of paths) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt === 1) {
+          // Something the last click opened (a menu, a modal) is covering the page. Start clean.
+          await page.goto(ORIGIN, { waitUntil: "load" });
+          await page.waitForTimeout(400);
+        }
+        const target = page.locator(path).first();
+        if (!(await target.count())) break; // this screen no longer has it; not a bug in itself
+        const before = await page.evaluate(SNAPSHOT);
+        const errCount = errors.length;
+        try {
+          await target.click({ timeout: 1200 });
+        } catch {
+          continue;
+        }
+        tried++;
+        await page.waitForTimeout(250);
+        const after = await page.evaluate(SNAPSHOT);
+        if (after !== before || errors.length > errCount) changed++;
+        break;
       }
-      tried++;
-      await page.waitForTimeout(250);
-      const after = await page.evaluate(SNAPSHOT);
-      if (after !== before || errors.length > errCount) changed++;
     }
 
     // Fresh load for the screenshots, so they show the first screen and not wherever the clicks ended.
