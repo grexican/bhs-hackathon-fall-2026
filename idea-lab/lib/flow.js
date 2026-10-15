@@ -193,18 +193,26 @@ Return JSON:
       : `Build the prototype.${cutOff ? " A previous attempt ran out of room before it finished. Stay under 350 lines and keep the CSS compact." : ""}\n\n${brief}`;
 
     let lastTick = 0;
-    const { text, usage, finish } = await chatStream({
-      tier: "build",
-      model: buildModel,
-      maxTokens: MAX_TOKENS,
-      system: BUILD_RULES,
-      user,
-      onText: (sofar) => {
-        if (Date.now() - lastTick < 1200) return;
-        lastTick = Date.now();
-        tick(id, "write", `Writing code: ${sofar.split("\n").length} lines`);
-      },
-    });
+    let streamed;
+    try {
+      streamed = await chatStream({
+        tier: "build",
+        model: buildModel,
+        maxTokens: MAX_TOKENS,
+        system: BUILD_RULES,
+        user,
+        onText: (sofar) => {
+          if (Date.now() - lastTick < 1200) return;
+          lastTick = Date.now();
+          tick(id, "write", `Writing code: ${sofar.split("\n").length} lines`);
+        },
+      });
+    } catch (err) {
+      console.error(`[build ${id}] round ${round}`, err);
+      await progress(id, "write", "The AI stalled, so we're trying that again");
+      continue;
+    }
+    const { text, usage, finish } = streamed;
     await updateShowcase(id, { usage: [...(await getShowcase(id)).usage, usage] });
 
     const candidate = extractHtml(text);

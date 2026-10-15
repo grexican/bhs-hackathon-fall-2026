@@ -10,6 +10,7 @@ export const MODELS = {
 };
 
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+const IDLE_MS = 90_000; // no tokens (or keep-alives) for this long = stalled
 
 export async function chat({ tier, model: override, system, user, json = false, maxTokens = 1200, temperature = 0.7, timeoutMs = 60_000 }) {
   if (process.env.AI_SIM === "1") return simChat({ tier, system, user, json });
@@ -51,7 +52,7 @@ export async function chat({ tier, model: override, system, user, json = false, 
  * the build can report progress, and returns `finish` so a cut-off answer ("length") is never
  * mistaken for a finished one. That cut-off is exactly how a half-written prototype once shipped.
  */
-export async function chatStream({ tier, model: override, system, user, maxTokens = 32000, temperature = 0.6, timeoutMs = 300_000, onText }) {
+export async function chatStream({ tier, model: override, system, user, maxTokens = 32000, temperature = 0.6, timeoutMs = 420_000, onText }) {
   if (process.env.AI_SIM === "1") {
     const r = await simChat({ tier, system, user, json: false });
     onText?.(r.text);
@@ -61,6 +62,13 @@ export async function chatStream({ tier, model: override, system, user, maxToken
   if (!key) throw new Error("OPENROUTER_API_KEY is not set");
   const model = override || MODELS[tier]();
   const started = Date.now();
+  // Abort if the stream goes quiet: a stalled model once held a build for its whole 5-minute timeout.
+  const idle = new AbortController();
+  let idleTimer = setTimeout(() => idle.abort(new Error("The model stopped responding")), IDLE_MS);
+  const alive = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => idle.abort(new Error("The model stopped responding")), IDLE_MS);
+  };
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
@@ -82,7 +90,7 @@ export async function chatStream({ tier, model: override, system, user, maxToken
         { role: "user", content: user },
       ],
     }),
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: AbortSignal.any([AbortSignal.timeout(timeoutMs), idle.signal]),
   });
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
 
@@ -91,25 +99,30 @@ export async function chatStream({ tier, model: override, system, user, maxToken
   let usageBody = null;
   let buffer = "";
   const decoder = new TextDecoder();
-  for await (const chunk of res.body) {
-    buffer += decoder.decode(chunk, { stream: true });
-    let nl;
-    while ((nl = buffer.indexOf("\n")) >= 0) {
-      const line = buffer.slice(0, nl).trim();
-      buffer = buffer.slice(nl + 1);
-      if (!line.startsWith("data:")) continue; // ": OPENROUTER PROCESSING" keep-alives
-      const data = line.slice(5).trim();
-      if (data === "[DONE]") continue;
-      const evt = JSON.parse(data);
-      if (evt.error) throw new Error(`OpenRouter stream error: ${JSON.stringify(evt.error).slice(0, 300)}`);
-      const choice = evt.choices?.[0];
-      if (choice?.delta?.content) {
-        text += choice.delta.content;
-        onText?.(text);
+  try {
+    for await (const chunk of res.body) {
+      alive();
+      buffer += decoder.decode(chunk, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith("data:")) continue; // ": OPENROUTER PROCESSING" keep-alives
+        const data = line.slice(5).trim();
+        if (data === "[DONE]") continue;
+        const evt = JSON.parse(data);
+        if (evt.error) throw new Error(`OpenRouter stream error: ${JSON.stringify(evt.error).slice(0, 300)}`);
+        const choice = evt.choices?.[0];
+        if (choice?.delta?.content) {
+          text += choice.delta.content;
+          onText?.(text);
+        }
+        if (choice?.finish_reason) finish = choice.finish_reason;
+        if (evt.usage) usageBody = evt.usage;
       }
-      if (choice?.finish_reason) finish = choice.finish_reason;
-      if (evt.usage) usageBody = evt.usage;
     }
+  } finally {
+    clearTimeout(idleTimer);
   }
   const usage = { tier, model, ms: Date.now() - started, cost: usageBody?.cost ?? null, out: usageBody?.completion_tokens ?? null, finish };
   return { text, usage, finish };
