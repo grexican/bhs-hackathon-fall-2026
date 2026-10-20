@@ -13,7 +13,7 @@
 | When | What |
 |---|---|
 | Sat 10:00 | Kickoff + intro |
-| Sat, after intro | Setup & config: paste the setup line into Cursor (`SETUP.md`), hand out OpenRouter keys |
+| Sat, after intro | Setup & config: paste the setup line into Cursor (`SETUP.md`), then `/connect` (each project gets its own AI key) |
 | Sat 11:00 | Everyone is building product |
 | Sat 20:00 | Day 1 ends |
 | Sun 11:00–16:00 | Build, polish, demos |
@@ -26,8 +26,9 @@
 
 ## AI keys
 
-The school is asked for AI credits via OpenRouter. Organizers hand each student an OpenRouter API
-key at setup; it goes in `.env` as `OPENROUTER_API_KEY`. Defaults are the cheap tiers in `kit/ai/models.ts`.
+Each project gets its own OpenRouter key with a monthly cap when the student runs `/connect` (the hub
+makes it; it lands in the app's `.env`). Organizers don't hand out keys. Defaults are the cheap tiers in
+`kit/ai/models.ts`. Hub checklist for the day before and the day itself: `event-day-runbook.md`.
 
 ## Judging
 
