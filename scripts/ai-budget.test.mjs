@@ -2,7 +2,7 @@
 // (payloads below are OpenRouter's real answers for a key over its monthly limit), never a crash text.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { AiBudgetError, ask, budgetError, image } from "../kit/ai/index.ts";
+import { AiBudgetError, ask, askJson, budgetError, image } from "../kit/ai/index.ts";
 
 const KEY_LIMIT = {
   error: {
@@ -48,4 +48,46 @@ test("ask() and image() throw it (and log one error line) when OpenRouter says t
   assert.equal(line.level, "error");
   assert.equal(line.kind, "ai-budget");
   assert.doesNotMatch(logged.join("\n"), /sk-or-test-not-real/);
+});
+
+// OpenRouter's answer when no provider of the model accepts a parameter (gpt-6-luna + temperature + JSON schema).
+const NO_ENDPOINT = { error: { message: "No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection", code: 404 } };
+
+test("askJson with a temperature the model refuses: retried once without it, and it works", async () => {
+  const realFetch = globalThis.fetch;
+  const realWarn = console.warn;
+  const bodies = [];
+  process.env.OPENROUTER_API_KEY = "sk-or-test-not-real";
+  delete process.env.AI_PROVIDER;
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(init.body);
+    bodies.push(body);
+    return "temperature" in body
+      ? new Response(JSON.stringify(NO_ENDPOINT), { status: 404 })
+      : new Response(JSON.stringify({ model: "m", choices: [{ message: { content: '{"ok":true}' } }] }), { status: 200 });
+  };
+  console.warn = () => {};
+  try {
+    const { data } = await askJson("fast", "hi", { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"], additionalProperties: false }, { temperature: 0.4 });
+    assert.deepEqual(data, { ok: true });
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+  }
+  assert.equal(bodies.length, 2);
+  assert.equal(bodies[0].temperature, 0.4);
+  assert.equal("temperature" in bodies[1], false);
+});
+
+test("no endpoint even without the extras: a plain message that names the tier and the fix", async () => {
+  const realFetch = globalThis.fetch;
+  process.env.OPENROUTER_API_KEY = "sk-or-test-not-real";
+  delete process.env.AI_PROVIDER;
+  globalThis.fetch = async () => new Response(JSON.stringify(NO_ENDPOINT), { status: 404 });
+  try {
+    await assert.rejects(askJson("fast", "hi", { type: "object" }), (err) => /"fast" model .* can't do structured JSON/.test(err.message) && /MODEL_FAST=/.test(err.message) && !/provider routing/.test(err.message));
+    await assert.rejects(ask("lite", "hi"), /"lite" model .* can't do this request/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

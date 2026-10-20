@@ -51,7 +51,20 @@ const openRouterProvider: LlmProvider = {
         response_format: { type: "json_schema", json_schema: { name: "result", strict: true, schema: opts.schema } },
       }),
     };
-    const json = await post(body);
+    let json;
+    try {
+      json = await post(body);
+    } catch (err) {
+      if (!(err as { noEndpoint?: boolean }).noEndpoint) throw err;
+      // Some models (reasoning ones especially) refuse `temperature`. Drop it and try once more.
+      if (body.temperature !== undefined) {
+        delete body.temperature;
+        console.warn(`[ai] ${cfg.model} doesn't take a temperature; asked again without it.`);
+        json = await post(body).catch((again) => {
+          throw (again as { noEndpoint?: boolean }).noEndpoint ? cantDoIt(tier, cfg.model, opts) : again;
+        });
+      } else throw cantDoIt(tier, cfg.model, opts);
+    }
     return {
       text: json.choices?.[0]?.message?.content ?? "",
       model: json.model ?? cfg.model,
@@ -119,8 +132,19 @@ async function post(body: Record<string, unknown>) {
     console.error(JSON.stringify({ level: "error", message: `AI budget: ${budget.message}`, kind: "ai-budget", status: res.status, resets_at: budget.resetsAt }));
     throw budget;
   }
+  // OpenRouter's 404 "No endpoints found that can handle the requested parameters": no provider of that model
+  // accepts something in the request. chat() retries without the usual culprit, then explains it plainly.
+  if (res.status === 404 && /no endpoints found that can handle/i.test(json?.error?.message ?? "")) {
+    throw Object.assign(new Error(`OpenRouter 404: ${json.error.message}`), { noEndpoint: true });
+  }
   if (!res.ok || json?.error) throw new Error(`OpenRouter ${res.status}: ${json?.error?.message ?? "request failed"}`);
   return json;
+}
+
+/** The plain-English version of OpenRouter's "No endpoints found that can handle the requested parameters". */
+function cantDoIt(tier: Tier, model: string, opts: AskOptions & { schema?: JsonSchema }) {
+  const what = opts.schema ? "structured JSON (askJson)" : "this request";
+  return new Error(`The "${tier}" model (${model}) can't do ${what} with these settings. Try another tier, or another model with MODEL_${tier.toUpperCase()}=… in .env (npm run ai -- models).`);
 }
 
 // Deterministic stand-in: same input, same output, no network, no cost.
