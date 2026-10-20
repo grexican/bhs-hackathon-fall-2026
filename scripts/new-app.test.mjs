@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -72,6 +73,43 @@ test("the starter app runs: /health, saved data survives a restart, public files
   assert.equal((await fetch(`${app.base}/..%2fpackage.json`)).status, 403);
   assert.equal((await fetch(`${app.base}/api/nope`)).status, 404);
   await app.stop();
+});
+
+test("the Feedback button: simulated offline, forwarded to the hub with the app secret when connected", async () => {
+  const dir = path.join(root, "apps", "lunch-line");
+  const html = fs.readFileSync(path.join(dir, "public/index.html"), "utf8");
+  assert.match(html, /<!-- <script src="\/locker\/feedback\.js" defer><\/script> -->/, "off by default, one line to turn on");
+
+  // Offline: saved next to the database and printed, nothing leaves the laptop.
+  const volume = path.join(root, "fb-volume");
+  let app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: path.join(volume, "app.db"), LOCKER_URL: "", LOCKER_APP_SECRET: "" });
+  const widget = await fetch(`${app.base}/locker/feedback.js`);
+  assert.match(widget.headers.get("content-type"), /javascript/);
+  assert.match(await widget.text(), /\/api\/feedback/);
+  const sim = await fetch(`${app.base}/api/feedback`, { method: "POST", body: JSON.stringify({ message: "Too many taps", rating: 4 }) });
+  assert.equal(sim.status, 201);
+  assert.deepEqual(await sim.json(), { ok: true, simulated: true });
+  assert.match(fs.readFileSync(path.join(volume, "feedback.jsonl"), "utf8"), /"message":"Too many taps","rating":4/);
+  assert.equal((await fetch(`${app.base}/api/feedback`, { method: "POST", body: "{}" })).status, 400);
+  await app.stop();
+
+  // Connected: the app's server forwards it to the hub with its secret (the browser never sees it).
+  const seen = [];
+  const hub = http.createServer(async (req, res) => {
+    let raw = "";
+    for await (const c of req) raw += c;
+    seen.push({ url: req.url, auth: req.headers.authorization, body: JSON.parse(raw) });
+    res.writeHead(201, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: true, id: "1" }));
+  });
+  await new Promise((r) => hub.listen(0, "127.0.0.1", r));
+  app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: path.join(volume, "app.db"), LOCKER_URL: `http://127.0.0.1:${hub.address().port}`, LOCKER_APP_SECRET: "app_secret_xyz" });
+  const sent = await fetch(`${app.base}/api/feedback`, { method: "POST", body: JSON.stringify({ message: "Works!", page: "/", contact: "maya" }) });
+  assert.equal(sent.status, 201);
+  const reply = await sent.text();
+  assert.doesNotMatch(reply, /app_secret_xyz/);
+  assert.deepEqual(seen, [{ url: "/api/feedback", auth: "Bearer app_secret_xyz", body: { message: "Works!", page: "/", contact: "maya" } }]);
+  await app.stop();
+  hub.close();
 });
 
 test("--bare makes just the folder, for a scaffolder", () => {

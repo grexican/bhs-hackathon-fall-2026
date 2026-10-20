@@ -22,3 +22,6 @@ builds/*
 .provenance-allow
 apps/*
 !apps/README.md
+
+# Your personal notes from /onboard (stay on your laptop)
+ME.md

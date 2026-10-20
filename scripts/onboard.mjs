@@ -9,7 +9,7 @@
 //   3. Configures git user.name / user.email if they aren't already set.
 //   4. Creates a feature branch named `firstname-lastname` (or the project
 //      name if they prefer) and switches to it.
-//   5. Personalizes README.md with their name.
+//   5. Writes their personal ME.md (gitignored, so it never clashes with kit updates).
 //   6. Stages + commits the personalization.
 //   7. Optionally runs `git push -u origin <branch>`.
 //   8. Tells them how to start building (`/start`).
@@ -22,13 +22,13 @@
 // flow conversationally. Either path is fine.
 
 import { execSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { stdin as input, stdout as output } from "node:process";
 import { createInterface } from "node:readline/promises";
 
 const REPO_ROOT = resolve(import.meta.dirname, "..");
-const README_PATH = resolve(REPO_ROOT, "README.md");
+const ME_PATH = resolve(REPO_ROOT, "ME.md");
 
 const rl = createInterface({ input, output });
 
@@ -100,7 +100,7 @@ async function main() {
   info("Welcome. This script gets your project set up in one shot:");
   info("  • configure git with your name and email");
   info("  • create your own branch");
-  info("  • personalize the README with your name");
+  info("  • write your personal notes file, ME.md (stays on your laptop)");
   info("  • commit + (optionally) push to GitHub");
   info("");
   info("It explains each step before doing it. Press Ctrl+C any time to stop.");
@@ -209,32 +209,21 @@ async function main() {
     }
   }
 
-  // 8. Personalize README
-  header("Personalizing README");
-  if (existsSync(README_PATH)) {
-    const original = readFileSync(README_PATH, "utf8");
-    const banner = `\n> **${fullName}'s build** — _${projectName}_\n`;
-    let next = original;
-    if (!next.includes("**'s build**") && !next.includes(banner.trim())) {
-      next = next.replace("# AI Builder Hackathon", `# AI Builder Hackathon${banner}`);
-    }
-    if (next !== original) {
-      writeFileSync(README_PATH, next, "utf8");
-      ok("added a personal banner to README.md");
-    } else {
-      ok("README.md already has a banner — no change");
-    }
+  // 8. Personal notes. ME.md is gitignored: the kit's README stays untouched, so kit updates never conflict.
+  header("Writing ME.md");
+  if (existsSync(ME_PATH)) {
+    ok("ME.md already exists — no change");
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    writeFileSync(ME_PATH, `# ${fullName}'s build\n\n- Branch: ${branchName}\n- Project: _${projectName}_\n- Started: ${today}\n\n## Notes to self\n\n- \n`, "utf8");
+    ok("wrote ME.md (only on your laptop, never committed)");
   }
 
-  // 9. Stage + commit
+  // 9. A first (empty) commit that marks the start of their branch
   header("Saving your first commit");
-  const status = gitOk(["status", "--porcelain"]).stdout;
-  if (!status) {
-    info("No changes to commit yet — that's fine.");
-  } else {
-    git(["add", "README.md"]);
+  {
     const commitMessage = `chore: onboard ${fullName} (${branchName})`;
-    git(["commit", "-m", commitMessage]);
+    git(["commit", "--allow-empty", "-m", commitMessage]);
     ok(`committed: "${commitMessage}"`);
   }
 

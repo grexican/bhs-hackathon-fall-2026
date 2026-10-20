@@ -6,6 +6,7 @@ import http from "node:http";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { gate } from "./gate.mjs";
+import { feedback } from "./feedback.mjs";
 
 const root = resolve(process.argv[2] || ".");
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".ico": "image/x-icon", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".mp4": "video/mp4", ".mp3": "audio/mpeg" };
@@ -13,6 +14,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": 
 http
   .createServer(async (req, res) => {
     if (req.url === "/health") return res.end("ok");
+    if (await feedback(req, res)) return; // the "Feedback" button: <script src="/locker/feedback.js" defer></script>
     if ((await gate(req, res)) === null) return;
     const path = decodeURIComponent(new URL(req.url, "http://x").pathname);
     let file = normalize(join(root, path));

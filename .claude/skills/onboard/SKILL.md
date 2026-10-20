@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: First-time setup walkthrough. Asks the student a few questions, configures git, creates their branch, personalizes the README, makes an initial commit, and optionally pushes. Friendlier than the terminal-based `npm run onboard`. Run this once when you first open the project.
+description: First-time setup walkthrough. Asks the student a few questions, configures git, creates their branch, writes their personal ME.md (never committed), makes an initial commit, and optionally pushes. Friendlier than the terminal-based `npm run onboard`. Run this once when you first open the project.
 allowed-tools:
   - Read
   - Write
@@ -21,7 +21,7 @@ There is also a `npm run onboard` script that does the same flow non-interactive
 2. Ask the student for their first name, last name, and email.
 3. Configure git's `user.name` and `user.email` (only if they aren't already set, or if the student wants to change them).
 4. Create a branch named `firstname-lastname` and switch to it.
-5. Add a personal banner to the README.
+5. Write their personal notes file, `ME.md` (gitignored, so kit updates never clash with it).
 6. Make the first commit.
 7. Ask if they want to push to GitHub now.
 8. Tell them how to run the app.
@@ -83,7 +83,7 @@ Show a summary:
 > - Set git user.name to "<full name>"
 > - Set git user.email to "<email>"
 > - Create branch "<branch>"
-> - Add a personal banner to README.md
+> - Write your personal notes file, ME.md (only on your laptop)
 > - Commit it
 >
 > Sound good?
@@ -114,24 +114,33 @@ Run each command separately, with a one-line "what this does" before each:
 
 If a command fails, **stop**, paste the error verbatim to the student, and ask what they'd like to do.
 
-### 7. Personalize the README
+### 7. Their notes file: ME.md
 
-Use `Edit` to insert a banner just under the `# AI Builder Hackathon` heading. Format:
+Never edit the kit's `README.md` (it changes when organizers update the kit, and edits there cause
+merge conflicts). Write `ME.md` at the kit root instead. It's gitignored, so it stays on their laptop:
 
 ```markdown
-> **Jane Doe's build** — _My hackathon project_
+# Jane Doe's build
+
+- Branch: jane-doe
+- Project: _My hackathon project_ (folder: apps/<codename>/ once /start makes it)
+- Started: <today's date>
+
+## Notes to self
+
+- 
 ```
 
-If they didn't pick a project name, leave it as "_My hackathon project_" — they'll change it later.
+If they didn't pick a project name, leave "_My hackathon project_"; they'll change it later.
 
 ### 8. Commit
 
 ```bash
-git add README.md
-git commit -m "chore: onboard Jane Doe (jane-doe)"
+git commit --allow-empty -m "chore: onboard Jane Doe (jane-doe)"
 ```
 
-Show them the commit message and explain that this is now permanently saved in git history.
+An empty commit that marks the start of their branch (ME.md isn't in git). Show them the message and
+explain that commits are saved points in history they can always go back to.
 
 ### 9. Push (ask first)
 

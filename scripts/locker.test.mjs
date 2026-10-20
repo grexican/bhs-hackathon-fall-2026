@@ -292,3 +292,28 @@ test("the kit's own Railway tool (node_modules/.bin) is used before one on PATH"
     fs.rmSync(path.join(kit, "node_modules"), { recursive: true, force: true });
   }
 });
+
+test("feedback: shows what testers sent, newest first, and only new ones with --new", async () => {
+  projects.get("lunch-line").feedback = [
+    { id: "2", message: "Couldn't find\nthe menu", page: "/", contact: "maya", rating: 2, read: false, createdAt: "2026-10-24T12:30:00Z" },
+    { id: "1", message: "Love the colours", page: null, contact: null, rating: 5, read: true, createdAt: "2026-10-24T11:00:00Z" },
+  ];
+  const r = await run(["feedback", "lunch-line"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /lunch-line: 2 feedback, 1 new, average rating 3\.5 of 5\./);
+  assert.match(r.out, /- \[2026-10-24 12:30 · new · 2\/5 · \/ · from maya\] Couldn't find the menu/);
+  assert.match(r.out, /Love the colours/);
+  const fresh = await run(["feedback", "lunch-line", "--new"]);
+  assert.doesNotMatch(fresh.out, /Love the colours/);
+  const other = await run(["feedback", "taken-app"]);
+  assert.equal(other.code, 1);
+  assert.match(other.out, /Ask its owner/);
+});
+
+test("the laptop's name on the hub's connect page is one a student recognises", async () => {
+  const { deviceName } = await import("./locker.mjs");
+  const name = deviceName();
+  assert.match(name, new RegExp(`${os.hostname()}`));
+  assert.match(name, /'s laptop \(/);
+  assert.ok(name.length <= 80);
+});

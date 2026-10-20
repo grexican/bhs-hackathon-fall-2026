@@ -37,6 +37,7 @@
     "locker:logs": "node scripts/locker.mjs logs",
     "locker:status": "node scripts/locker.mjs status",
     "locker:list": "node scripts/locker.mjs list",
+    "locker:feedback": "node scripts/locker.mjs feedback",
     "deploy": "node scripts/locker.mjs deploy",
     "test": "node --test scripts/*.test.mjs"
   },

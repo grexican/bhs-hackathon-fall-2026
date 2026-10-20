@@ -45,6 +45,7 @@ test("lists every tool, each with a description", async () => {
     "locker_connect_check",
     "locker_create_project",
     "locker_deploy",
+    "locker_feedback",
     "locker_join_project",
     "locker_list_app",
     "locker_logs",
@@ -153,6 +154,20 @@ test("list_app: needs a tagline, then lists the app", async () => {
   assert.match(r.text, /listed in the Apps directory/);
   const bad = await call("locker_list_app", { codename: "lunch-line", category: "Homework" });
   assert.equal(bad.isError, true, "unknown category rejected before the hub");
+});
+
+test("feedback reads the inbox as plain lines", async () => {
+  const r = await call("locker_feedback", { codename: "lunch-line" });
+  assert.equal(r.isError, false, r.text);
+  assert.match(r.text, /lunch-line: 0 feedback, 0 new\./);
+  assert.match(r.text, /Feedback button/);
+});
+
+test("new_app with bare: true makes an empty folder (no starter app)", async () => {
+  const r = await call("new_app", { codename: "bare-one", bare: true });
+  assert.equal(r.isError, false, r.text);
+  assert.ok(fs.existsSync(path.join(mock.kit, "apps", "bare-one", "AGENTS.md")));
+  assert.ok(!fs.existsSync(path.join(mock.kit, "apps", "bare-one", "server.js")));
 });
 
 test("join: a non-member gets a friendly error result", async () => {

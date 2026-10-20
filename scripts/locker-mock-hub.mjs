@@ -73,6 +73,18 @@ export async function startMockHub() {
       p.retried = true;
       return send(201, { ...p.project, status: "provisioning" });
     }
+    const fm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/feedback$/);
+    if (req.method === "GET" && fm) {
+      const p = projects.get(fm[1]);
+      if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
+      const all = p.feedback ?? [];
+      const items = url.searchParams.get("unread") === "1" ? all.filter((f) => !f.read) : all;
+      const rated = all.filter((f) => f.rating);
+      return send(200, {
+        summary: { total: all.length, unread: all.filter((f) => !f.read).length, averageRating: rated.length ? rated.reduce((n, f) => n + f.rating, 0) / rated.length : null },
+        feedback: items.slice(0, Number(url.searchParams.get("limit") ?? 50)),
+      });
+    }
     const lm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/listing$/);
     if (req.method === "PUT" && lm) {
       const p = projects.get(lm[1]);

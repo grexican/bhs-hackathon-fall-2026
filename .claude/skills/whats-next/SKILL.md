@@ -13,7 +13,8 @@ stall because they add features nobody asked for while the one thing people need
 
 Read what exists in `apps/<codename>/docs/`: `idea.md` (the one thing, the "later" list),
 `feedback.md` (tests with real people), `decisions.md`, and `/stats` if the app counts visits
-(`share-it`). Then tell the student in 3 lines max: what's working, what's not, and what we
+(`share-it`). If the app is online, read the Feedback button's inbox too (`locker_feedback` tool, or
+`npm run locker:feedback -- <codename>`; `--new` for unread) and quote testers' own words. Then tell the student in 3 lines max: what's working, what's not, and what we
 don't know yet.
 
 No tester feedback yet? Say so: the best next step is almost always `/test-with-a-friend`, not a feature.

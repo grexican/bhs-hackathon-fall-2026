@@ -41,7 +41,8 @@ function copyTemplate(dir, { codename, name }) {
   }
   // The same request logging the app gets online (npm run deploy refreshes this copy).
   fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
-  fs.copyFileSync(path.join(KIT, "kit", "locker", "otel.mjs"), path.join(dir, "locker", "otel.mjs"));
+  // And the tester "Feedback" button (server side + the button itself).
+  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
 }
 
 async function main() {

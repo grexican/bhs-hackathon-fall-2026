@@ -122,9 +122,21 @@ export function openBrowser(url) {
 
 const quiet = { log: () => {}, write: () => {} };
 
+/** What the hub's connect page shows, so the student recognises their laptop: "ana's laptop (DESKTOP-8F3K2LQ)". */
+export function deviceName() {
+  let user = "";
+  try {
+    user = os.userInfo().username;
+  } catch {
+    user = process.env.USERNAME || process.env.USER || ""; // userInfo() can throw on some locked-down machines
+  }
+  const host = os.hostname();
+  return (user ? `${user}'s laptop (${host})` : host).slice(0, 80);
+}
+
 /** Starts the laptop sign-in: { deviceId, code, url, interval, expiresIn }. */
 export async function connectStart() {
-  return (await api("POST", "/api/cli/start", { device: os.hostname() }, { auth: false })).json;
+  return (await api("POST", "/api/cli/start", { device: deviceName() }, { auth: false })).json;
 }
 
 /** One poll of the sign-in. On approval saves LOCKER_TOKEN to the kit .env and returns the status without it. */
@@ -242,6 +254,26 @@ export async function saveListing(codename, fields) {
   checkCodename(codename, { mustExist: false });
   const body = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
   return (await api("PUT", `/api/projects/${codename}/listing`, body)).json;
+}
+
+// ---------- tester feedback (the app's "Feedback" button, kit/locker/feedback.mjs) ----------
+
+/** What testers sent through the app's feedback button: { summary, feedback: [...] }, newest first. */
+export async function readFeedback(codename, { unread = false, limit = 50 } = {}) {
+  checkCodename(codename, { mustExist: false });
+  const query = new URLSearchParams({ limit: String(limit), ...(unread && { unread: "1" }) });
+  return (await api("GET", `/api/projects/${codename}/feedback?${query}`)).json;
+}
+
+/** Plain-text lines for a terminal or a chat. */
+export function formatFeedback(codename, { summary, feedback }) {
+  const head = `${codename}: ${summary.total} feedback, ${summary.unread} new${summary.averageRating ? `, average rating ${summary.averageRating} of 5` : ""}.`;
+  if (!feedback.length) return `${head}\nNothing to show yet. Turn on the Feedback button in the app (/test-with-a-friend) and share the link.`;
+  const lines = feedback.map((f) => {
+    const meta = [new Date(f.createdAt).toISOString().slice(0, 16).replace("T", " "), f.read ? null : "new", f.rating ? `${f.rating}/5` : null, f.page, f.contact ? `from ${f.contact}` : null].filter(Boolean);
+    return `- [${meta.join(" · ")}] ${f.message.replace(/\s+/g, " ")}`;
+  });
+  return [head, ...lines].join("\n");
 }
 
 // ---------- deploying ----------
@@ -495,6 +527,13 @@ async function list(args) {
   console.log(`  Everyone finds it at ${hubUrl()}/apps. Opens and installs: ${hubUrl()}/p/${codename}`);
 }
 
+async function feedbackCmd(args) {
+  const codename = needCodename(args, { mustExist: false });
+  const data = await readFeedback(codename, { unread: args.includes("--new"), limit: Number(flag(args, "limit") ?? 50) });
+  console.log(formatFeedback(codename, data));
+  console.log(`\nMark it read or delete it on ${hubUrl()}/p/${codename}#feedback`);
+}
+
 function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
@@ -505,13 +544,13 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list };
+const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list, feedback: feedbackCmd };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list|feedback> [codename]");
     process.exit(1);
   }
   Promise.resolve().then(() => fn(rest)).catch((err) => {

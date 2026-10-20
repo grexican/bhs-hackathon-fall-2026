@@ -4,6 +4,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "./db.js";
+import { feedback } from "./locker/feedback.mjs";
 
 const PORT = Number(process.env.PORT) || 3000; // the kit puts a free port in .env; online, the host sets it
 const PUBLIC = path.resolve("public");
@@ -45,9 +46,11 @@ function serveFile(req, res) {
 }
 
 http
-  .createServer((req, res) => {
+  .createServer(async (req, res) => {
     const route = routes[`${req.method} ${req.url.split("?")[0]}`];
     try {
+      // The tester "Feedback" button (POST /api/feedback, sent on to the hub). Turn the button on in public/index.html.
+      if (await feedback(req, res)) return;
       if (route) return route(req, res);
       if (req.url.startsWith("/api/")) return sendJson(res, 404, { error: "No such API route" });
       serveFile(req, res);

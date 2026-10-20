@@ -42,9 +42,19 @@ Give the student this, short enough to read off a phone:
 Optional, if the app is online: send them the link afterwards and see if they open it again tomorrow.
 That's the strongest signal there is.
 
+**For testers you can't watch** (classmates who open the link later): turn on the app's **Feedback
+button**. Starter apps already have the server side; in `public/index.html` remove the comment marks
+around `<script src="/locker/feedback.js" defer></script>`. Other Node servers add
+`if (await feedback(req, res)) return;` (from `locker/feedback.mjs`, copy `kit/locker/` in if missing);
+static sites using `locker/static.mjs` only need the script tag. Testers write, rate and (if they want)
+leave a name; it lands in the team's inbox on the hub, and works offline as a simulator
+(`data/feedback.jsonl`). It's a bonus, not a replacement: watching one person beats ten messages.
+
 ## 3. After: one fix
 
-The student tells you (or pastes) what happened. Write `apps/<codename>/docs/feedback.md`:
+The student tells you (or pastes) what happened. Also read the button's inbox if it's on
+(`locker_feedback` tool, or `npm run locker:feedback -- <codename>`) and fold those messages in.
+Write `apps/<codename>/docs/feedback.md`:
 
 ```
 ## <date>: <tester, e.g. "Maya, 15, eats in the cafeteria daily">
