@@ -396,7 +396,8 @@ export function addRequestLogging(codename, io = quiet) {
     pkg.dependencies = { ...pkg.dependencies };
     for (const name of missing) pkg.dependencies[name] = OTEL_PACKAGES[name];
     fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""));
-    io.log(`Added request logging to package.json (locker/otel.mjs). Run npm install in apps/${codename}/ to use it on your laptop too.`);
+    // The server installs them. On a laptop the app runs fine without them (otel.mjs has a built-in fallback).
+    io.log(`Added the request-logging packages to apps/${codename}/package.json (the server installs them; your laptop doesn't need them). Commit that change in apps/${codename}/.`);
   }
   // The hub gives every project a start command that loads locker/otel.mjs when it's there (not a
   // NODE_OPTIONS setting: Railway hands settings to the build too, before this file exists). It runs
@@ -405,11 +406,14 @@ export function addRequestLogging(codename, io = quiet) {
   return true;
 }
 
+export const LOCAL_TEST_USER = "Test Student <test.student@example.org>";
+
 /** Sets app settings on the server (no redeploy) and in apps/<codename>/.env. Returns the key names. */
 export function setSettings(codename, values, io = quiet) {
   checkCodename(codename);
   for (const key of Object.keys(values)) {
     if (HUB_OWNED.has(key)) throw new HubError(`${key} comes from the hub, so you can't set it here. Run: npm run locker:env -- ${codename}`, 0);
+    if (key === "LOCKER_GATE_USER") throw new HubError(`LOCKER_GATE_USER is only for your laptop: put it in apps/${codename}/.env, not on the server.`, 0);
   }
   const { e, childEnv } = railwayArgs(codename);
   const sets = Object.entries(values).flatMap(([k, v]) => ["--set", `${k}=${v}`]);
@@ -419,7 +423,13 @@ export function setSettings(codename, values, io = quiet) {
   if (run.status !== 0 || /error|unauthorized/i.test(output)) {
     throw Object.assign(new HubError("Railway didn't accept the settings (see above).", 0), { output });
   }
-  mergeEnv(path.join(appDir(codename), ".env"), values);
+  const envFile = path.join(appDir(codename), ".env");
+  mergeEnv(envFile, values);
+  // School sign-in on: locally the gate acts signed in as a test user, so the laptop never bounces to the hub.
+  if (values.LOCKER_GATE === "1" && !readEnv(envFile).LOCKER_GATE_USER) {
+    mergeEnv(envFile, { LOCKER_GATE_USER: `"${LOCAL_TEST_USER}"` });
+    io.log(`On your laptop you're signed in as ${LOCAL_TEST_USER} (LOCKER_GATE_USER in apps/${codename}/.env; change it or delete it). Online, people sign in with their school account.`);
+  }
   return Object.keys(values);
 }
 
@@ -532,7 +542,10 @@ function deploy(args) {
   const codename = needCodename(args);
   const { appUrl } = deployApp(codename, cli);
   console.log(`\n✓ Uploaded. The build takes 1–3 minutes.`);
-  if (appUrl) console.log(`  Then open: ${appUrl}  (check ${appUrl}/health says ok)`);
+  if (appUrl) {
+    console.log(`  Until it's built, the address may say "Application not found" (or show the old version). That's normal.`);
+    console.log(`  Then open: ${appUrl}  (it's live when ${appUrl}/health says ok)`);
+  }
   console.log(`  Watch it build: npm run locker:logs -- ${codename} --build`);
   console.log(`  Watch it run:   npm run locker:logs -- ${codename}`);
 }
@@ -552,17 +565,34 @@ function set(args) {
   console.log(`Saved ${keys.join(", ")}. They apply on your next deploy (npm run deploy -- ${codename}).`);
 }
 
+// The hub's Apps categories (the hub's docs/contract.md, PUT /api/projects/:codename/listing).
+export const LIST_CATEGORIES = ["School life", "Money", "Wellbeing", "Language", "Families", "Expat life", "Games", "Clubs", "Other"];
+const listUsage = (codename) => `Usage: npm run locker:list -- ${codename} --tagline "One line that says what it does" --category "School life"
+         [--description "A few sentences"] [--icon "L"] [--icon-file public/icon.png | --icon-from-app] [--school-only] [--off]
+Categories: ${LIST_CATEGORIES.join(", ")}`;
+
 async function list(args) {
   const codename = needCodename(args, { mustExist: false });
   const off = args.includes("--off");
-  const l = await saveListing(codename, {
-    listed: !off,
-    tagline: flag(args, "tagline"),
-    description: flag(args, "description"),
-    category: flag(args, "category"),
-    icon: flag(args, "icon"),
-    bhsOnly: args.includes("--school-only") ? true : undefined,
-  });
+  let category = flag(args, "category");
+  if (category !== undefined) {
+    category = LIST_CATEGORIES.find((c) => c.toLowerCase() === String(category).trim().toLowerCase());
+    if (!category) throw new HubError(`"${flag(args, "category")}" isn't a category.\n${listUsage(codename)}`, 0);
+  }
+  let l;
+  try {
+    l = await saveListing(codename, {
+      listed: !off,
+      tagline: flag(args, "tagline"),
+      description: flag(args, "description"),
+      category,
+      icon: flag(args, "icon"),
+      bhsOnly: args.includes("--school-only") ? true : undefined,
+    });
+  } catch (err) {
+    if (err instanceof HubError && err.status === 400) err.message += `\n${listUsage(codename)}`;
+    throw err;
+  }
   if (flag(args, "icon-file") || args.includes("--icon-from-app")) {
     await setIcon(codename, { file: flag(args, "icon-file"), fromApp: args.includes("--icon-from-app") });
     console.log(`✓ Apps shows ${codename}'s own image now (instead of the emoji).`);

@@ -10,5 +10,11 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env --disable-warning=ExperimentalWarning --import ./locker/otel.mjs server.js",
     "start": "node server.js"
+  },
+  "dependencies": {
+    "@opentelemetry/sdk-node": "^0.223.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
+    "@opentelemetry/instrumentation-http": "^0.223.0",
+    "@opentelemetry/instrumentation-undici": "^0.33.0"
   }
 }

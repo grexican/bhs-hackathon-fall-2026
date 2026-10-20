@@ -5,30 +5,39 @@
 (() => {
   if (document.getElementById("fb-open")) return;
   const style = document.createElement("style");
+  // Restyle it from your own CSS with these variables (all optional), e.g. :root { --fb-ink: #1c2b7a; --fb-font: inherit; }
+  //   --fb-ink (button + text), --fb-paper (sheet), --fb-accent (stars), --fb-font,
+  //   --fb-left / --fb-right / --fb-bottom (where the button sits; bottom-left by default).
   style.textContent = `
-    #fb-open { position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 2147483000;
-      font: 600 15px/1 system-ui, sans-serif; padding: 12px 16px; min-height: 44px; border-radius: 999px; border: 0;
-      background: #1d1b18; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.2); cursor: pointer; }
+    #fb-open { position: fixed; z-index: 2147483000; left: var(--fb-left, max(12px, env(safe-area-inset-left)));
+      right: var(--fb-right, auto); bottom: var(--fb-bottom, max(12px, env(safe-area-inset-bottom)));
+      font: 600 13px/1 var(--fb-font, system-ui, sans-serif); padding: 0 14px; min-height: 36px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25); background: var(--fb-ink, #1d1b18); color: var(--fb-paper, #fff);
+      box-shadow: 0 2px 8px rgba(0,0,0,.18); cursor: pointer; opacity: .88; }
+    #fb-open:hover, #fb-open:focus-visible { opacity: 1; }
+    #fb-open:focus-visible { outline: 2px solid var(--fb-ink, #1d1b18); outline-offset: 3px; }
+    @media (prefers-reduced-motion: no-preference) { #fb-open { transition: opacity .15s; } }
     #fb-sheet { border: 0; padding: 0; margin: auto auto 0; width: 100%; max-width: 480px; border-radius: 18px 18px 0 0;
-      font: 16px/1.4 system-ui, sans-serif; color: #1d1b18; background: #fff; }
+      font: 16px/1.4 var(--fb-font, system-ui, sans-serif); color: var(--fb-ink, #1d1b18); background: var(--fb-paper, #fff); }
     #fb-sheet::backdrop { background: rgba(0,0,0,.35); }
     #fb-sheet form { display: grid; gap: 12px; padding: 20px 20px max(20px, env(safe-area-inset-bottom)); }
     #fb-sheet h2 { margin: 0; font-size: 20px; }
     #fb-sheet label { display: grid; gap: 6px; }
     #fb-sheet textarea, #fb-sheet input[type=text] { font: inherit; font-size: 16px; width: 100%; box-sizing: border-box;
-      padding: 10px; border: 1px solid #c9c4ba; border-radius: 10px; }
+      padding: 10px; border: 1px solid #c9c4ba; border-radius: 10px; color: inherit; background: var(--fb-paper, #fff); }
     #fb-sheet textarea { min-height: 110px; resize: vertical; }
     #fb-sheet fieldset { display: flex; gap: 4px; border: 0; padding: 0; margin: 0; align-items: center; }
     #fb-sheet legend { font-size: 14px; float: left; margin-right: 8px; }
     #fb-sheet .fb-star { display: inline-block; font-size: 30px; line-height: 1; cursor: pointer; color: #c9c4ba; }
     #fb-sheet .fb-star input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-    #fb-sheet .fb-star.on { color: #e0a800; }
-    #fb-sheet .fb-star:focus-within { outline: 2px solid #1d1b18; border-radius: 4px; }
+    #fb-sheet .fb-star.on { color: var(--fb-accent, #e0a800); }
+    #fb-sheet .fb-star:focus-within { outline: 2px solid var(--fb-ink, #1d1b18); border-radius: 4px; }
     #fb-sheet .fb-row { display: flex; gap: 8px; justify-content: flex-end; }
-    #fb-sheet button { font: 600 16px system-ui, sans-serif; min-height: 44px; padding: 0 18px; border-radius: 999px;
-      border: 1px solid #1d1b18; background: #fff; color: #1d1b18; cursor: pointer; }
-    #fb-sheet button[type=submit] { background: #1d1b18; color: #fff; }
+    #fb-sheet button { font: 600 16px var(--fb-font, system-ui, sans-serif); min-height: 44px; padding: 0 18px; border-radius: 999px;
+      border: 1px solid var(--fb-ink, #1d1b18); background: var(--fb-paper, #fff); color: var(--fb-ink, #1d1b18); cursor: pointer; }
+    #fb-sheet button[type=submit] { background: var(--fb-ink, #1d1b18); color: var(--fb-paper, #fff); }
     #fb-sheet .fb-msg { margin: 0; font-size: 14px; min-height: 1.4em; }
+    @media (prefers-reduced-motion: reduce) { #fb-open, #fb-sheet { transition: none; animation: none; } }
     .fb-hide { position: absolute; left: -9999px; }`;
   document.head.append(style);
 

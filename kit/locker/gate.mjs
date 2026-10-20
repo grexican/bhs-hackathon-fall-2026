@@ -10,6 +10,10 @@
 //     // user is { sub, email, name, domain } when the gate is on, or undefined when it's off
 //   });
 //
+// On your laptop: LOCKER_GATE_USER="Ana Garcia <ana@example.org>" in the app's .env makes the gate act
+// signed in as that person, without the hub (so you can see the signed-in app). `npm run locker:set --
+// <codename> LOCKER_GATE=1` adds a test user for you. It's refused on the server (Railway).
+//
 // Express: app.use(async (req, res, next) => { const u = await gate(req, res); if (u !== null) { req.user = u; next(); } });
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
@@ -50,9 +54,28 @@ function redirect(res, to, setCookie) {
   return null;
 }
 
+/** "Ana Garcia <ana@example.org>", "ana@example.org" or "Ana Garcia" → a pretend signed-in user. */
+export function simUser(value) {
+  const m = String(value).match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  let name = (m ? m[1] : value).trim();
+  let email = m ? m[2].trim() : "";
+  if (!m && name.includes("@")) [email, name] = [name, name.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())];
+  if (!email) email = `${name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/^\.|\.$/g, "") || "test"}@example.org`;
+  return { sub: `sim:${email}`, email, name: name || email, domain: email.split("@")[1], simulated: true };
+}
+
 /** Returns the signed-in user, undefined when the gate is off, or null when it sent a response. */
 export async function gate(req, res) {
   if (!on()) return undefined;
+  if (env("LOCKER_GATE_USER")) {
+    if (env("RAILWAY_ENVIRONMENT") || env("RAILWAY_ENVIRONMENT_NAME")) {
+      res.statusCode = 500;
+      res.end("LOCKER_GATE_USER is only for your laptop. Remove it from the app's settings on the server.");
+      return null;
+    }
+    if (new URL(req.url, "http://x").pathname === "/_locker/logout") return redirect(res, "/");
+    return simUser(env("LOCKER_GATE_USER"));
+  }
   if (!env("LOCKER_APP_ID") || !env("LOCKER_APP_SECRET") || !env("LOCKER_URL")) {
     res.statusCode = 500;
     res.end("LOCKER_GATE=1 but LOCKER_URL / LOCKER_APP_ID / LOCKER_APP_SECRET are missing. Run /connect.");

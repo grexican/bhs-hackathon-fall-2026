@@ -32,7 +32,8 @@ Read the code and fix what's missing (one line each on what you changed):
   server (see the top of `locker/gate.mjs`; static sites already do), and turn it on with
   `npm run locker:set -- <codename> LOCKER_GATE=1` (sets it on the server and in the app's `.env`; it
   applies on the next deploy). Visitors then sign in with their school Google account; no login code
-  to write.
+  to write. On the laptop the app acts signed in as `LOCKER_GATE_USER` (a test user `locker:set` adds
+  to `.env`; change the name to try someone else), so local testing never needs the hub.
 - **Secrets** come from env vars. The hub already set them on the server; `.env` is never uploaded.
 
 Run it once the production way (`npm run build`, then `npm start` with a `PORT`) and open it.
@@ -40,12 +41,14 @@ Run it once the production way (`npm run build`, then `npm start` with a `PORT`)
 ## 2. Deploy
 
 From the kit root: `npm run deploy -- <codename>`. It uploads the folder; Railway builds it in 1–3
-minutes. A failure? Read `npm run locker:logs -- <codename> --build`, explain the cause in one
+minutes. Until the build is done, the address says "Application not found" (or still shows the old
+version): that's normal, not a failure. Wait for `<APP_URL>/health` to answer `ok` (check every ~10 s,
+up to 5 min) before you open it or tell the student anything. A failure? Read `npm run locker:logs -- <codename> --build`, explain the cause in one
 sentence, fix, deploy again. Two failed fixes: tell them to raise a hand.
 
 ## 3. Prove it's live
 
-After the build, use **`verify-in-browser`** on the live address (`APP_URL` in the app's `.env`):
+Only after `/health` says ok, use **`verify-in-browser`** on the live address (`APP_URL` in the app's `.env`):
 `/health` says ok, phone and desktop screenshots, zero console errors. Only then say "It's live" and
 give them the link to share.
 

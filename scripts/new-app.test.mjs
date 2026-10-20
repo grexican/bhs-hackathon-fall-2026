@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { OTEL_PACKAGES } from "./locker.mjs";
 import { freePort } from "./port.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "new-app.mjs");
@@ -45,6 +46,10 @@ test("new-app copies the starter app, fills in the name, and commits it (without
   assert.equal(pkg.description, 'Lunch & "Line"');
   assert.equal(pkg.scripts.start, "node server.js");
   assert.match(pkg.scripts.dev, /--import \.\/locker\/otel\.mjs/);
+  // The request-logging packages are there from day one, so the first deploy doesn't change package.json.
+  assert.deepEqual(pkg.dependencies, OTEL_PACKAGES);
+  assert.doesNotMatch(out, /made from the codename/, "no name hint when --name was given");
+  assert.match(newApp("name-hint"), /The app is called "Name Hint" \(made from the codename\)[\s\S]*--name/);
   assert.match(fs.readFileSync(path.join(dir, "public/index.html"), "utf8"), /<title>Lunch &amp; &quot;Line&quot;<\/title>/);
   for (const f of ["server.js", "package.json", "public/index.html"]) assert.doesNotMatch(fs.readFileSync(path.join(dir, f), "utf8"), /\{\{/);
   assert.match(fs.readFileSync(path.join(dir, ".env"), "utf8"), /^PORT=\d{4}$/m);
@@ -72,6 +77,11 @@ test("the starter app runs: /health, saved data survives a restart, public files
   assert.match(await home.text(), /Tap me/);
   assert.equal((await fetch(`${app.base}/..%2fpackage.json`)).status, 403);
   assert.equal((await fetch(`${app.base}/api/nope`)).status, 404);
+  // A route with a blank in it: "GET /api/taps/:id".
+  const one = await (await fetch(`${app.base}/api/taps/1`)).json();
+  assert.equal(one.id, 1);
+  assert.equal((await fetch(`${app.base}/api/taps/99`)).status, 404);
+  assert.equal((await fetch(`${app.base}/api/taps/1/extra`)).status, 404);
   await app.stop();
 });
 
@@ -170,6 +180,29 @@ test("school sign-in: off by default; with LOCKER_GATE=1 it sends people to sign
   assert.deepEqual(me, { user: { sub: "u1", email: "ana@example.org", name: "Ana", domain: "example.org" } });
   await app.stop();
   hub.close();
+});
+
+test("school sign-in on a laptop: LOCKER_GATE_USER acts signed in without the hub, and is refused on Railway", async () => {
+  const dir = path.join(root, "apps", "lunch-line");
+  const db = path.join(root, "gate-sim-volume", "app.db");
+  const base = { DATABASE_PATH: db, LOCKER_GATE: "1", LOCKER_URL: "http://127.0.0.1:9", LOCKER_APP_ID: "app_1", LOCKER_APP_SECRET: "s", APP_URL: "" };
+  let app = await boot(dir, { ...base, PORT: String(await freePort()), LOCKER_GATE_USER: "Ana Garcia <ana@example.org>" });
+  const page = await fetch(`${app.base}/`, { redirect: "manual" });
+  assert.equal(page.status, 200, "no trip to the hub");
+  assert.deepEqual(await (await fetch(`${app.base}/api/me`)).json(), { user: { sub: "sim:ana@example.org", email: "ana@example.org", name: "Ana Garcia", domain: "example.org", simulated: true } });
+  await app.stop();
+  app = await boot(dir, { ...base, PORT: String(await freePort()), LOCKER_GATE_USER: "Ana <ana@example.org>", RAILWAY_ENVIRONMENT: "production" });
+  const refused = await fetch(`${app.base}/api/me`);
+  assert.equal(refused.status, 500);
+  assert.match(await refused.text(), /only for your laptop/);
+  await app.stop();
+});
+
+test("the Feedback button is small, bottom-left by default, and restyled with CSS variables", () => {
+  const js = fs.readFileSync(path.join(root, "apps", "lunch-line", "locker", "feedback.js"), "utf8");
+  for (const v of ["--fb-ink", "--fb-paper", "--fb-accent", "--fb-font", "--fb-left", "--fb-bottom"]) assert.ok(js.includes(`var(${v}`), v);
+  assert.match(js, /left: var\(--fb-left, max\(12px, env\(safe-area-inset-left\)\)\)/);
+  assert.match(js, /prefers-reduced-motion: reduce/);
 });
 
 test("--bare makes just the folder, for a scaffolder", () => {

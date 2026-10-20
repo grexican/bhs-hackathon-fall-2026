@@ -30,6 +30,7 @@ async function readJson(req) {
 
 // The app's own API. Add a route here for each thing the page needs to load or save.
 // `user` is whoever is signed in when the school sign-in is on (see the bottom of this file), else undefined.
+// A `:name` in the address is a blank to fill in: "GET /api/taps/:id" answers /api/taps/7, with params.id = "7".
 const routes = {
   // How many times has anyone tapped the button? (An example: replace it with your app's data.)
   "GET /api/taps": (req, res) => {
@@ -42,6 +43,13 @@ const routes = {
     db.prepare("insert into taps default values").run();
     const { count } = db.prepare("select count(*) as count from taps").get();
     sendJson(res, 201, { count });
+  },
+
+  // One tap, by its number: /api/taps/1, /api/taps/2… (an example of a route with a blank in it).
+  "GET /api/taps/:id": (req, res, user, params) => {
+    const tap = db.prepare("select id, at from taps where id = ?").get(Number(params.id));
+    if (!tap) return sendJson(res, 404, { error: "No tap with that number." });
+    sendJson(res, 200, tap);
   },
 
   // Who's using the app: { user: { name, email, sub } } with the school sign-in on, else { user: null }.
@@ -62,6 +70,19 @@ const routes = {
     }
   },
 };
+
+// Finds the route for a request, filling in the blanks: "GET /api/taps/:id" + /api/taps/7 → params { id: "7" }.
+function findRoute(method, url) {
+  for (const [key, handler] of Object.entries(routes)) {
+    const [routeMethod, pattern] = key.split(" ");
+    if (routeMethod !== method) continue;
+    const names = [];
+    const regex = new RegExp("^" + pattern.replace(/:(\w+)/g, (_, name) => (names.push(name), "([^/]+)")) + "$");
+    const found = url.match(regex);
+    if (found) return { handler, params: Object.fromEntries(names.map((name, i) => [name, decodeURIComponent(found[i + 1])])) };
+  }
+  return null;
+}
 
 // Anything that isn't an API route is a file from public/ (index.html for the home page).
 function serveFile(req, res) {
@@ -89,8 +110,8 @@ http
       // The tester "Feedback" button (POST /api/feedback, sent on to the hub). Turn the button on in public/index.html.
       if (await feedback(req, res)) return;
 
-      const route = routes[`${req.method} ${url}`];
-      if (route) return await route(req, res, user);
+      const route = findRoute(req.method, url);
+      if (route) return await route.handler(req, res, user, route.params);
       if (url.startsWith("/api/")) return sendJson(res, 404, { error: "No such API route" });
       serveFile(req, res);
     } catch (err) {

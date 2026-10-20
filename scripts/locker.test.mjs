@@ -134,6 +134,7 @@ test("deploy: runs railway up with the project token, never shows it", async () 
   assert.match(r.out, /token present/);
   assert.doesNotMatch(r.out, new RegExp(RW_TOKEN));
   assert.match(r.out, /lunch-line-production\.up\.railway\.app/);
+  assert.match(r.out, /may say "Application not found"/);
   // Request logging rides along: the file and the packages (the hub's start command loads them).
   assert.ok(fs.existsSync(path.join(dir, "locker", "otel.mjs")));
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")).dependencies["@opentelemetry/sdk-node"], "^0.223.0");
@@ -254,6 +255,15 @@ test("set: pushes variables with the project token, updates .env, never shows th
   const env = readEnv(path.join(kit, "apps", "lunch-line", ".env"));
   assert.equal(env.LOCKER_GATE, "1");
   assert.equal(env.GREETING, "hi there");
+  // Sign-in on: the laptop gets a pretend signed-in user (never sent to the server), so it doesn't bounce to the hub.
+  assert.equal(env.LOCKER_GATE_USER, "Test Student <test.student@example.org>");
+  assert.doesNotMatch(r.out, /--set LOCKER_GATE_USER/);
+  assert.match(r.out, /On your laptop you're signed in as Test Student/);
+  const again = await run(["set", "lunch-line", "LOCKER_GATE=1"]);
+  assert.doesNotMatch(again.out, /On your laptop/, "an existing LOCKER_GATE_USER is left alone");
+  const refused = await run(["set", "lunch-line", "LOCKER_GATE_USER=Ana <ana@example.org>"]);
+  assert.equal(refused.code, 1);
+  assert.match(refused.out, /only for your laptop/);
 });
 
 test("set: refuses settings that come from the hub", async () => {
@@ -268,7 +278,12 @@ test("list: lists the app in the directory, explains what's missing, and can hid
   const missing = await run(["list", "lunch-line"]);
   assert.equal(missing.code, 1);
   assert.match(missing.out, /Add a tagline/);
-  const r = await run(["list", "lunch-line", "--tagline", "See the line before you leave class", "--category", "School life", "--icon", "L", "--school-only"]);
+  assert.match(missing.out, /Usage: npm run locker:list -- lunch-line --tagline/);
+  assert.match(missing.out, /Categories: School life, Money, Wellbeing/);
+  const badCat = await run(["list", "lunch-line", "--tagline", "x", "--category", "Sports"]);
+  assert.equal(badCat.code, 1);
+  assert.match(badCat.out, /"Sports" isn't a category\.[\s\S]*Categories: School life/);
+  const r = await run(["list", "lunch-line", "--tagline", "See the line before you leave class", "--category", "school life", "--icon", "L", "--school-only"]);
   assert.equal(r.code, 0, r.out);
   assert.match(r.out, /lunch-line is listed in Apps: L See the line before you leave class \(School life\)/);
   assert.equal(projects.get("lunch-line").listing.bhsOnly, true);

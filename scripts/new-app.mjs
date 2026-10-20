@@ -87,6 +87,8 @@ ${bare ? "" : `
   "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Its "Ask the AI" box is one
   uncommented line in \`public/index.html\`.
 - School sign-in: off until \`LOCKER_GATE=1\`; then \`user\` in every route is whoever is signed in (\`GET /api/me\`).
+  On this laptop, \`LOCKER_GATE_USER="Ana Garcia <ana@example.org>"\` in \`.env\` signs you in as that person.
+- Routes with a blank in the address: \`"GET /api/things/:id"\` in \`server.js\` gives the handler \`params.id\`.
 - Users' passwords or API keys: \`locker/vault.mjs\` (\`keep-secrets-safe\`), never the database.
 - \`locker/\`: kit files (request logging, sign-in gate, Feedback button, AI kit). The deploy refreshes them; don't edit.
 
@@ -124,6 +126,7 @@ PORT=${await freePort()}
   git(...id, "commit", "-q", "-m", `Start ${name}`);
 
   console.log(`Created apps/${codename}/ (${name}), its own git repo with a first commit.`);
+  if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in public/index.html (or start over with --name "…").`);
   if (!bare) console.log(`Try it: cd apps/${codename} && npm run dev   (a starter app with a database, ready to change)`);
   console.log(`Next: build in apps/${codename}/. When you want it online: /connect, then /ship.`);
 }
