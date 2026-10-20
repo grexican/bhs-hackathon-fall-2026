@@ -148,14 +148,20 @@ export function checkCodename(codename, { mustExist = true } = {}) {
 }
 
 async function waitReady(project, io) {
-  const deadline = Date.now() + 120_000;
+  // The host makes one new project per 30 seconds; in a rush the hub queues them (it says how many).
+  const deadline = Date.now() + 15 * 60_000;
+  if (project.status === "provisioning" && project.queue > 1) {
+    io.log(`Lots of people are setting up right now: you're in line with ${project.queue - 1} ahead (about ${Math.ceil((project.queue * 30) / 60)} min). Keep building; this finishes by itself.`);
+  }
   while (project.status === "provisioning" && Date.now() < deadline) {
     io.write(".");
     await sleep(Number(process.env.LOCKER_POLL_MS ?? 3000));
     project = await getProject(project.codename);
   }
   if (project.status === "provisioning") io.write("\n");
-  if (project.status === "failed") throw new HubError("The hub couldn't finish setting up this project. Tell an organizer.", 0);
+  if (project.status === "failed") {
+    throw new HubError(`The hub couldn't finish setting up ${project.codename}${project.error ? ` (${project.error})` : ""}. Run the same command again to retry. Fails twice? Tell an organizer.`, 0);
+  }
   return project;
 }
 
@@ -195,6 +201,11 @@ export async function createProject({ codename, name, pitch = "", ideaUrl }, io 
     }
     io.log(`You already have ${codename}. Fetching its settings.`);
     p = mine;
+    // Its setup broke last time (a hosting hiccup): the hub can start it over.
+    if (p.status === "failed") {
+      io.log("Last time its setup didn't finish. Trying again…");
+      p = (await api("POST", `/api/projects/${codename}/retry`)).json;
+    }
   }
   p = await waitReady(p, io);
   return { project: p, keys: await writeAppEnv(codename, p) };
