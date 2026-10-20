@@ -1,0 +1,98 @@
+// BHS sign-in gate: put "Sign in with BHS" in front of a whole app with one setting.
+// With LOCKER_GATE=1 every page needs a school Google account (signed in through BHS Locker).
+// Without it, nothing changes. Copy this file into your app (the deploy only uploads the app
+// folder); /ship and /connect do that for you. No packages needed.
+//
+//   import { gate } from "./locker/gate.mjs";
+//   http.createServer(async (req, res) => {
+//     const user = await gate(req, res);   // null = the gate already answered (redirect / login)
+//     if (user === null) return;
+//     // user is { sub, email, name, domain } when the gate is on, or undefined when it's off
+//   });
+//
+// Express: app.use(async (req, res, next) => { const u = await gate(req, res); if (u !== null) { req.user = u; next(); } });
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+
+const COOKIE = "bhs_gate";
+const DAY = 24 * 60 * 60;
+
+const on = () => process.env.LOCKER_GATE === "1";
+const env = (k) => process.env[k] ?? "";
+
+const sign = (value) => createHmac("sha256", env("LOCKER_APP_SECRET")).update(value).digest("base64url");
+function seal(obj) {
+  const body = Buffer.from(JSON.stringify(obj)).toString("base64url");
+  return `${body}.${sign(body)}`;
+}
+function open(token) {
+  const [body, mac] = String(token ?? "").split(".");
+  if (!body || !mac) return null;
+  const a = Buffer.from(sign(body));
+  const b = Buffer.from(mac);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  const obj = JSON.parse(Buffer.from(body, "base64url").toString());
+  return obj.exp > Date.now() / 1000 ? obj : null;
+}
+
+const cookies = (req) => Object.fromEntries((req.headers.cookie ?? "").split(/;\s*/).filter(Boolean).map((c) => [c.slice(0, c.indexOf("=")), decodeURIComponent(c.slice(c.indexOf("=") + 1))]));
+
+function origin(req) {
+  if (env("APP_URL") && !/localhost|127\.0\.0\.1/.test(req.headers.host ?? "")) return env("APP_URL").replace(/\/$/, "");
+  const proto = req.headers["x-forwarded-proto"] ?? (req.socket?.encrypted ? "https" : "http");
+  return `${proto}://${req.headers.host}`;
+}
+
+function redirect(res, to, setCookie) {
+  res.statusCode = 302;
+  res.setHeader("Location", to);
+  if (setCookie) res.setHeader("Set-Cookie", setCookie);
+  res.end();
+  return null;
+}
+
+/** Returns the signed-in user, undefined when the gate is off, or null when it sent a response. */
+export async function gate(req, res) {
+  if (!on()) return undefined;
+  if (!env("LOCKER_APP_ID") || !env("LOCKER_APP_SECRET") || !env("LOCKER_URL")) {
+    res.statusCode = 500;
+    res.end("LOCKER_GATE=1 but LOCKER_URL / LOCKER_APP_ID / LOCKER_APP_SECRET are missing. Run /connect.");
+    return null;
+  }
+  const url = new URL(req.url, origin(req));
+  const secure = url.protocol === "https:" ? "; Secure" : "";
+  const callback = `${origin(req)}/_locker/callback`;
+
+  if (url.pathname === "/_locker/logout") {
+    return redirect(res, "/", `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secure}`);
+  }
+
+  if (url.pathname === "/_locker/callback") {
+    const state = open(url.searchParams.get("state"));
+    if (!state) return redirect(res, "/");
+    const r = await fetch(`${env("LOCKER_URL")}/oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: env("LOCKER_APP_ID"), client_secret: env("LOCKER_APP_SECRET"), code: url.searchParams.get("code"), redirect_uri: callback }),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok || !body.user) {
+      res.statusCode = 403;
+      res.end(`Sign-in didn't work: ${body.error ?? r.status}`);
+      return null;
+    }
+    const token = seal({ ...body.user, exp: Math.floor(Date.now() / 1000) + 7 * DAY });
+    return redirect(res, state.back || "/", `${COOKIE}=${token}; Path=/; Max-Age=${7 * DAY}; HttpOnly; SameSite=Lax${secure}`);
+  }
+
+  const user = open(cookies(req)[COOKIE]);
+  if (user) {
+    const { exp, ...who } = user;
+    return who;
+  }
+
+  // Not signed in: off to BHS Locker, then back to the page they wanted.
+  const state = seal({ back: url.pathname + url.search, n: randomBytes(8).toString("hex"), exp: Math.floor(Date.now() / 1000) + 600 });
+  const to = new URL(`${env("LOCKER_URL")}/oauth/authorize`);
+  to.search = new URLSearchParams({ client_id: env("LOCKER_APP_ID"), redirect_uri: callback, state }).toString();
+  return redirect(res, to.toString());
+}

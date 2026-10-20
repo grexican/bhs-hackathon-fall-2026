@@ -48,8 +48,9 @@ After `/connect`, every app gets real services from the BHS Incubator hub (setti
 - **AI:** `OPENROUTER_API_KEY`, the app's own capped key. `kit/ai` reads it as is.
 - **Email:** the hub relay, as an `email` provider with `sim` and `locker` implementations.
 - **Database:** `node:sqlite` (built into Node 22.18+), file at `DATABASE_PATH`. Never anywhere else in production.
-- **Sign-in:** none until the app needs it. Then "Sign in with BHS" for school-only apps, its own
-  simple sign-in for public apps, and a `sim` provider locally.
+- **Sign-in:** none until the app needs it. School-only app: the **BHS sign-in gate** (`kit/locker/gate.mjs`,
+  `LOCKER_GATE=1`) or "Sign in with BHS" per page. Public app (families, expats): its own simple
+  sign-in. Locally: the `sim` provider.
 
 Details: `providers-and-services` → "Incubator services".
 
