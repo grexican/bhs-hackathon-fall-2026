@@ -423,3 +423,18 @@ test("bring --withdraw takes back a waiting request; a second time says there's 
   assert.equal(again.code, 1);
   assert.match(again.out, /no waiting request/);
 });
+
+test("new-app asks the hub first: a taken codename is refused, a free or own one is made", async () => {
+  const NEW_APP = path.join(path.dirname(SCRIPT), "new-app.mjs");
+  const make = (...a) => new Promise((resolve) => execFile(process.execPath, [NEW_APP, ...a, "--bare"], { env: mock.env() }, (err, stdout, stderr) => resolve({ code: err ? err.code : 0, out: stdout + stderr })));
+  const taken = await make("claimed-app");
+  assert.equal(taken.code, 1);
+  assert.match(taken.out, /already took "claimed-app"[\s\S]*has to be unique[\s\S]*claimed-app-2/);
+  assert.ok(!fs.existsSync(path.join(kit, "apps", "claimed-app")), "no folder made");
+  const free = await make("brand-new-app");
+  assert.equal(free.code, 0, free.out);
+  assert.doesNotMatch(free.out, /wasn't checked|couldn't reach/);
+  const offline = await new Promise((resolve) => execFile(process.execPath, [NEW_APP, "offline-app", "--bare"], { env: mock.env({ LOCKER_TOKEN: "", LOCKER_KIT_ROOT: fs.mkdtempSync(path.join(os.tmpdir(), "kit-offline-")) }) }, (err, stdout, stderr) => resolve({ code: err ? err.code : 0, out: stdout + stderr })));
+  assert.equal(offline.code, 0, offline.out);
+  assert.match(offline.out, /isn't connected to the hub yet, so "offline-app" wasn't checked/);
+});

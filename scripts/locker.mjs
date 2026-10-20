@@ -150,6 +150,19 @@ export const isConnected = () => Boolean(token());
 export const me = async () => (await api("GET", "/api/me")).json;
 export const getProject = async (codename) => (await api("GET", `/api/projects/${codename}`)).json;
 
+/**
+ * Is the codename free on the hub? (new-app asks before making the folder; the codename becomes the web address.)
+ * { checked: true, available, reason, yours } or { checked: false, why: "not-connected" | "unreachable" }. Never throws.
+ */
+export async function codenameFree(codename) {
+  if (!token()) return { checked: false, why: "not-connected" };
+  try {
+    return { checked: true, ...(await api("GET", `/api/codenames/${encodeURIComponent(codename)}`)).json };
+  } catch {
+    return { checked: false, why: "unreachable" };
+  }
+}
+
 export function checkCodename(codename, { mustExist = true } = {}) {
   if (!codename) throw new HubError("Which app? Add its codename, like: lunch-line", 0);
   if (!CODENAME.test(codename)) throw new HubError(`"${codename}" isn't a valid codename (3–30 lowercase letters, digits or dashes).`, 0);

@@ -30,6 +30,7 @@ button {
 }
 .count { font-size: 1.1rem; }
 .hello { color: #5f5a52; }
+.starter-hint { margin-top: 2.5rem; font-size: 0.9rem; color: #5f5a52; border-top: 1px dashed #c9c4ba; padding-top: 0.75rem; }
 
 /* The "Ask the AI" box (public/ask.js). */
 .ask { display: grid; gap: 8px; margin-top: 2rem; text-align: left; }

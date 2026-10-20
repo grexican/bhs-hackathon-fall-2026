@@ -23,6 +23,7 @@ const project = (codename, name) => ({
 export async function startMockHub() {
   const projects = new Map([
     ["taken-app", { owner: "someone-else", members: [] }],
+    ["claimed-app", { owner: "someone-else", members: [] }],
     ["team-app", { owner: "someone-else", members: ["ana"], project: null }],
   ]);
   projects.get("team-app").project = { codename: "team-app", name: "Team App", status: "ready", url: "https://team-app-production.up.railway.app", role: "member" };
@@ -48,6 +49,12 @@ export async function startMockHub() {
       return send(200, polls < 3 ? { status: "pending" } : { status: "approved", token: TOKEN, student: { email: "ana@bhsschools.org", name: "Ana" } });
     }
     if (req.headers.authorization !== `Bearer ${TOKEN}`) return send(401, { error: "Not signed in." });
+    const cn = url.pathname.match(/^\/api\/codenames\/([^/]+)$/);
+    if (cn) {
+      const p = projects.get(cn[1]);
+      if (!p) return send(200, { available: true });
+      return send(200, p.owner === "ana" || p.members?.includes("ana") ? { available: true, yours: true } : { available: false, reason: `Someone already took "${cn[1]}".` });
+    }
     if (url.pathname === "/api/me") {
       const mine = [...projects.values()].filter((p) => p.owner === "ana" || p.members?.includes("ana")).map((p) => p.project);
       return send(200, { student: { email: "ana@bhsschools.org", name: "Ana" }, projects: mine });

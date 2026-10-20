@@ -65,6 +65,17 @@ async function main() {
   const bare = args.includes("--bare");
   const dir = path.join(ROOT, "apps", codename);
   if (fs.existsSync(dir)) fail(`apps/${codename}/ already exists. Pick another codename, or keep building in that folder.`);
+  // The codename becomes the app's web address, so it must be free on the hub. Ask now, not at /connect.
+  const { codenameFree } = await import("./locker.mjs");
+  const free = await codenameFree(codename);
+  if (free.checked && !free.available) {
+    fail(`${free.reason} The codename becomes your app's web address, so it has to be unique. Try another, like ${codename}-2 or ${codename.slice(0, 20)}-club.`);
+  }
+  const unchecked = free.checked
+    ? null
+    : free.why === "not-connected"
+      ? `Note: this laptop isn't connected to the hub yet, so "${codename}" wasn't checked. /connect checks it; if it's taken then, you'll pick another name.`
+      : `Note: couldn't reach the hub to check that "${codename}" is free. /connect checks it again later.`;
 
   const files = {
     "AGENTS.md": `# ${name} (\`${codename}\`)
@@ -86,6 +97,9 @@ ${bare ? "" : `
 - \`POST /api/ask\` in \`server.js\`: a working AI example (\`locker/ai\`, the kit's AI helper). It already handles
   "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Its "Ask the AI" box is one
   uncommented line in \`public/index.html\`.
+- Tester **Feedback button**: the other commented line in \`public/index.html\` (\`/test-with-a-friend\`). The starter
+  page shows a small "Turn on: Ask the AI · Feedback button" hint so the student knows both exist; drop it when
+  the real page replaces the starter.
 - School sign-in: off until \`LOCKER_GATE=1\`; then \`user\` in every route is whoever is signed in (\`GET /api/me\`).
   On this laptop, \`LOCKER_GATE_USER="Ana Garcia <ana@example.org>"\` in \`.env\` signs you in as that person.
 - Routes with a blank in the address: \`"GET /api/things/:id"\` in \`server.js\` gives the handler \`params.id\`.
@@ -129,6 +143,7 @@ PORT=${await freePort()}
   if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in public/index.html (or start over with --name "…").`);
   if (!bare) console.log(`Try it: cd apps/${codename} && npm run dev   (a starter app with a database, ready to change)`);
   console.log(`Next: build in apps/${codename}/. When you want it online: /connect, then /ship.`);
+  if (unchecked) console.log(unchecked);
 }
 
 function fail(msg) {
