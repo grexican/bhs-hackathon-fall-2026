@@ -37,10 +37,13 @@ simple one-page poster with `canvas-design` (name, sentence, QR code, "scan me")
 
 ## 3. The Locker directory
 
-Every student can browse listed apps on the hub and add them to "My Locker". To list it, open the
-project page on the hub (`<LOCKER_URL>/p/<codename>`) and press the **List in the … Locker** button. It needs a
-tagline (90 characters max), a category and an icon (one emoji). Help the student write the tagline:
-what it does for the user, not what it's built with. The hub's project page then shows opens and
+Every student can browse listed apps on the hub and add them to "My Locker". Listing needs a
+**tagline** (90 characters max), a **category** (School life, Money, Wellbeing, Language, Families,
+Expat life, Games, Clubs, Other) and an **icon** (one emoji). Help the student write the tagline:
+what it does for the user, not what it's built with. Then list it with the `locker_list_app` tool, or
+`npm run locker:list -- <codename> --tagline "..." --category "School life" --icon "🍝"` (add
+`--school-only` if it uses the sign-in gate; `--off` hides it again). The project page on the hub
+(`<LOCKER_URL>/p/<codename>`) does the same with a form. The hub's project page then shows opens and
 people per week, for visits that came through the Locker.
 
 ## 4. See if people come back
