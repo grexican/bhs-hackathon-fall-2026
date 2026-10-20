@@ -264,10 +264,13 @@ server.registerTool(
     inputSchema: { codename },
   },
   tool(async ({ codename }) => {
-    const { output, appUrl } = deployApp(codename);
+    const { output, appUrl, refreshed } = deployApp(codename);
     const said = lastLines(output, 3);
-    const url = appUrl ? ` Then open ${appUrl} (${appUrl}/health should say ok).` : "";
-    return `Uploaded apps/${codename}/. The build takes 1–3 minutes.${url} Check the build with locker_logs (codename ${codename}, build: true).${said ? `\nRailway said:\n${said}` : ""}`;
+    const url = appUrl
+      ? ` Until it's built, ${appUrl} may say "Application not found" (or show the old version): that's normal. Wait until ${appUrl}/health says ok before opening it or telling the student it's live.`
+      : "";
+    const kit = refreshed?.length ? `\nUpdated the kit's files in the app: ${refreshed.join(", ")}. Commit them in apps/${codename}/.` : "";
+    return `Uploaded apps/${codename}/. The build takes 1–3 minutes.${url} Check the build with locker_logs (codename ${codename}, build: true).${kit}${said ? `\nRailway said:\n${said}` : ""}`;
   }),
 );
 

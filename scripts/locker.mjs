@@ -328,7 +328,8 @@ export function deployApp(codename, io = quiet) {
   }
   const { e, childEnv } = railwayArgs(codename);
   addRequestLogging(codename, io);
-  refreshKitFiles(codename);
+  const refreshed = refreshKitFiles(codename);
+  if (refreshed.length) io.log(`Updated the kit's files in your app: ${refreshed.join(", ")}. Commit them in apps/${codename}/.`);
   io.log(`Uploading apps/${codename}/ to its hosting slot. Railway builds it from source…`);
   const run = railway(["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
@@ -337,7 +338,7 @@ export function deployApp(codename, io = quiet) {
   if (run.status !== 0 || /deploy(ment)? failed|error:|unauthorized/i.test(output)) {
     throw Object.assign(new HubError(`The upload didn't go through (see above). Watch the build with: npm run locker:logs -- ${codename} --build`, 0), { output });
   }
-  return { output, appUrl: e.APP_URL };
+  return { output, appUrl: e.APP_URL, refreshed };
 }
 
 // Request logging (kit/locker/otel.mjs): one log line per request and per outgoing call, read with
@@ -358,24 +359,32 @@ export const OTEL_NODE_OPTION = "--import=./locker/otel.mjs";
 /**
  * Before each deploy: bring the kit's own files in the app up to date, but only the ones the app
  * already has (the starter app has them all): locker/gate.mjs, locker/feedback.mjs + feedback.js,
- * and the AI kit in locker/ai/. Fixes reach every app on its next deploy. Returns the paths refreshed.
+ * and the AI kit in locker/ai/. Fixes reach every app on its next deploy. Returns the paths that changed.
  */
 export function refreshKitFiles(codename) {
   const dir = appDir(codename);
   const kit = (rel) => fileURLToPath(new URL(`../kit/${rel}`, import.meta.url));
   const done = [];
+  // Copies only when the kit's version is different (line endings don't count), and notes what changed.
+  const same = (a, b) => fs.readFileSync(a, "utf8").replace(/\r\n/g, "\n") === fs.readFileSync(b, "utf8").replace(/\r\n/g, "\n");
+  const refresh = (from, to, rel) => {
+    if (same(from, to)) return;
+    fs.copyFileSync(from, to);
+    done.push(rel);
+  };
   for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs", "browser.mjs"]) {
     const to = path.join(dir, "locker", f);
-    if (fs.existsSync(to)) {
-      fs.copyFileSync(kit(`locker/${f}`), to);
-      done.push(`locker/${f}`);
-    }
+    if (fs.existsSync(to)) refresh(kit(`locker/${f}`), to, `locker/${f}`);
   }
   const ai = path.join(dir, "locker", "ai");
   if (fs.existsSync(path.join(ai, "index.ts"))) {
     for (const f of fs.readdirSync(kit("ai")).filter((n) => n.endsWith(".ts") && n !== "cli.ts")) {
-      fs.copyFileSync(path.join(kit("ai"), f), path.join(ai, f));
-      done.push(`locker/ai/${f}`);
+      const to = path.join(ai, f);
+      if (fs.existsSync(to)) refresh(path.join(kit("ai"), f), to, `locker/ai/${f}`);
+      else {
+        fs.copyFileSync(path.join(kit("ai"), f), to);
+        done.push(`locker/ai/${f}`);
+      }
     }
   }
   return done;
@@ -609,6 +618,33 @@ async function feedbackCmd(args) {
   console.log(`\nMark it read or delete it on ${hubUrl()}/p/${codename}#feedback`);
 }
 
+// ---------- bring an app hosted elsewhere (an organizer approves it on the hub) ----------
+
+/** Asks to bring an app the student hosts elsewhere: { id, codename, status, verify: { file, token } }. */
+export async function requestApp({ codename, name, url, pitch }) {
+  checkCodename(codename, { mustExist: false });
+  return (await api("POST", "/api/app-requests", { codename, name, url, pitch })).json;
+}
+
+export const myAppRequests = async () => (await api("GET", "/api/app-requests")).json.requests;
+
+async function bring(args) {
+  if (!args.length) {
+    const reqs = await myAppRequests();
+    if (!reqs.length) return console.log('No requests yet. Ask with: npm run locker:bring -- <codename> --url https://your-app.example.com --name "Your App"');
+    for (const r of reqs) console.log(`${r.name} (${r.codename}): ${r.status}${r.note ? ` (${r.note})` : ""}  ${r.url}`);
+    return;
+  }
+  const codename = needCodename(args, { mustExist: false });
+  const url = flag(args, "url");
+  if (!url) throw new HubError(`Where does it live? Add its address: npm run locker:bring -- ${codename} --url https://your-app.example.com`, 0);
+  const r = await requestApp({ codename, url, name: flag(args, "name"), pitch: flag(args, "pitch") });
+  console.log(`✓ Asked to bring ${r.name} (${r.codename}) from ${r.url}. An organizer approves it on the hub; you'll get an email.`);
+  console.log(`  Optional, makes approval quicker: prove it's yours by serving this line at ${r.verify.file}:`);
+  console.log(`    ${r.verify.token}`);
+  console.log(`  Check where it stands: npm run locker:bring`);
+}
+
 function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
@@ -619,7 +655,7 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list, feedback: feedbackCmd };
+const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list, feedback: feedbackCmd, bring };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {

@@ -135,6 +135,14 @@ test("deploy: runs railway up with the project token, never shows it", async () 
   assert.doesNotMatch(r.out, new RegExp(RW_TOKEN));
   assert.match(r.out, /lunch-line-production\.up\.railway\.app/);
   assert.match(r.out, /may say "Application not found"/);
+  // Kit files in the app: refreshed only when they differ, and the student is told to commit them.
+  fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "locker", "gate.mjs"), "// an old gate\n");
+  const fresh = await run(["deploy", "lunch-line"]);
+  assert.match(fresh.out, /Updated the kit's files in your app: locker\/gate\.mjs\. Commit them in apps\/lunch-line\//);
+  assert.doesNotMatch(fs.readFileSync(path.join(dir, "locker", "gate.mjs"), "utf8"), /an old gate/);
+  const quietAgain = await run(["deploy", "lunch-line"]);
+  assert.doesNotMatch(quietAgain.out, /Updated the kit's files/, "nothing changed, nothing said");
   // Request logging rides along: the file and the packages (the hub's start command loads them).
   assert.ok(fs.existsSync(path.join(dir, "locker", "otel.mjs")));
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")).dependencies["@opentelemetry/sdk-node"], "^0.223.0");

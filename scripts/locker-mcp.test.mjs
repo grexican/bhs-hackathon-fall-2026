@@ -136,6 +136,7 @@ test("deploy uploads and points at the live URL and the build logs", async () =>
   assert.equal(r.isError, false, r.text);
   assert.match(r.text, /https:\/\/lunch-line-production\.up\.railway\.app/);
   assert.match(r.text, /locker_logs/);
+  assert.match(r.text, /may say "Application not found"[\s\S]*\/health says ok/);
   assert.match(r.text, /token present/);
 });
 
