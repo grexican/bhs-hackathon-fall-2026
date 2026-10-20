@@ -64,7 +64,10 @@ this way (and also sets `PORT`), so a custom Node server must read `process.env.
 
 ## Scaffold commands
 
-Run these from the folder where the app should live. Replace `my-app` with the app name.
+The app folder `apps/<codename>/` already exists (`npm run new-app`), so scaffolders that refuse a
+non-empty folder need a detour: run the command from `apps/` into `<codename>-tmp`, move its files into
+`apps/<codename>/` (keep our `AGENTS.md`, `docs/`, and merge `.gitignore`), then delete the temp folder.
+Replace `my-app` with `<codename>-tmp`.
 
 ### Vite (vanilla TS, React, and the base for games, 3D, charts)
 

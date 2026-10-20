@@ -20,3 +20,5 @@ builds/*
 # Local-only guard lists
 .provenance-terms
 .provenance-allow
+apps/*
+!apps/README.md

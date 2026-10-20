@@ -10,6 +10,7 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "onboard": "node scripts/onboard.mjs",
+    "new-app": "node scripts/new-app.mjs",
     "port": "node scripts/port.mjs",
     "shot": "node scripts/shot.mjs",
     "demo:new": "node scripts/demo.mjs new",
@@ -26,7 +27,13 @@
     "check": "node scripts/check.mjs",
     "check:names": "node scripts/check-provenance.mjs --all",
     "scan:agents": "agentshield scan --path . --min-severity medium",
-    "ai": "node kit/ai/cli.ts"
+    "ai": "node kit/ai/cli.ts",
+    "locker:connect": "node scripts/locker.mjs connect",
+    "locker:project": "node scripts/locker.mjs project",
+    "locker:env": "node scripts/locker.mjs env",
+    "locker:status": "node scripts/locker.mjs status",
+    "deploy": "node scripts/locker.mjs deploy",
+    "test": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
     "@playwright/cli": "^0.1.21",
