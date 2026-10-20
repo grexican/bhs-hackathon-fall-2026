@@ -120,6 +120,55 @@ test("deploy: runs railway up with the project token, never shows it", async () 
   assert.match(r.out, /token present/);
   assert.doesNotMatch(r.out, new RegExp(RW_TOKEN));
   assert.match(r.out, /lunch-line-production\.up\.railway\.app/);
+  // Request logging rides along: the file and the packages (the hub's start command loads them).
+  assert.ok(fs.existsSync(path.join(dir, "locker", "otel.mjs")));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")).dependencies["@opentelemetry/sdk-node"], "^0.223.0");
+  assert.match(r.out, /no "start" script/);
+});
+
+test("deploy: LOCKER_OTEL=0 leaves the app alone", async () => {
+  const dir = path.join(kit, "apps", "otel-off");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(path.join(kit, "apps", "lunch-line", ".env"), path.join(dir, ".env"));
+  mergeEnv(path.join(dir, ".env"), { LOCKER_OTEL: "0" });
+  fs.writeFileSync(path.join(dir, "package.json"), "{}");
+  const r = await run(["deploy", "otel-off"]);
+  assert.equal(r.code, 0, r.out);
+  assert.ok(!fs.existsSync(path.join(dir, "locker", "otel.mjs")));
+  assert.equal(fs.readFileSync(path.join(dir, "package.json"), "utf8"), "{}");
+});
+
+test("logs: --errors and --find become one Railway filter", async () => {
+  const { logFlags } = await import("./locker.mjs");
+  assert.deepEqual(logFlags({ errors: true }), ["--filter", '"@level:error"']);
+  assert.deepEqual(logFlags({ build: true, find: 'POST "/order" $(x)' }), ["--build", "--filter", '"POST  /order   (x)"']);
+  assert.deepEqual(logFlags({}), []);
+});
+
+test("request logging prints one line per request and per outgoing call, without query strings", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "otel-"));
+  fs.mkdirSync(path.join(dir, "locker"));
+  fs.copyFileSync(path.join(path.dirname(SCRIPT), "..", "kit", "locker", "otel.mjs"), path.join(dir, "locker", "otel.mjs"));
+  fs.writeFileSync(path.join(dir, "package.json"), '{"type":"module"}');
+  fs.writeFileSync(
+    path.join(dir, "server.js"),
+    `import http from "node:http";
+const s = http.createServer((req, res) => { res.statusCode = req.url.startsWith("/bad") ? 500 : 200; res.end("x"); });
+s.listen(0, async () => {
+  const base = "http://127.0.0.1:" + s.address().port;
+  for (const p of ["/ok?token=secret", "/bad", "/health"]) await fetch(base + p).then((r) => r.text());
+  setTimeout(() => process.exit(0), 100);
+});`,
+  );
+  const out = await new Promise((resolve) =>
+    execFile(process.execPath, ["server.js"], { cwd: dir, env: { ...process.env, NODE_OPTIONS: "--import=./locker/otel.mjs", npm_lifecycle_event: "" } }, (err, stdout, stderr) => resolve(stdout + stderr)),
+  );
+  const lines = out.trim().split("\n").map((l) => JSON.parse(l));
+  assert.match(lines[0].message, /Request logging on \(built-in\)/);
+  const incoming = lines.filter((l) => l.kind === "request").map((l) => `${l.level} ${l.target} ${l.status}`);
+  assert.deepEqual(incoming, ["info /ok 200", "error /bad 500"], "health checks stay quiet");
+  assert.equal(lines.filter((l) => l.kind === "outgoing").length, 3);
+  assert.doesNotMatch(out, /secret/);
 });
 
 test('deploy: "Deploy failed" with exit 0 still counts as a failure', async () => {

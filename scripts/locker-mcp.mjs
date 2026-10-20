@@ -271,15 +271,18 @@ server.registerTool(
 server.registerTool(
   "locker_logs",
   {
-    description: "Shows the latest log lines of a deployed app: the running app by default, or the build with build: true.",
+    description:
+      "Shows the latest log lines of a deployed app: the running app by default, or the build with build: true. The running app logs one JSON line per request and per outgoing call (AI, APIs), with level error for failures and crashes (with the stack). Use errors: true to see only what broke.",
     inputSchema: {
       codename,
       build: z.boolean().optional().describe("true for the build logs (why a deploy failed); false or left out for the running app."),
       lines: z.number().int().min(1).max(500).optional().describe("How many lines, default 50."),
+      errors: z.boolean().optional().describe("true for only errors: failed requests, failed AI/API calls and crashes."),
+      find: z.string().max(100).optional().describe("Only lines containing this text, like a path (/api/order) or an error message."),
     },
   },
-  tool(async ({ codename, build = false, lines = 50 }) => {
-    const text = lastLines(readLogs(codename, { build, lines }), lines);
+  tool(async ({ codename, build = false, lines = 50, errors = false, find }) => {
+    const text = lastLines(readLogs(codename, { build, lines, errors, find }), lines);
     return text ? `Last ${build ? "build" : "app"} logs for ${codename}:\n${text}` : `No ${build ? "build" : "app"} logs for ${codename} yet. Deploy first with locker_deploy, or try again in a minute.`;
   }),
 );

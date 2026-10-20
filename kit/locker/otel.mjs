@@ -1,8 +1,9 @@
 // Request logs for your app, one line each, in the Railway logs (npm run locker:logs -- <codename>).
 // Every page load and every call your app makes (to the AI, to an API) becomes one line:
 //   {"level":"info","message":"GET /api/menu 200 34ms",...}    {"level":"error","message":"POST /order 500 12ms",...}
-// Crashes get their full error printed too. Nothing to change in your code: the deploy turns it on
-// with NODE_OPTIONS=--import=./locker/otel.mjs. LOCKER_OTEL=0 turns it off.
+// Crashes get their full error printed too. Nothing to change in your code: `npm run deploy` copies
+// this file in, and the server starts your app with it. On your laptop:
+// node --import ./locker/otel.mjs server.js. LOCKER_OTEL=0 turns it off.
 //
 // With the OpenTelemetry packages installed (the deploy adds them) this is real OpenTelemetry:
 // set OTEL_EXPORTER_OTLP_ENDPOINT later and the same traces go to any tracing service instead.
@@ -54,7 +55,7 @@ async function startOpenTelemetry() {
         const target = server ? pathOnly(a["url.path"] ?? a["http.target"]) : `${a["server.address"] ?? a["net.peer.name"] ?? ""}${pathOnly(a["url.path"] ?? "")}`;
         if (server && quiet.has(target)) continue;
         const error = s.status?.code === 2 ? s.status.message || s.events?.find((e) => e.name === "exception")?.attributes?.["exception.message"] || "error" : undefined;
-        requestLine({ kind: server ? "in" : "out", method, target, status, ms, error: status >= 400 && !error ? undefined : error, traceId: s.spanContext().traceId });
+        requestLine({ kind: server ? "in" : "out", method, target, status, ms, error: status ? undefined : error, traceId: s.spanContext().traceId });
       }
       done({ code: 0 });
     },
@@ -96,7 +97,12 @@ function startBuiltin() {
   return "built-in";
 }
 
-if (process.env.LOCKER_OTEL !== "0" && !globalThis.__lockerOtel) {
+// NODE_OPTIONS also reaches npm itself and build scripts (npm ci, npm run build): only servers need this.
+const tool = /[\\/](npm|npx|pnpm|yarn|corepack)(-cli)?(\.c?js)?$/i.test(process.argv[1] ?? "");
+const script = process.env.npm_lifecycle_event;
+const server = !tool && (!script || /^(start|dev|serve|preview)/.test(script));
+
+if (server && process.env.LOCKER_OTEL !== "0" && !globalThis.__lockerOtel) {
   globalThis.__lockerOtel = true;
   crashes();
   let mode;

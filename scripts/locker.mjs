@@ -7,7 +7,7 @@
 //   npm run locker:set -- <codename> KEY=VALUE [KEY=VALUE...]   (app settings on the server, no redeploy)
 //   npm run locker:env -- <codename>
 //   npm run locker:status -- [codename]
-//   npm run locker:logs -- <codename> [--build]
+//   npm run locker:logs -- <codename> [--build] [--errors] [--find "text"]
 //   npm run deploy -- <codename>
 // LOCKER_URL (env or kit .env) overrides the hub address. Tokens are written to .env files, never printed.
 import { spawn, spawnSync } from "node:child_process";
@@ -259,6 +259,7 @@ export function deployApp(codename, io = quiet) {
     throw new HubError(`apps/${codename}/ has no package.json or index.html yet, so there's nothing to run. Build the app first.`, 0);
   }
   const { e, childEnv } = railwayArgs(codename);
+  addRequestLogging(codename, io);
   io.log(`Uploading apps/${codename}/ to its hosting slot. Railway builds it from source…`);
   const run = spawnSync("railway", ["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, shell: true, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
@@ -268,6 +269,45 @@ export function deployApp(codename, io = quiet) {
     throw Object.assign(new HubError(`The upload didn't go through (see above). Watch the build with: npm run locker:logs -- ${codename} --build`, 0), { output });
   }
   return { output, appUrl: e.APP_URL };
+}
+
+// Request logging (kit/locker/otel.mjs): one log line per request and per outgoing call, read with
+// `npm run locker:logs`. Real OpenTelemetry once these are installed; a built-in fallback until then.
+export const OTEL_PACKAGES = {
+  "@opentelemetry/sdk-node": "^0.223.0",
+  "@opentelemetry/sdk-trace-base": "^2.12.0",
+  "@opentelemetry/instrumentation-http": "^0.223.0",
+  "@opentelemetry/instrumentation-undici": "^0.33.0",
+};
+export const OTEL_NODE_OPTION = "--import=./locker/otel.mjs";
+
+/**
+ * Before each deploy of a Node app: refresh locker/otel.mjs from the kit, make sure package.json
+ * lists the OpenTelemetry packages. The hub's start command for the project loads it.
+ * LOCKER_OTEL=0 in the app's .env skips all of it.
+ */
+export function addRequestLogging(codename, io = quiet) {
+  const dir = appDir(codename);
+  const pkgFile = path.join(dir, "package.json");
+  if (!fs.existsSync(pkgFile)) return false; // a plain HTML site has no Node process to watch
+  const env = readEnv(path.join(dir, ".env"));
+  if (env.LOCKER_OTEL === "0") return false;
+  fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
+  fs.copyFileSync(fileURLToPath(new URL("../kit/locker/otel.mjs", import.meta.url)), path.join(dir, "locker", "otel.mjs"));
+  const raw = fs.readFileSync(pkgFile, "utf8");
+  const pkg = JSON.parse(raw);
+  const missing = Object.keys(OTEL_PACKAGES).filter((name) => !pkg.dependencies?.[name]);
+  if (missing.length) {
+    pkg.dependencies = { ...pkg.dependencies };
+    for (const name of missing) pkg.dependencies[name] = OTEL_PACKAGES[name];
+    fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""));
+    io.log(`Added request logging to package.json (locker/otel.mjs). Run npm install in apps/${codename}/ to use it on your laptop too.`);
+  }
+  // The hub gives every project a start command that loads locker/otel.mjs when it's there (not a
+  // NODE_OPTIONS setting: Railway hands settings to the build too, before this file exists). It runs
+  // `npm start`, so the app needs a start script.
+  if (!pkg.scripts?.start) io.log(`Heads up: package.json has no "start" script, so the server won't know how to run the app. Add one, like "start": "node server.js".`);
+  return true;
 }
 
 /** Sets app settings on the server (no redeploy) and in apps/<codename>/.env. Returns the key names. */
@@ -289,10 +329,17 @@ export function setSettings(codename, values, io = quiet) {
 }
 
 /** The last `lines` log lines (build or runtime), token masked. Fetches instead of streaming, for tools. */
-export function readLogs(codename, { build = false, lines = 50 } = {}) {
+/** Railway log flags: build logs, only errors (the request log marks failures level "error"), or a text search. */
+export function logFlags({ build = false, errors = false, find } = {}) {
+  // spawnSync runs through a shell (cmd.exe on Windows), so the filter goes in double quotes with none inside.
+  const filter = [errors && "@level:error", find && String(find).replace(/["%^&|<>`$\\]/g, " ").trim()].filter(Boolean).join(" ");
+  return [...(build ? ["--build"] : []), ...(filter ? ["--filter", `"${filter}"`] : [])];
+}
+
+export function readLogs(codename, { build = false, lines = 50, errors = false, find } = {}) {
   checkCodename(codename);
   const { e, childEnv } = railwayArgs(codename);
-  const extra = build ? ["--build"] : [];
+  const extra = logFlags({ build, errors, find });
   const run = spawnSync("railway", ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra, "--lines", String(lines)], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8", timeout: 60_000 });
   return `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
 }
@@ -430,7 +477,7 @@ async function list(args) {
 function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
-  const extra = args.includes("--build") ? ["--build"] : [];
+  const extra = logFlags({ build: args.includes("--build"), errors: args.includes("--errors"), find: flag(args, "find") });
   const run = spawnSync("railway", ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra], { cwd: appDir(codename), env: childEnv, shell: true, stdio: "inherit" });
   process.exitCode = run.status ?? 1;
 }

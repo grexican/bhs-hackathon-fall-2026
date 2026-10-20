@@ -40,8 +40,8 @@ When the student confirms, change only what's needed to fix the specific error. 
 
 ## Works on my laptop, broken online
 
-Get the server's own error first: `npm run locker:logs -- <codename>` (add `--build` if the deploy
-failed). The usual causes, in order: listening on a fixed port instead of `PORT`, saving the
+Get the server's own error first: `npm run locker:logs -- <codename> --errors` (add `--build` if the
+deploy failed). Each failed request, failed AI/API call and crash is one line there, with the stack. The usual causes, in order: listening on a fixed port instead of `PORT`, saving the
 database or files somewhere other than `/data`, a setting that's in the laptop's `.env` but not on
 the server (`npm run locker:set`), and a missing `start` script. `/ship` has the full checklist.
 
