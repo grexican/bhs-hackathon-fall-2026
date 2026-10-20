@@ -18,7 +18,7 @@ const outputs = []; // every tool result text, for the secrets check at the end
 before(async () => {
   mock = await startMockHub();
   client = new Client({ name: "locker-mcp-test", version: "1.0.0" });
-  // A short connect wait, so the first locker_connect hands back "Still waiting" before the mock approves.
+  // A short check wait, so the first locker_connect_check hands back "Still waiting" before the mock approves.
   const transport = new StdioClientTransport({ command: process.execPath, args: [SERVER], env: mock.env({ LOCKER_CONNECT_WAIT_MS: "30" }), stderr: "pipe" });
   await client.connect(transport);
 });
@@ -62,13 +62,15 @@ test("status before connecting says how to connect", async () => {
   assert.match(r.text, /locker_connect/);
 });
 
-test("connect: hands back the code while waiting, then check finishes it and saves the token", async () => {
+test("connect: returns the code at once, then check polls until approved and saves the token", async () => {
   const first = await call("locker_connect");
   assert.equal(first.isError, false, first.text);
-  assert.match(first.text, /Still waiting/);
+  assert.match(first.text, /Show the student this code/);
   assert.match(first.text, /KQ7-4PX/);
   assert.match(first.text, /locker_connect_check/);
-  let r = first;
+  let r = await call("locker_connect_check");
+  assert.match(r.text, /Still waiting/);
+  assert.match(r.text, /locker_connect_check again/);
   for (let i = 0; i < 20 && !/Connected as/.test(r.text); i++) r = await call("locker_connect_check");
   assert.match(r.text, /Connected as Ana/);
   assert.equal(readEnv(path.join(mock.kit, ".env")).LOCKER_TOKEN, TOKEN);

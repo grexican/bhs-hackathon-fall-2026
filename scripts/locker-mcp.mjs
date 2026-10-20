@@ -30,8 +30,8 @@ import {
 import { CODENAME } from "./new-app.mjs";
 
 const NEW_APP = path.join(path.dirname(fileURLToPath(import.meta.url)), "new-app.mjs");
-// How long locker_connect / locker_connect_check wait for the student to click Connect before handing back.
-const CONNECT_WAIT_MS = Number(process.env.LOCKER_CONNECT_WAIT_MS ?? 110_000);
+// How long one locker_connect_check call waits for the student to click Connect before handing back.
+const CONNECT_WAIT_MS = Number(process.env.LOCKER_CONNECT_WAIT_MS ?? 60_000);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- keeping secrets out ----------
@@ -118,7 +118,7 @@ async function waitForApproval() {
     pending = null;
     throw new HubError("The sign-in code expired before it was approved. Call locker_connect again for a new code.", 0);
   }
-  return `Still waiting. Ask the student to open ${pending.url}, sign in with their school Google account, check the code ${pending.code} matches, and click Connect. Then call locker_connect_check.`;
+  return `Still waiting for the student to click Connect (code ${pending.code}, page ${pending.url}). Call locker_connect_check again.`;
 }
 
 // ---------- the tools ----------
@@ -143,7 +143,7 @@ server.registerTool(
   "locker_connect",
   {
     description:
-      "Connects this laptop to the hub: opens the browser for the student to sign in with their school Google account and approve a code, then waits up to ~2 minutes. Saves the sign-in to the kit .env itself. If it says 'Still waiting', call locker_connect_check.",
+      "Starts connecting this laptop to the hub: opens the browser and returns right away with the sign-in page and a code to show the student. Then call locker_connect_check, which finishes the sign-in and saves it to the kit .env itself.",
   },
   tool(async () => {
     if (isConnected()) {
@@ -163,13 +163,13 @@ server.registerTool(
       expiresAt: Date.now() + (start.expiresIn ?? 900) * 1000,
     };
     openBrowser(start.url);
-    return waitForApproval();
+    return `Show the student this code: ${start.code}. Ask them to sign in with their school Google account at ${start.url} (it should have opened in the browser), check the code matches, and click Connect. Then call locker_connect_check.`;
   }),
 );
 
 server.registerTool(
   "locker_connect_check",
-  { description: "Keeps waiting (up to ~2 minutes) for the student to approve the sign-in that locker_connect started." },
+  { description: "Waits (up to ~1 minute per call) for the student to approve the sign-in that locker_connect started, then saves it. If it says still waiting, call it again." },
   tool(async () => {
     if (!pending) {
       return isConnected() ? "Already connected. Use locker_status to see the account." : "No sign-in is waiting. Call locker_connect to start one.";
