@@ -17,6 +17,12 @@ Read what exists in `apps/<codename>/docs/`: `idea.md` (the one thing, the "late
 `npm run locker:feedback -- <codename>`; `--new` for unread) and quote testers' own words. Then tell the student in 3 lines max: what's working, what's not, and what we
 don't know yet.
 
+**Did the last pick work?** If `docs/decisions.md` has an earlier pick with a "how we'll know" line,
+grade it first, with one word and a number: **HIT** (it reached the target, and you can point to
+where you saw it), **MISS** (it didn't: say by how much and the most likely reason), or **UNMEASURED**
+(nobody checked or nothing counted it). Write the verdict under that decision. A MISS is useful, not
+a failure; an UNMEASURED means the next pick needs a way to count it (`share-it` has a counter).
+
 No tester feedback yet? Say so: the best next step is almost always `/test-with-a-friend`, not a feature.
 
 ## 2. Offer 2–3 options

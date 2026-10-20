@@ -152,7 +152,8 @@ product needs another stack (`--bare` skips it). The rules that apply to every s
 | "I have to present" | `/pitch`. |
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
-| "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). |
+| "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). If it reads users' text or the app's data: `ai-safety`. |
+| "Calculate / count / check if…" | `test-first`: one small test that says what right looks like, then the code. |
 | "Deploy it" | `/ship` (after `/connect`). Their own Railway slot from the hub, static sites included. |
 
 ## Code style

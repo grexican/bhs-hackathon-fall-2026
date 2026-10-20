@@ -79,7 +79,8 @@ memorable moment. No default look. If they want a name-brand feel (logo, colors,
 Before feature code, use **`providers-and-services`**: list every outside capability the idea touches
 (messaging, payments, email, AI, maps…). Each gets a provider interface and a **simulator** that works
 today, plus seed data. If it uses AI, copy `kit/ai` into the server code (`ai-kit`); decisions and
-routing go to Jev (`jev-decisions`). Tell the student which parts are simulated and what "going real"
+routing go to Jev (`jev-decisions`). If the AI reads what users type or other outside text, follow
+`ai-safety` from the first version. Tell the student which parts are simulated and what "going real"
 will take later.
 
 ## 5. Build the smallest impressive version

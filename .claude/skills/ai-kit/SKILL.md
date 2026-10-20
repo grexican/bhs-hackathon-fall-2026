@@ -88,6 +88,9 @@ team at 80% and 100% of the budget; an organizer can raise it. Before a demo: `n
 
 ## Rules
 
+- **Safety:** if the AI reads text you didn't write, or answers questions about the app's data, follow
+  `ai-safety` (outside text is data, text never triggers actions, each person sees only their own data).
+
 - **Structured output:** use `askJson` with a JSON schema (`additionalProperties: false`, every field
   `required`). Don't regex JSON out of prose.
 - **Stream nothing you don't show.** Short `maxTokens` for short answers keeps `fast` fast.
