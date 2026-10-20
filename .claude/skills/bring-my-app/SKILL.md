@@ -24,8 +24,13 @@ One question at a time. Never delete or overwrite their original.
    is), no Docker needed. Secrets they had in code move to `.env`. Explain each change in one line.
 6. **Write `apps/<codename>/docs/idea.md`**: what it does, who it's for, what's next.
 7. Offer **`/connect`** (hosting slot + AI key) and then **`/ship`**.
-8. Staying hosted where it is (another host, another stack)? It can still use the school sign-in: an
-   organizer registers its address on the hub, then follow `school-sign-in` (Express, Hono, Next.js, Python).
+8. **Staying hosted where it is** (another host, another stack)? It can still join the program (a page on
+   the hub, the school sign-in, tester feedback, a place in Apps). Ask for it in one step:
+   `npm run locker:bring -- <codename> --url https://its-address --name "Its Name"` (or the `locker_bring_app`
+   tool, or "Bring an app you already host" on My Locker). An organizer approves it; the student gets an
+   email. Optional, makes approval quicker: serve the token it prints at `https://<host>/.well-known/locker-verify.txt`.
+   After approval: `mkdir apps/<codename>` and `npm run locker:join -- <codename>` for its settings, then
+   `school-sign-in`. `npm run locker:bring` (no codename) shows where requests stand.
 
 If it's not a web app (a mobile-only app, a Python script, a game engine project), say what the
 kit can and can't do for it today, and suggest the web version or a web companion page.

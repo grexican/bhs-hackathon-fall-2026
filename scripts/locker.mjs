@@ -661,7 +661,7 @@ const [cmd, ...rest] = process.argv.slice(2);
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list|feedback> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list|feedback|bring> [codename]");
     process.exit(1);
   }
   Promise.resolve().then(() => fn(rest)).catch((err) => {

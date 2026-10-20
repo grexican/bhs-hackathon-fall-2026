@@ -26,6 +26,8 @@ import {
   pullEnv,
   readEnv,
   formatFeedback,
+  myAppRequests,
+  requestApp,
   readFeedback,
   readLogs,
   saveListing,
@@ -315,6 +317,29 @@ server.registerTool(
     if (iconFile || iconFromApp) await setIcon(codename, { file: iconFile, fromApp: Boolean(iconFromApp) });
     if (!l.listed) return `${codename} isn't listed in the Apps directory anymore.`;
     return `${codename} is listed in the Apps directory: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}). Its hub page shows opens and installs.`;
+  }),
+);
+
+server.registerTool(
+  "locker_bring_app",
+  {
+    description:
+      "Asks to bring an app the student already hosts somewhere else (its own https address) into the program: a page on the hub, the school sign-in, tester feedback, a place in Apps. An organizer approves it and the student gets an email; then locker_join_project gives its settings. Without a codename, lists the student's requests and where they stand.",
+    inputSchema: {
+      codename: codename.optional(),
+      url: z.string().url().optional().describe("The app's address, https only, no port, like https://lunch-line.example.com"),
+      name: z.string().min(1).max(60).optional().describe("Display name, like Lunch Line."),
+      pitch: z.string().max(300).optional().describe("One sentence on what it does."),
+    },
+  },
+  tool(async ({ codename, url, name, pitch }) => {
+    if (!codename) {
+      const reqs = await myAppRequests();
+      return reqs.length ? reqs.map((r) => `- ${r.name} (${r.codename}): ${r.status}${r.note ? ` (${r.note})` : ""} ${r.url}`).join("\n") : "No requests yet.";
+    }
+    if (!url) throw new HubError("Give the app's address (url), like https://your-app.example.com", 0);
+    const r = await requestApp({ codename, url, name, pitch });
+    return `Asked to bring ${r.name} (${r.codename}) from ${r.url}. An organizer approves it on the hub; the student gets an email. Optional, makes approval quicker: serve the line ${r.verify.token} at ${r.verify.file}. Check status with locker_bring_app (no codename).`;
   }),
 );
 

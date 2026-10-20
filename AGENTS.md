@@ -61,7 +61,7 @@ Details: `providers-and-services` → "Incubator services".
 
 **AI tools (MCP):** the kit registers a local `bhs-locker` server (`scripts/locker-mcp.mjs`, in `.mcp.json`
 and `.cursor/mcp.json`). Its tools (`locker_status`, `locker_connect`, `locker_create_project`, `locker_join_project`,
-`locker_pull_env`, `locker_set`, `locker_deploy`, `locker_logs`, `locker_list_app`, `locker_feedback`, `new_app`) write `.env` files themselves and
+`locker_pull_env`, `locker_set`, `locker_deploy`, `locker_logs`, `locker_list_app`, `locker_feedback`, `locker_bring_app`, `new_app`) write `.env` files themselves and
 never return keys. Prefer them over the npm commands when they're available.
 
 ## AI in apps
@@ -126,7 +126,7 @@ product needs another stack (`--bare` skips it). The rules that apply to every s
 | `npm run setup` | One-time: install tools, the Playwright browser, and git hooks. |
 | `npm run doctor` | Checks the laptop (Node, git, npm, Railway tool, hub connection) and gives one fix per problem. |
 | `npm run new-app -- <codename>` | Make `apps/<codename>/`, its own git repo, with the starter app (`--bare`: empty). |
-| `npm run locker:connect / project / env / status / logs / list / feedback` | Talk to the incubator hub (`/connect`). |
+| `npm run locker:connect / project / env / status / logs / list / feedback / bring` | Talk to the incubator hub (`/connect`). |
 | `npm run deploy -- <codename>` | Upload the app to its hosting slot (`/ship`). |
 | `npm test` | The kit's own tests. |
 | `npm run port` | Print a free random port. |

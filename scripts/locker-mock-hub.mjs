@@ -73,6 +73,14 @@ export async function startMockHub() {
       p.retried = true;
       return send(201, { ...p.project, status: "provisioning" });
     }
+    if (url.pathname === "/api/app-requests") {
+      flags.requests ??= [];
+      if (req.method === "GET") return send(200, { requests: flags.requests });
+      if (!/^https:\/\/[^/:]+\/?$/.test(body.url ?? "")) return send(400, { error: "The app's address must start with https://" });
+      const r = { id: String(flags.requests.length + 1), codename: body.codename, name: body.name ?? body.codename, url: body.url.replace(/\/?$/, "/"), status: "pending", verify: { file: `${body.url.replace(/\/$/, "")}/.well-known/locker-verify.txt`, token: "locker-verify=tok123" } };
+      flags.requests.push(r);
+      return send(201, r);
+    }
     const fm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/feedback$/);
     if (req.method === "GET" && fm) {
       const p = projects.get(fm[1]);

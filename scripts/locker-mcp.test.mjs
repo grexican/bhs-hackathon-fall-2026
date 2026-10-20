@@ -41,6 +41,7 @@ test("lists every tool, each with a description", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
+    "locker_bring_app",
     "locker_connect",
     "locker_connect_check",
     "locker_create_project",
@@ -155,6 +156,13 @@ test("list_app: needs a tagline, then lists the app", async () => {
   assert.match(r.text, /listed in the Apps directory/);
   const bad = await call("locker_list_app", { codename: "lunch-line", category: "Homework" });
   assert.equal(bad.isError, true, "unknown category rejected before the hub");
+});
+
+test("bring_app asks for an app hosted elsewhere and lists requests", async () => {
+  const r = await call("locker_bring_app", { codename: "quiz-night", url: "https://quiz.example.com", name: "Quiz Night" });
+  assert.equal(r.isError, false, r.text);
+  assert.match(r.text, /Asked to bring Quiz Night/);
+  assert.match((await call("locker_bring_app", {})).text, /quiz-night\): pending/);
 });
 
 test("feedback reads the inbox as plain lines", async () => {

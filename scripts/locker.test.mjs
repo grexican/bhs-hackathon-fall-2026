@@ -375,3 +375,19 @@ test("deploy refreshes the kit files an app already has (gate, feedback, AI kit)
   assert.ok(!fs.existsSync(path.join(dir, "locker", "ai", "cli.ts")));
   assert.ok(!fs.existsSync(path.join(dir, "locker", "feedback.mjs")), "not added when the app never had it");
 });
+
+test("bring: asks to bring an app hosted elsewhere, shows the ownership line, then lists requests", async () => {
+  const missing = await run(["bring", "quiz-night"]);
+  assert.equal(missing.code, 1);
+  assert.match(missing.out, /--url https:/);
+  const bad = await run(["bring", "quiz-night", "--url", "http://quiz.example.com"]);
+  assert.equal(bad.code, 1);
+  assert.match(bad.out, /https/);
+  const r = await run(["bring", "quiz-night", "--url", "https://quiz.example.com", "--name", "Quiz Night"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Asked to bring Quiz Night \(quiz-night\)/);
+  assert.match(r.out, /https:\/\/quiz\.example\.com\/\.well-known\/locker-verify.txt/);
+  assert.match(r.out, /locker-verify=tok123/);
+  const list = await run(["bring"]);
+  assert.match(list.out, /Quiz Night \(quiz-night\): pending/);
+});
