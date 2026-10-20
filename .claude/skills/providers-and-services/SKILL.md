@@ -102,7 +102,9 @@ for BHS people uses **"Sign in with BHS"** (`locker` AuthProvider: redirect to
 `$LOCKER_URL/oauth/authorize?client_id=$LOCKER_APP_ID&redirect_uri=…&state=…`, then the server
 posts the `code` to `$LOCKER_URL/oauth/token` with `LOCKER_APP_SECRET` and gets `{ user: { sub, email, name } }`;
 key users by `sub`). An app for the public (families, expats) gets its own simple sign-in instead.
-Redirect URIs must be `http://localhost:*` or the app's Railway address.
+Redirect URIs must be `http://localhost:*` or the app's Railway address. It's standard OpenID Connect
+(discovery at `$LOCKER_URL/.well-known/openid-configuration`), so any login library works: `school-sign-in`
+has copy-paste setups for Express, Hono, Next.js (Auth.js) and Python (Authlib), including apps hosted elsewhere.
 
 ## Done means
 

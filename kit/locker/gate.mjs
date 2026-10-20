@@ -100,7 +100,7 @@ export async function gate(req, res) {
     const body = await r.json().catch(() => ({}));
     if (!r.ok || !body.user) {
       res.statusCode = 403;
-      res.end(`Sign-in didn't work: ${body.error ?? r.status}`);
+      res.end(`Sign-in didn't work: ${body.error_description ?? body.error ?? r.status}`);
       return null;
     }
     const token = seal({ ...body.user, exp: Math.floor(Date.now() / 1000) + 7 * DAY });

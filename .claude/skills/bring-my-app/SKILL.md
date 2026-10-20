@@ -24,6 +24,8 @@ One question at a time. Never delete or overwrite their original.
    is), no Docker needed. Secrets they had in code move to `.env`. Explain each change in one line.
 6. **Write `apps/<codename>/docs/idea.md`**: what it does, who it's for, what's next.
 7. Offer **`/connect`** (hosting slot + AI key) and then **`/ship`**.
+8. Staying hosted where it is (another host, another stack)? It can still use the school sign-in: an
+   organizer registers its address on the hub, then follow `school-sign-in` (Express, Hono, Next.js, Python).
 
 If it's not a web app (a mobile-only app, a Python script, a game engine project), say what the
 kit can and can't do for it today, and suggest the web version or a web companion page.
