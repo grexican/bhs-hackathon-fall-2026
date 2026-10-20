@@ -1,6 +1,6 @@
 # The BHS Incubator (organizers)
 
-The hub (the "Locker", `https://locker-production-7e62.up.railway.app`) turns a student's local
+The hub (the "Locker", `https://locker.bhslabs.org`) turns a student's local
 app into a live one without them making any account but their school Google sign-in. The
 kit talks to it through `scripts/locker.mjs`; the API contract lives with the hub (contract v1).
 

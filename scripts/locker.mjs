@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CODENAME, titleCase } from "./new-app.mjs";
 
-const DEFAULT_URL = "https://locker-production-7e62.up.railway.app";
+const DEFAULT_URL = "https://locker.bhslabs.org";
 // LOCKER_KIT_ROOT lets the tests point at a throwaway folder instead of the real kit.
 const ROOT = process.env.LOCKER_KIT_ROOT ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT_ENV = path.join(ROOT, ".env");

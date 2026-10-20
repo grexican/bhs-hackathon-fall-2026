@@ -17,10 +17,10 @@ If `$ARGUMENTS` already holds an idea or an Idea Lab link, skip to the matching 
 just this: **"Do you know what you want to build?"**
 
 - **No / not sure** → "Try the Idea Lab: browse ideas at
-  https://idea-lab-production-4afc.up.railway.app/examples or make your own at
-  https://idea-lab-production-4afc.up.railway.app/ — then paste the link here."
+  https://ideas.bhslabs.org/examples or make your own at
+  https://ideas.bhslabs.org/ — then paste the link here."
 - **Pasted an Idea Lab link** (`/s/<id>` or `/c/<id>`) → fetch
-  `https://idea-lab-production-4afc.up.railway.app/api/session/<id>` (JSON: `idea`, `research`,
+  `https://ideas.bhslabs.org/api/session/<id>` (JSON: `idea`, `research`,
   the questions and answers, and `spec` with `name, tagline, for, core, twist, features, screens,
   look, ai, weekend`) and the prototype at `/s/<id>/app`. Seed `docs/idea.md` from it. In step 1,
   **confirm** what the spec already answers ("Your spec says it's for ___. Still right?") instead of re-asking.
