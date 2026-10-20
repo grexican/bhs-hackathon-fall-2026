@@ -12,6 +12,8 @@ Say this (3 lines, no more):
 > monthly budget, email sending, and optional "Sign in with BHS". You sign in once with your school
 > Google account. Takes about a minute.
 
+If the `bhs-locker` tools are available, use them (they keep keys out of the chat); otherwise use the npm commands.
+
 Then, one step at a time:
 
 1. **Which app?** Find the codename (the folder in `apps/`). Only one? Use it and say so. None?

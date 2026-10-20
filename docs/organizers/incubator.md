@@ -16,6 +16,13 @@ kit talks to it through `scripts/locker.mjs`; the API contract lives with the hu
 4. **Costs**: `/admin` on the hub (organizer allowlist) shows students, projects, Railway and AI
    spend, refreshed hourly. Students see their own with `npm run locker:status`.
 
+## AI tools (MCP)
+
+`scripts/locker-mcp.mjs` is a local stdio MCP server (`bhs-locker`, registered in `.mcp.json` and `.cursor/mcp.json`;
+nothing to install beyond `npm run setup`). It runs the same functions as `locker.mjs`, so students' agents connect,
+create, pull keys, set, deploy and read logs through tools. It writes the `.env` files itself and its results never
+contain a token or key, so secrets stay out of the chat. Tests: `scripts/locker-mcp.test.mjs`.
+
 ## What the hub creates per project
 
 - A Railway project + service, a volume at `/data` (SQLite lives at `/data/app.db`), a public

@@ -1,6 +1,7 @@
 {
   "mcpServers": {
     "context7": { "url": "https://mcp.context7.com/mcp" },
-    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] }
+    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] },
+    "bhs-locker": { "command": "node", "args": ["${workspaceFolder}/scripts/locker-mcp.mjs"] }
   }
 }

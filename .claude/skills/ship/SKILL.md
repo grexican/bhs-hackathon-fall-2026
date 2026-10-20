@@ -8,6 +8,7 @@ argument-hint: "[codename]"
 
 Needs `/connect` first (`apps/<codename>/.env` has `RAILWAY_TOKEN`). If not, run `/connect`.
 One line to the student per step. Fix the app, not the platform.
+If the `bhs-locker` tools are available, use them (they keep keys out of the chat); otherwise use the npm commands.
 
 **Working as a team:** both of you can deploy the same project. Agree who ships. Commit and `git pull`
 first so you don't overwrite each other's changes.

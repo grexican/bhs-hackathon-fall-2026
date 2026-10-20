@@ -3,118 +3,28 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import fs from "node:fs";
-import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { mergeEnv, readEnv } from "./locker.mjs";
+import { RW_TOKEN, TOKEN, startMockHub } from "./locker-mock-hub.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "locker.mjs");
-const TOKEN = "lkr_test_secret_token";
-const RW_TOKEN = "rw_project_token_secret";
-const projects = new Map([
-  ["taken-app", { owner: "someone-else", members: [] }],
-  ["team-app", { owner: "someone-else", members: ["ana"], project: null }],
-]);
-projects.get("team-app").project = { codename: "team-app", name: "Team App", status: "ready", url: "https://team-app-production.up.railway.app", role: "member" };
-let approvalRequired = false;
-let polls = 0;
-
-const project = (codename, name) => ({
-  codename,
-  name,
-  status: "ready",
-  url: `https://${codename}-production.up.railway.app`,
-  railway: { projectId: "p1", serviceId: "svc-123", environmentId: "e1", dashboardUrl: "https://railway.com/project/p1", inviteUrl: "https://railway.com/invite/abc" },
-  ai: { monthlyLimitUsd: 5, usedUsd: 0.12 },
-  costs: { railwayUsdThisMonth: 0.04, aiUsdThisMonth: 0.12, updatedAt: "2026-10-20T00:00:00Z" },
-});
-
-const server = http.createServer(async (req, res) => {
-  const send = (status, body) => {
-    res.writeHead(status, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(body));
-  };
-  let raw = "";
-  for await (const chunk of req) raw += chunk;
-  const body = raw ? JSON.parse(raw) : {};
-  const url = new URL(req.url, "http://x");
-
-  if (req.method === "POST" && url.pathname === "/api/cli/start") {
-    assert.ok(body.device, "device name sent");
-    return send(200, { deviceId: "dev-1", code: "KQ7-4PX", url: "http://hub/connect?code=KQ7-4PX", interval: 0.02, expiresIn: 5 });
-  }
-  if (url.pathname === "/api/cli/poll") {
-    polls++;
-    return send(200, polls < 3 ? { status: "pending" } : { status: "approved", token: TOKEN, student: { email: "ana@bhsschools.org", name: "Ana" } });
-  }
-  if (req.headers.authorization !== `Bearer ${TOKEN}`) return send(401, { error: "Not signed in." });
-  if (url.pathname === "/api/me") {
-    const mine = [...projects.values()].filter((p) => p.owner === "ana" || p.members?.includes("ana")).map((p) => p.project);
-    return send(200, { student: { email: "ana@bhsschools.org", name: "Ana" }, projects: mine });
-  }
-  if (req.method === "POST" && url.pathname === "/api/projects") {
-    if (!/^[a-z0-9-]{3,30}$/.test(body.codename)) return send(400, { error: "Bad codename." });
-    if (approvalRequired) return send(403, { error: "Making projects needs an organizer's OK first." });
-    if (projects.has(body.codename)) return send(409, { error: "That codename is taken. Pick another one." });
-    // First answer is "provisioning", like the real hub while Railway spins up.
-    projects.set(body.codename, { owner: "ana", project: { ...project(body.codename, body.name), role: "owner" }, body });
-    return send(201, { ...project(body.codename, body.name), status: "provisioning" });
-  }
-  const m = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)(\/env)?$/);
-  if (m) {
-    const p = projects.get(m[1]);
-    if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
-    if (!m[2]) return send(200, p.project);
-    return send(200, {
-      env: {
-        RAILWAY_TOKEN: RW_TOKEN,
-        RAILWAY_SERVICE_ID: "svc-123",
-        OPENROUTER_API_KEY: "or-app-key",
-        LOCKER_URL: "http://hub",
-        LOCKER_APP_ID: "app_1",
-        LOCKER_APP_SECRET: "app_secret",
-        DATABASE_PATH: "/data/app.db",
-      },
-    });
-  }
-  send(404, { error: "Not found." });
-});
-
+let mock;
 let kit;
-let bin;
-let hub;
+let projects;
 
 before(async () => {
-  await new Promise((r) => server.listen(0, "127.0.0.1", r));
-  hub = `http://127.0.0.1:${server.address().port}`;
-  kit = fs.mkdtempSync(path.join(os.tmpdir(), "locker-kit-"));
-  fs.writeFileSync(path.join(kit, ".env"), "# my notes\nOPENROUTER_API_KEY=sk-or-root\n");
-  // A fake `railway` that records how it was called and whether it got the token.
-  bin = fs.mkdtempSync(path.join(os.tmpdir(), "locker-bin-"));
-  fs.writeFileSync(
-    path.join(bin, "fake-railway.mjs"),
-    `const fail = process.env.FAKE_RAILWAY_FAIL;
-console.log("railway " + process.argv.slice(2).join(" "));
-console.log("token " + (process.env.RAILWAY_TOKEN === "${RW_TOKEN}" ? "present" : "missing"));
-if (fail) console.log("Deploy failed");`,
-  );
-  fs.writeFileSync(path.join(bin, "railway.cmd"), `@node "%~dp0fake-railway.mjs" %*\r\n`);
-  fs.writeFileSync(path.join(bin, "railway"), `#!/bin/sh\nnode "$(dirname "$0")/fake-railway.mjs" "$@"\n`, { mode: 0o755 });
+  mock = await startMockHub();
+  ({ kit, projects } = mock);
 });
 
-after(() => {
-  server.close();
-  fs.rmSync(kit, { recursive: true, force: true });
-  fs.rmSync(bin, { recursive: true, force: true });
-});
+after(() => mock.close());
 
 function run(args, extraEnv = {}) {
-  const env = { ...process.env, LOCKER_URL: hub, LOCKER_KIT_ROOT: kit, LOCKER_NO_BROWSER: "1", LOCKER_POLL_MS: "10", PATH: `${bin}${path.delimiter}${process.env.PATH}`, ...extraEnv };
-  delete env.LOCKER_TOKEN;
   return new Promise((resolve) => {
-    execFile(process.execPath, [SCRIPT, ...args], { env }, (err, stdout, stderr) => resolve({ code: err ? err.code : 0, out: stdout + stderr }));
+    execFile(process.execPath, [SCRIPT, ...args], { env: mock.env(extraEnv) }, (err, stdout, stderr) => resolve({ code: err ? err.code : 0, out: stdout + stderr }));
   });
 }
 
@@ -259,10 +169,10 @@ test("join: a member with the code gets the env bundle, and status shows roles",
 });
 
 test("project: builder-approval 403 is shown as-is plus what to do", async () => {
-  approvalRequired = true;
+  mock.flags.approvalRequired = true;
   fs.mkdirSync(path.join(kit, "apps", "new-thing"), { recursive: true });
   const r = await run(["project", "new-thing"]);
-  approvalRequired = false;
+  mock.flags.approvalRequired = false;
   assert.equal(r.code, 1);
   assert.match(r.out, /needs an organizer's OK/);
   assert.match(r.out, /Tell an organizer your school email\./);

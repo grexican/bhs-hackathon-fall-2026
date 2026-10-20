@@ -6,7 +6,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+// LOCKER_KIT_ROOT: the same test hook as locker.mjs (the MCP tests scaffold into a throwaway folder).
+const ROOT = process.env.LOCKER_KIT_ROOT ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const CODENAME = /^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/;
 export const titleCase = (codename) => codename.split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

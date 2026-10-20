@@ -54,6 +54,11 @@ After `/connect`, every app gets real services from the BHS Incubator hub (setti
 
 Details: `providers-and-services` → "Incubator services".
 
+**AI tools (MCP):** the kit registers a local `bhs-locker` server (`scripts/locker-mcp.mjs`, in `.mcp.json`
+and `.cursor/mcp.json`). Its tools (`locker_status`, `locker_connect`, `locker_create_project`, `locker_join_project`,
+`locker_pull_env`, `locker_set`, `locker_deploy`, `locker_logs`, `new_app`) write `.env` files themselves and
+never return keys. Prefer them over the npm commands when they're available.
+
 ## AI in apps
 
 - Use `kit/ai` (`ai-kit` skill). Ask for a **tier** (`lite`, `fast`, `smart`, `thinking`, `vision`,

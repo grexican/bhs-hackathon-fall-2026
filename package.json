@@ -33,6 +33,7 @@
     "locker:join": "node scripts/locker.mjs join",
     "locker:set": "node scripts/locker.mjs set",
     "locker:env": "node scripts/locker.mjs env",
+    "locker:logs": "node scripts/locker.mjs logs",
     "locker:status": "node scripts/locker.mjs status",
     "deploy": "node scripts/locker.mjs deploy",
     "test": "node --test scripts/*.test.mjs"
@@ -41,5 +42,9 @@
     "@playwright/cli": "^0.1.21",
     "ecc-agentshield": "^1.6.0",
     "playwright": "^1.55.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.7"
   }
 }
