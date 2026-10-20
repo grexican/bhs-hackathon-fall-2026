@@ -5,6 +5,7 @@
 //   npm run ai -- decide "i was charged twice"  a Jev demo: yes/no + pick-one + scale in one call
 //   npm run ai -- image "a neon skateboard" [out.png]
 import fs from "node:fs";
+import path from "node:path";
 import { choice, decide, jevEnabled } from "./jev.ts";
 import { ask, image, provider } from "./llm.ts";
 import { JEV_MODEL, resolveTier, TIERS, type Tier } from "./models.ts";
@@ -70,7 +71,7 @@ async function main() {
     const [prompt, out = "tmp/image.png"] = rest;
     const r = await image(prompt);
     const [, b64] = r.dataUrl.split(",");
-    fs.mkdirSync("tmp", { recursive: true });
+    fs.mkdirSync(path.dirname(out), { recursive: true });
     const file = r.simulated ? out.replace(/\.\w+$/, ".svg") : out;
     fs.writeFileSync(file, Buffer.from(b64, "base64"));
     console.log(`saved ${file} — ${r.model}, ${r.ms}ms, ${money(r.cost)}`);

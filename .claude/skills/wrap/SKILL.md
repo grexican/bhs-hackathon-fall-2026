@@ -22,6 +22,10 @@ If unclear, ask once via `AskUserQuestion`: "Push after committing?" with option
 
 ## Workflow
 
+**Which repo?** App work lives in `apps/<codename>/`, its own git repo: run every git command
+below inside that folder (`git -C apps/<codename> …`). It has no GitHub remote until they add one,
+so for `push` without a remote, say so in one line and just commit.
+
 ### 1. See what's changed
 
 Run:

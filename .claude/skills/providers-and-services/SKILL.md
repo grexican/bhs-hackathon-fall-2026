@@ -44,8 +44,8 @@ src/
   sim/              simulator UIs: the fake phone, fake inbox, fake payment sheet
 ```
 
-Worked example (interface, simulator, real provider, service, simulator UI):
-`.claude/skills/providers-and-services/examples/messaging/`.
+Worked examples (interface, simulator, real provider; messaging adds a service and simulator UI):
+`.claude/skills/providers-and-services/examples/messaging/` and `examples/email/` (sim + the hub relay).
 
 ## Rules
 
@@ -74,15 +74,35 @@ Worked example (interface, simulator, real provider, service, simulator UI):
 | The idea needs | Provider | Simulator |
 |---|---|---|
 | WhatsApp / SMS / Telegram / Discord bot | `MessagingProvider` | In-app phone-style chat panel; messages stored; the bot replies live |
-| Email (sign-up, receipts, newsletters) | `EmailProvider` | In-app inbox at `/sim/inbox` showing rendered emails |
+| Email (sign-up, receipts, newsletters) | `EmailProvider` (`sim`, `locker`) | In-app inbox at `/sim/inbox` showing rendered emails |
 | Payments / checkout | `PaymentProvider` | Test checkout sheet with good and declined test cards; ledger table |
-| Login / accounts | `AuthProvider` | "Sign in as…" picker over seeded users |
+| Login / accounts | `AuthProvider` (`sim`, `locker`, or own) | "Sign in as…" picker over seeded users |
 | Maps / places / delivery tracking | `GeoProvider` | Seeded places; route simulated along a fixed path with a timer |
 | Push notifications | `NotifyProvider` | In-app toast tray + notification log |
 | Scraping / 3rd-party data API | `DataProvider` | Recorded fixture responses in `seed/fixtures/`, replayed |
 | Hardware / sensors / IoT | `DeviceProvider` | Sliders that generate readings; scripted scenarios |
 | AI (chat, JSON, images, decisions) | `kit/ai` | Built in: `AI_PROVIDER=sim`, or no key |
 | Multiplayer | `RoomProvider` | Bot players that join and act on a timer |
+
+## Incubator services (after `/connect`)
+
+The BHS Incubator hub gives each app real versions of the common providers. Each still has a
+simulator, which stays the default locally. Settings land in `apps/<codename>/.env`.
+
+| Need | Real one | Notes |
+|---|---|---|
+| Hosting | The app's Railway slot | `/ship`. Listens on `PORT`, has `/health`. |
+| AI | `OPENROUTER_API_KEY` | The app's own key with a monthly cap. `kit/ai` already reads it. |
+| Email | `locker` provider: hub relay | `examples/email/`. 50 a day, one recipient per call. Uses `LOCKER_APP_SECRET`, server-side only. |
+| Sign-in | See below | `sim` provider ("Sign in as…") locally. |
+| Database | `node:sqlite` | Built into Node 22.18+: no install, no Docker. File at `DATABASE_PATH` (`./data/app.db` locally, `/data/app.db` on Railway). |
+
+**Sign-in decision:** default is **no sign-in until the app needs it**. When it does: an app only
+for BHS people uses **"Sign in with BHS"** (`locker` AuthProvider: redirect to
+`$LOCKER_URL/oauth/authorize?client_id=$LOCKER_APP_ID&redirect_uri=…&state=…`, then the server
+posts the `code` to `$LOCKER_URL/oauth/token` with `LOCKER_APP_SECRET` and gets `{ user: { sub, email, name } }`;
+key users by `sub`). An app for the public (families, expats) gets its own simple sign-in instead.
+Redirect URIs must be `http://localhost:*` or the app's Railway address.
 
 ## Done means
 
