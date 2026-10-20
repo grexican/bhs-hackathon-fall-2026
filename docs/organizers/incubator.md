@@ -25,6 +25,27 @@ kit talks to it through `scripts/locker.mjs`; the API contract lives with the hu
   deploy token on the Railway service itself, so nothing is pasted by hand.
 - A Railway invite link: optional, lets a student watch logs in Railway's dashboard (free account).
 
+## Teams
+
+- Whoever creates a project owns it (it counts toward their max of 3). The owner adds teammates by
+  school email on the hub page `/p/<codename>` ("Add teammate"), up to 6 people per project.
+  Teammates don't spend their own 3.
+- Teammates can read the project's settings and deploy it. They get the code from the owner via
+  GitHub (`/bring-my-app`), then run `npm run locker:join -- <codename>`. Non-members get a 404
+  ("Ask its owner to add you").
+- Codenames are first come: a name someone else owns answers 409.
+
+## Switches and admin (`/admin`)
+
+- **Builder approval:** organizers can require approval before a student can make projects. Until
+  approved, `locker:project` says so and tells the student to give an organizer their school email.
+  Signing in alone never creates anything.
+- **People outside the school:** organizers add their email on `/admin` (an invite). Guests, mentors
+  and parents can then sign in.
+- **Delete a project:** `/admin` removes a project (hosting, AI key). Use it to free a student's slot.
+- **Sign-in gate:** `LOCKER_GATE=1` on an app puts the school sign-in in front of the whole app.
+  Server apps call `gate(req, res)` first; static sites use `kit/locker/static.mjs`. No login code.
+
 ## Sign-in default
 
 No sign-in until the app needs it. Then: **"Sign in with BHS"** (hub OAuth, stable `sub` per app and

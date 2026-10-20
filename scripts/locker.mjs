@@ -3,6 +3,7 @@
 // settings, and deploy. Plain Node 22, no packages.
 //   npm run locker:connect
 //   npm run locker:project -- <codename> [--name "Lunch Line"] [--pitch "..."] [--idea-url <link>]
+//   npm run locker:join -- <codename>      (teammate: fetch the settings for a project you were added to)
 //   npm run locker:env -- <codename>
 //   npm run locker:status -- [codename]
 //   npm run locker:logs -- <codename> [--build]
@@ -168,10 +169,22 @@ async function project(args) {
   try {
     p = (await api("POST", "/api/projects", body)).json;
   } catch (e) {
+    if (e.status === 403) throw new HubError(`${e.message} Tell an organizer your school email.`, 403);
     if (e.status !== 409 && e.status !== 400) throw e;
     // Already ours (a re-run)? Then just carry on. Otherwise show the hub's message.
-    const mine = await api("GET", `/api/projects/${codename}`).catch(() => null);
+    const mine = await api("GET", `/api/projects/${codename}`).catch((err) => (err.status === 404 ? "other" : null));
+    if (mine === "other") {
+      throw new HubError(
+        `${e.message}
+  "${codename}" belongs to someone else's project. If you're on that team, run: npm run locker:join -- ${codename}
+  Otherwise pick a new codename.`,
+        409,
+      );
+    }
     if (!mine) throw e;
+    if (mine.json.role === "member") {
+      throw new HubError(`You're a teammate on ${codename}, not its owner. Run: npm run locker:join -- ${codename}`, 409);
+    }
     console.log(`You already have ${codename}. Fetching its settings.`);
     p = mine.json;
   }
@@ -182,11 +195,38 @@ async function project(args) {
 }
 
 function printProject(p) {
-  console.log(`\n${p.name} (${p.codename}): ${p.status}`);
+  const role = p.role === "member" ? " [teammate]" : p.role === "owner" ? " [owner]" : "";
+  console.log(`
+${p.name} (${p.codename}): ${p.status}${role}`);
   if (p.url) console.log(`  Live address:   ${p.url}`);
   if (p.ai) console.log(`  AI budget:      $${(p.ai.usedUsd ?? 0).toFixed(2)} used of $${p.ai.monthlyLimitUsd} this month`);
   if (p.costs) console.log(`  Hosting cost:   $${(p.costs.railwayUsdThisMonth ?? 0).toFixed(2)} this month`);
   if (p.railway?.inviteUrl) console.log(`  See logs in Railway (optional, free account): ${p.railway.inviteUrl}`);
+}
+
+async function join(args) {
+  const codename = needCodename(args, { mustExist: false });
+  let p;
+  try {
+    p = (await api("GET", `/api/projects/${codename}`)).json;
+  } catch (e) {
+    if (e.status === 404) {
+      throw new HubError(`You're not on ${codename}'s team yet. Ask its owner to add you on the hub page: ${hubUrl()}/p/${codename}  ("Add teammate", with your school email).`, 404);
+    }
+    throw e;
+  }
+  console.log(`✓ You're on ${p.name} (${codename}).`);
+  if (!fs.existsSync(appDir(codename))) {
+    console.log(`
+You need the code first. Ask the owner for the GitHub link, then in Cursor/Claude type:`);
+    console.log(`  /bring-my-app <link>   (it clones the code into apps/${codename}/)`);
+    console.log(`Then run this again: npm run locker:join -- ${codename}`);
+    return;
+  }
+  await writeEnv(codename, p);
+  printProject(p);
+  console.log(`
+Next: run it locally. Both of you can ship it with: npm run deploy -- ${codename} (agree who ships; commit and pull first).`);
 }
 
 async function env(args) {
@@ -254,13 +294,13 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, env, status, deploy, logs };
+const COMMANDS = { connect, project, join, env, status, deploy, logs };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|env|status|deploy|logs> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|env|status|deploy|logs> [codename]");
     process.exit(1);
   }
   Promise.resolve(fn(rest)).catch((err) => {

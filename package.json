@@ -30,6 +30,7 @@
     "ai": "node kit/ai/cli.ts",
     "locker:connect": "node scripts/locker.mjs connect",
     "locker:project": "node scripts/locker.mjs project",
+    "locker:join": "node scripts/locker.mjs join",
     "locker:env": "node scripts/locker.mjs env",
     "locker:status": "node scripts/locker.mjs status",
     "deploy": "node scripts/locker.mjs deploy",

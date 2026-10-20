@@ -137,6 +137,8 @@ Or, if not pushing:
 
 > Committed `<short-hash>` on `<branch>`. Not pushed yet. Push when ready with: `git push`
 
+Working with a teammate on the app? Push, so they can pull the code.
+
 ## Guardrails
 
 - **Never push to `main` or `master`.** Stop and tell the student to switch branches.

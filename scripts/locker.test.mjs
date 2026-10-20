@@ -13,7 +13,12 @@ import { mergeEnv, readEnv } from "./locker.mjs";
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "locker.mjs");
 const TOKEN = "lkr_test_secret_token";
 const RW_TOKEN = "rw_project_token_secret";
-const projects = new Map([["taken-app", { owner: "someone-else" }]]);
+const projects = new Map([
+  ["taken-app", { owner: "someone-else", members: [] }],
+  ["team-app", { owner: "someone-else", members: ["ana"], project: null }],
+]);
+projects.get("team-app").project = { codename: "team-app", name: "Team App", status: "ready", url: "https://team-app-production.up.railway.app", role: "member" };
+let approvalRequired = false;
 let polls = 0;
 
 const project = (codename, name) => ({
@@ -46,20 +51,21 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.headers.authorization !== `Bearer ${TOKEN}`) return send(401, { error: "Not signed in." });
   if (url.pathname === "/api/me") {
-    const mine = [...projects.values()].filter((p) => p.owner === "ana").map((p) => p.project);
+    const mine = [...projects.values()].filter((p) => p.owner === "ana" || p.members?.includes("ana")).map((p) => p.project);
     return send(200, { student: { email: "ana@bhsschools.org", name: "Ana" }, projects: mine });
   }
   if (req.method === "POST" && url.pathname === "/api/projects") {
     if (!/^[a-z0-9-]{3,30}$/.test(body.codename)) return send(400, { error: "Bad codename." });
+    if (approvalRequired) return send(403, { error: "Making projects needs an organizer's OK first." });
     if (projects.has(body.codename)) return send(409, { error: "That codename is taken. Pick another one." });
     // First answer is "provisioning", like the real hub while Railway spins up.
-    projects.set(body.codename, { owner: "ana", project: project(body.codename, body.name), body });
+    projects.set(body.codename, { owner: "ana", project: { ...project(body.codename, body.name), role: "owner" }, body });
     return send(201, { ...project(body.codename, body.name), status: "provisioning" });
   }
   const m = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)(\/env)?$/);
   if (m) {
     const p = projects.get(m[1]);
-    if (!p || p.owner !== "ana") return send(404, { error: "No such project." });
+    if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
     if (!m[2]) return send(200, p.project);
     return send(200, {
       env: {
@@ -210,4 +216,54 @@ test('deploy: "Deploy failed" with exit 0 still counts as a failure', async () =
   const r = await run(["deploy", "lunch-line"], { FAKE_RAILWAY_FAIL: "1" });
   assert.equal(r.code, 1);
   assert.match(r.out, /didn't go through/);
+});
+
+test("project: a codename owned by someone else points to join or a new name", async () => {
+  const r = await run(["project", "taken-app"]);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /belongs to someone else/);
+  assert.match(r.out, /locker:join -- taken-app/);
+});
+
+test("project: a teammate (not owner) is sent to join", async () => {
+  fs.mkdirSync(path.join(kit, "apps", "team-app"), { recursive: true });
+  const r = await run(["project", "team-app"]);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /teammate on team-app/);
+});
+
+test("join: a non-member is told to ask the owner", async () => {
+  const r = await run(["join", "taken-app"]);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /Ask its owner to add you/);
+  assert.match(r.out, /\/p\/taken-app/);
+});
+
+test("join: a member without the code is told to /bring-my-app", async () => {
+  fs.rmSync(path.join(kit, "apps", "team-app"), { recursive: true, force: true });
+  const r = await run(["join", "team-app"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /\/bring-my-app/);
+  assert.ok(!fs.existsSync(path.join(kit, "apps", "team-app")), "no folder invented");
+});
+
+test("join: a member with the code gets the env bundle, and status shows roles", async () => {
+  fs.mkdirSync(path.join(kit, "apps", "team-app"), { recursive: true });
+  const r = await run(["join", "team-app"]);
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, new RegExp(RW_TOKEN));
+  assert.equal(readEnv(path.join(kit, "apps", "team-app", ".env")).RAILWAY_TOKEN, RW_TOKEN);
+  const s = await run(["status"]);
+  assert.match(s.out, /Team App \(team-app\): ready \[teammate\]/);
+  assert.match(s.out, /Lunch Line \(lunch-line\): ready \[owner\]/);
+});
+
+test("project: builder-approval 403 is shown as-is plus what to do", async () => {
+  approvalRequired = true;
+  fs.mkdirSync(path.join(kit, "apps", "new-thing"), { recursive: true });
+  const r = await run(["project", "new-thing"]);
+  approvalRequired = false;
+  assert.equal(r.code, 1);
+  assert.match(r.out, /needs an organizer's OK/);
+  assert.match(r.out, /Tell an organizer your school email\./);
 });

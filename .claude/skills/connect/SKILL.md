@@ -27,11 +27,22 @@ Then, one step at a time:
    dashboard. It needs a free Railway account."
 5. Offer `/ship` once the app runs locally.
 
+## Joining a teammate's project?
+
+Not making a new app, but joining a friend's? Three steps:
+
+1. The owner adds your school email on the hub page `/p/<codename>` ("Add teammate").
+2. You get the code from them as a GitHub link: `/bring-my-app <link>` puts it in `apps/<codename>/`.
+3. `npm run locker:join -- <codename>` writes the hosting and AI settings into that folder's `.env`.
+
+(Still run `npm run locker:connect` first if the laptop isn't connected.)
+
 ## If something fails
 
 | It says | You do |
 |---|---|
 | "Can't reach the hub" / "isn't answering yet" | Check wifi. Still failing: the hub isn't live yet, tell an organizer. Keep building locally. |
-| codename taken | Offer 2 new codenames, let them pick, rename the `apps/` folder, run it again. |
+| codename taken / "belongs to someone else's project" | On that team? Use the join steps above. Otherwise offer 2 new codenames, let them pick, rename the `apps/` folder, run it again. |
 | too many projects (max 3) | `npm run locker:status` lists them. An organizer can free one. |
 | "isn't connected" | Run `npm run locker:connect` again. |
+| "needs an organizer's OK" | Making projects is switched to approval. Tell an organizer your school email. |
