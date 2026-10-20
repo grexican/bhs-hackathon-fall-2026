@@ -54,9 +54,9 @@ with a wrong password).
 |---|---|---|
 | Build + deploy | ~30 s | ~3 min (the build installs Chromium and its system libraries) |
 | One page load (read + screenshot) | | ~0.5 s for the first one, ~0.2–0.3 s after |
-| Memory while idle | ~50 MB | ~60 MB (the browser only runs during a call) |
-| Memory during a call | | the app's Node grows to ~170 MB, plus the browser process (~150–300 MB) |
-| Money | | Hosting is billed by memory and CPU used: a browser that runs a few times a minute costs cents a month; one left open all day costs dollars. Close it (the helper does). |
+| Memory while idle | ~50 MB | ~60 MB (the browser only runs while it's used) |
+| Memory under load (3 calls a second, 75 s) | | ~220 MB for the whole app, browser included; ~0.6 of a CPU |
+| Money | | Hosting is billed for memory and CPU actually used. A few browser runs a minute: cents a month. Running flat out all month: around $10–15. A browser left open all day costs the most: close it (the helper does). |
 
 **Rules that keep it cheap:** run it on a button press or a schedule, never on every page load; cache
 what you read in SQLite; one browser at a time (the helper does it); close it (the helper does it).
