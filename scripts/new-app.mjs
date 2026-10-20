@@ -23,6 +23,15 @@ function flag(args, name) {
   return i >= 0 ? args[i + 1] : undefined;
 }
 
+/** Copies the AI kit (kit/ai, TypeScript that Node 22.18+ runs as is) into <app>/locker/ai. The deploy refreshes it. */
+export function copyAiKit(dir) {
+  const to = path.join(dir, "locker", "ai");
+  fs.mkdirSync(to, { recursive: true });
+  for (const f of fs.readdirSync(path.join(KIT, "kit", "ai"))) {
+    if (f.endsWith(".ts") && f !== "cli.ts") fs.copyFileSync(path.join(KIT, "kit", "ai", f), path.join(to, f));
+  }
+}
+
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 /** Copies the starter app into dir, filling in the app's name. */
@@ -41,8 +50,9 @@ function copyTemplate(dir, { codename, name }) {
   }
   // The same request logging the app gets online (npm run deploy refreshes this copy).
   fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
-  // And the tester "Feedback" button (server side + the button itself).
-  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
+  // And the school sign-in gate, the tester "Feedback" button, and the AI kit (locker/ai: server-side only).
+  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js", "gate.mjs"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
+  copyAiKit(dir);
 }
 
 async function main() {
@@ -72,7 +82,11 @@ ${bare ? "" : `
 - \`server.js\`: the server. \`/health\` (keep it), the API routes, and the files in \`public/\`.
 - \`db.js\`: SQLite (\`node:sqlite\`) at \`DATABASE_PATH\` (\`./data/app.db\` here, \`/data/app.db\` online).
 - \`public/\`: the page (phone first). Replace the "Tap me" example with the real app.
-- \`locker/otel.mjs\`: one log line per request, here and online. Leave it.
+- \`POST /api/ask\` in \`server.js\`: a working AI example (\`locker/ai\`, the kit's AI helper). It already handles
+  "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Its "Ask the AI" box is one
+  uncommented line in \`public/index.html\`.
+- School sign-in: off until \`LOCKER_GATE=1\`; then \`user\` in every route is whoever is signed in (\`GET /api/me\`).
+- \`locker/\`: kit files (request logging, sign-in gate, Feedback button, AI kit). The deploy refreshes them; don't edit.
 
 Switching to Vite, Next.js or another stack is fine (\`stack-picker\`): keep \`PORT\`, \`/health\`,
 \`DATABASE_PATH\` and a \`start\` script. A purely static site can use \`locker/static.mjs\` instead (\`/ship\`).

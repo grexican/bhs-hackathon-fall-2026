@@ -7,7 +7,7 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { freePort } from "./port.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "new-app.mjs");
@@ -108,6 +108,66 @@ test("the Feedback button: simulated offline, forwarded to the hub with the app 
   const reply = await sent.text();
   assert.doesNotMatch(reply, /app_secret_xyz/);
   assert.deepEqual(seen, [{ url: "/api/feedback", auth: "Bearer app_secret_xyz", body: { message: "Works!", page: "/", contact: "maya" } }]);
+  await app.stop();
+  hub.close();
+});
+
+test("the AI example: simulated before /connect, a friendly 503 when the budget is used up", async () => {
+  const dir = path.join(root, "apps", "lunch-line");
+  assert.ok(fs.existsSync(path.join(dir, "locker/ai/index.ts")));
+  assert.ok(!fs.existsSync(path.join(dir, "locker/ai/cli.ts")), "the CLI stays in the kit");
+  assert.match(fs.readFileSync(path.join(dir, "public/index.html"), "utf8"), /<!-- <script type="module" src="\/ask\.js"><\/script> -->/);
+  const db = path.join(root, "ai-volume", "app.db");
+
+  // No key yet: a labelled simulated answer, never a crash.
+  let app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: db, OPENROUTER_API_KEY: "", AI_PROVIDER: "" });
+  const sim = await fetch(`${app.base}/api/ask`, { method: "POST", body: JSON.stringify({ question: "hi" }) });
+  assert.equal(sim.status, 200);
+  const simJson = await sim.json();
+  assert.equal(simJson.simulated, true);
+  assert.match(simJson.note, /Connect your app first \(\/connect\)/);
+  assert.equal((await fetch(`${app.base}/api/ask`, { method: "POST", body: "{}" })).status, 400);
+  await app.stop();
+
+  // With a key whose monthly limit is reached (OpenRouter's real 403, stubbed in the app process).
+  const stub = path.join(root, "stub-openrouter.mjs");
+  fs.writeFileSync(stub, `const real = globalThis.fetch;
+globalThis.fetch = async (url, init) => String(url).includes("openrouter.ai")
+  ? new Response(JSON.stringify({ error: { message: "Key limit exceeded (monthly limit). resets 2026-11-01T00:00:00.000Z.", code: 403, metadata: { limit_source: "openrouter_key_limit" } } }), { status: 403 })
+  : real(url, init);`);
+  app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: db, OPENROUTER_API_KEY: "sk-or-test-not-real", NODE_OPTIONS: `--import=${pathToFileURL(stub).href}` });
+  const out = await fetch(`${app.base}/api/ask`, { method: "POST", body: JSON.stringify({ question: "hi" }) });
+  assert.equal(out.status, 503);
+  assert.deepEqual(await out.json(), { error: "This app's AI budget for the month is used up. Ask an organizer to raise it.", code: "AI_BUDGET_USED_UP" });
+  assert.equal((await fetch(`${app.base}/health`)).status, 200, "the rest of the app keeps working");
+  await app.stop();
+});
+
+test("school sign-in: off by default; with LOCKER_GATE=1 it sends people to sign in and the app knows who they are", async () => {
+  const dir = path.join(root, "apps", "lunch-line");
+  const db = path.join(root, "gate-volume", "app.db");
+  let app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: db, LOCKER_GATE: "" });
+  assert.deepEqual(await (await fetch(`${app.base}/api/me`)).json(), { user: null });
+  assert.equal((await fetch(`${app.base}/`)).status, 200);
+  await app.stop();
+
+  // A tiny stand-in for the hub's token endpoint.
+  const hub = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ user: { sub: "u1", email: "ana@example.org", name: "Ana", domain: "example.org" } }));
+  });
+  await new Promise((r) => hub.listen(0, "127.0.0.1", r));
+  const hubUrl = `http://127.0.0.1:${hub.address().port}`;
+  app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: db, LOCKER_GATE: "1", LOCKER_URL: hubUrl, LOCKER_APP_ID: "app_1", LOCKER_APP_SECRET: "gate_secret", APP_URL: "" });
+  assert.equal((await fetch(`${app.base}/health`)).status, 200, "the host's health check never needs sign-in");
+  const first = await fetch(`${app.base}/api/me`, { redirect: "manual" });
+  assert.equal(first.status, 302);
+  const to = new URL(first.headers.get("location"));
+  assert.equal(to.origin + to.pathname, `${hubUrl}/oauth/authorize`);
+  const back = await fetch(`${app.base}/_locker/callback?code=c1&state=${encodeURIComponent(to.searchParams.get("state"))}`, { redirect: "manual" });
+  assert.equal(back.status, 302);
+  const cookie = back.headers.get("set-cookie").split(";")[0];
+  const me = await (await fetch(`${app.base}/api/me`, { headers: { cookie } })).json();
+  assert.deepEqual(me, { user: { sub: "u1", email: "ana@example.org", name: "Ana", domain: "example.org" } });
   await app.stop();
   hub.close();
 });

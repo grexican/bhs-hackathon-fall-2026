@@ -17,7 +17,9 @@ description: How apps here use AI. Ask for a KIND of model (lite, fast, smart, t
 
 ## Using it in an app
 
-1. **Copy** `kit/ai/` into the app's **server** code, for example `my-app/src/server/ai/`. It is TypeScript
+0. **Starter app?** It's already there: `locker/ai/` (refreshed on every deploy), with a working route,
+   `POST /api/ask` in `server.js`, to copy from. Import it as `./locker/ai/index.ts`.
+1. Otherwise **copy** `kit/ai/` into the app's **server** code, for example `my-app/src/server/ai/`. It is TypeScript
    with only erasable syntax, so it runs in Next.js, Astro endpoints, Vite SSR, or plain `node file.ts`
    (Node 22.18+).
 2. **Call it only from the server.** A route handler or API endpoint; never a React component. The key

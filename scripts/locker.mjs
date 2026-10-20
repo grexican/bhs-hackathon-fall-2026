@@ -314,6 +314,7 @@ export function deployApp(codename, io = quiet) {
   }
   const { e, childEnv } = railwayArgs(codename);
   addRequestLogging(codename, io);
+  refreshKitFiles(codename);
   io.log(`Uploading apps/${codename}/ to its hosting slot. Railway builds it from source…`);
   const run = railway(["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
@@ -340,6 +341,32 @@ export const OTEL_NODE_OPTION = "--import=./locker/otel.mjs";
  * lists the OpenTelemetry packages. The hub's start command for the project loads it.
  * LOCKER_OTEL=0 in the app's .env skips all of it.
  */
+/**
+ * Before each deploy: bring the kit's own files in the app up to date, but only the ones the app
+ * already has (the starter app has them all): locker/gate.mjs, locker/feedback.mjs + feedback.js,
+ * and the AI kit in locker/ai/. Fixes reach every app on its next deploy. Returns the paths refreshed.
+ */
+export function refreshKitFiles(codename) {
+  const dir = appDir(codename);
+  const kit = (rel) => fileURLToPath(new URL(`../kit/${rel}`, import.meta.url));
+  const done = [];
+  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js"]) {
+    const to = path.join(dir, "locker", f);
+    if (fs.existsSync(to)) {
+      fs.copyFileSync(kit(`locker/${f}`), to);
+      done.push(`locker/${f}`);
+    }
+  }
+  const ai = path.join(dir, "locker", "ai");
+  if (fs.existsSync(path.join(ai, "index.ts"))) {
+    for (const f of fs.readdirSync(kit("ai")).filter((n) => n.endsWith(".ts") && n !== "cli.ts")) {
+      fs.copyFileSync(path.join(kit("ai"), f), path.join(ai, f));
+      done.push(`locker/ai/${f}`);
+    }
+  }
+  return done;
+}
+
 export function addRequestLogging(codename, io = quiet) {
   const dir = appDir(codename);
   const pkgFile = path.join(dir, "package.json");

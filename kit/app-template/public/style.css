@@ -29,3 +29,10 @@ button {
   cursor: pointer;
 }
 .count { font-size: 1.1rem; }
+.hello { color: #5f5a52; }
+
+/* The "Ask the AI" box (public/ask.js). */
+.ask { display: grid; gap: 8px; margin-top: 2rem; text-align: left; }
+.ask-row { display: flex; gap: 8px; }
+.ask input { flex: 1; min-width: 0; font: inherit; font-size: 16px; /* 16px stops phones from zooming in */ padding: 0 12px; min-height: 48px; border: 1px solid #c9c4ba; border-radius: 12px; }
+.ask-answer { min-height: 1.5em; }

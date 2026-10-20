@@ -317,3 +317,17 @@ test("the laptop's name on the hub's connect page is one a student recognises", 
   assert.match(name, /'s laptop \(/);
   assert.ok(name.length <= 80);
 });
+
+test("deploy refreshes the kit files an app already has (gate, feedback, AI kit), and adds none it doesn't", async () => {
+  const dir = path.join(kit, "apps", "lunch-line");
+  const kitFile = (rel) => fs.readFileSync(path.join(path.dirname(SCRIPT), "..", "kit", rel), "utf8");
+  fs.mkdirSync(path.join(dir, "locker", "ai"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "locker", "gate.mjs"), "// old copy");
+  fs.writeFileSync(path.join(dir, "locker", "ai", "index.ts"), "// old copy");
+  const r = await run(["deploy", "lunch-line"]);
+  assert.equal(r.code, 0, r.out);
+  assert.equal(fs.readFileSync(path.join(dir, "locker", "gate.mjs"), "utf8"), kitFile("locker/gate.mjs"));
+  assert.equal(fs.readFileSync(path.join(dir, "locker", "ai", "llm.ts"), "utf8"), kitFile("ai/llm.ts"));
+  assert.ok(!fs.existsSync(path.join(dir, "locker", "ai", "cli.ts")));
+  assert.ok(!fs.existsSync(path.join(dir, "locker", "feedback.mjs")), "not added when the app never had it");
+});

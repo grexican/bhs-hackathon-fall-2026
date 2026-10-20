@@ -102,7 +102,8 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 **There is no default stack.** Every app gets the best-in-class stack for what it is. Use
 `stack-picker` before scaffolding. What there is: a **starter app** that `npm run new-app` puts in every
 new folder (plain Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, a phone-first
-`public/`, its port in `.env`, request logging in `locker/otel.mjs`). It runs with `npm run dev`,
+`public/`, its port in `.env`, request logging in `locker/otel.mjs`, a working AI route `POST /api/ask` that already
+handles "no key yet" and "budget used up", the school sign-in gate off until `LOCKER_GATE=1`, and the Feedback button). It runs with `npm run dev`,
 needs no packages and already passes `/ship`. Build on it when plain Node fits; replace it when the
 product needs another stack (`--bare` skips it). The rules that apply to every stack:
 
