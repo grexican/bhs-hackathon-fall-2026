@@ -64,11 +64,13 @@ export function checkInstalled(root = ROOT) {
   return ok ? { ok: true, label: "Kit packages installed" } : { ok: false, label: "Kit packages aren't installed yet", fix: "Run: npm install   (in this folder)" };
 }
 
-export function checkRailway() {
-  const version = run("railway", ["--version"]);
+export function checkRailway(root = ROOT) {
+  // The kit brings its own copy (@railway/cli in node_modules); scripts/locker.mjs uses it first.
+  const local = path.join(root, "node_modules", ".bin", WINDOWS ? "railway.cmd" : "railway");
+  const version = run(fs.existsSync(local) ? `"${local}"` : "railway", ["--version"]);
   return version
     ? { ok: true, label: `Railway tool ${version.replace(/^railway\s*/i, "")} (for putting apps online)` }
-    : { ok: false, label: "Railway tool missing (needed to put your app online and read its logs)", fix: "Run: npm i -g @railway/cli   then open a new terminal." };
+    : { ok: false, label: "Railway tool missing (needed to put your app online and read its logs)", fix: "Run: npm install   (in the kit folder; the Railway tool comes with the kit)" };
 }
 
 export function checkHub(root = ROOT) {
@@ -90,7 +92,7 @@ export function checkPowerShell() {
 }
 
 export async function checks(root = ROOT) {
-  return [checkNode(), await checkSqlite(), checkNpm(), checkInstalled(root), checkGit(), checkPowerShell(), checkRailway(), checkHub(root)].filter(Boolean);
+  return [checkNode(), await checkSqlite(), checkNpm(), checkInstalled(root), checkGit(), checkPowerShell(), checkRailway(root), checkHub(root)].filter(Boolean);
 }
 
 async function main() {

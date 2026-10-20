@@ -274,3 +274,18 @@ test("list: lists the app in the directory, explains what's missing, and can hid
   assert.match(off.out, /isn't listed in Apps anymore/);
   assert.equal(projects.get("lunch-line").listing.tagline, "See the line before you leave class", "fields left out are kept");
 });
+
+test("the kit's own Railway tool (node_modules/.bin) is used before one on PATH", async () => {
+  const bin = path.join(kit, "node_modules", ".bin");
+  fs.mkdirSync(bin, { recursive: true });
+  fs.writeFileSync(path.join(bin, "local-railway.mjs"), `console.log("local railway " + process.argv.slice(2).join(" "));`);
+  fs.writeFileSync(path.join(bin, "railway.cmd"), `@node "%~dp0local-railway.mjs" %*\r\n`);
+  fs.writeFileSync(path.join(bin, "railway"), `#!/bin/sh\nnode "$(dirname "$0")/local-railway.mjs" "$@"\n`, { mode: 0o755 });
+  try {
+    const r = await run(["set", "lunch-line", "LOCAL_CHECK=1"]);
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, /local railway variables --service svc-123 --set LOCAL_CHECK=1/);
+  } finally {
+    fs.rmSync(path.join(kit, "node_modules"), { recursive: true, force: true });
+  }
+});

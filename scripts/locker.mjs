@@ -248,15 +248,20 @@ export async function saveListing(codename, fields) {
 
 export const HUB_OWNED = new Set(["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER_APP_SECRET", "LOCKER_APP_ID", "LOCKER_URL"]);
 
+// The Railway tool: the kit's own copy (npm install puts @railway/cli in node_modules/.bin, nothing
+// global, no new terminal), else one on PATH. Quoted because the shell runs it and paths can have spaces.
+const LOCAL_RAILWAY = path.join(ROOT, "node_modules", ".bin", process.platform === "win32" ? "railway.cmd" : "railway");
+export const railwayBin = () => (fs.existsSync(LOCAL_RAILWAY) ? `"${LOCAL_RAILWAY}"` : "railway");
+
 function railwayArgs(codename) {
   const file = path.join(appDir(codename), ".env");
   const e = readEnv(file);
   if (!e.RAILWAY_TOKEN || !e.RAILWAY_SERVICE_ID) {
     throw new HubError(`apps/${codename}/.env has no deploy settings yet. Run: npm run locker:project -- ${codename}`, 0);
   }
-  const check = spawnSync("railway", ["--version"], { shell: true, encoding: "utf8" });
+  const check = spawnSync(railwayBin(), ["--version"], { shell: true, encoding: "utf8" });
   if (check.status !== 0) {
-    throw new HubError("The Railway tool isn't installed. Install it with: npm i -g @railway/cli  (then open a new terminal and try again)", 0);
+    throw new HubError("The Railway tool isn't installed. Run npm install in the kit folder (it comes with the kit), then try again.", 0);
   }
   // The project token goes only into the child's environment, never onto the screen.
   return { e, childEnv: { ...process.env, RAILWAY_TOKEN: e.RAILWAY_TOKEN } };
@@ -272,7 +277,7 @@ export function deployApp(codename, io = quiet) {
   const { e, childEnv } = railwayArgs(codename);
   addRequestLogging(codename, io);
   io.log(`Uploading apps/${codename}/ to its hosting slot. Railway builds it from source…`);
-  const run = spawnSync("railway", ["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, shell: true, encoding: "utf8" });
+  const run = spawnSync(railwayBin(), ["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, shell: true, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
   io.write(output);
   // `railway up` can say "Deploy failed" and still exit 0, so read what it printed too.
@@ -329,7 +334,7 @@ export function setSettings(codename, values, io = quiet) {
   }
   const { e, childEnv } = railwayArgs(codename);
   const sets = Object.entries(values).flatMap(([k, v]) => ["--set", `${k}=${v}`]);
-  const run = spawnSync("railway", ["variables", "--service", e.RAILWAY_SERVICE_ID, ...sets, "--skip-deploys"], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8" });
+  const run = spawnSync(railwayBin(), ["variables", "--service", e.RAILWAY_SERVICE_ID, ...sets, "--skip-deploys"], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
   io.write(output);
   if (run.status !== 0 || /error|unauthorized/i.test(output)) {
@@ -351,7 +356,7 @@ export function readLogs(codename, { build = false, lines = 50, errors = false, 
   checkCodename(codename);
   const { e, childEnv } = railwayArgs(codename);
   const extra = logFlags({ build, errors, find });
-  const run = spawnSync("railway", ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra, "--lines", String(lines)], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8", timeout: 60_000 });
+  const run = spawnSync(railwayBin(), ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra, "--lines", String(lines)], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8", timeout: 60_000 });
   return `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
 }
 
@@ -489,7 +494,7 @@ function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
   const extra = logFlags({ build: args.includes("--build"), errors: args.includes("--errors"), find: flag(args, "find") });
-  const run = spawnSync("railway", ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra], { cwd: appDir(codename), env: childEnv, shell: true, stdio: "inherit" });
+  const run = spawnSync(railwayBin(), ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra], { cwd: appDir(codename), env: childEnv, shell: true, stdio: "inherit" });
   process.exitCode = run.status ?? 1;
 }
 

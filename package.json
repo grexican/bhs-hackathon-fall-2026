@@ -41,6 +41,7 @@
     "test": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
+    "@railway/cli": "^5.71.0",
     "@playwright/cli": "^0.1.21",
     "ecc-agentshield": "^1.6.0",
     "playwright": "^1.55.0"
