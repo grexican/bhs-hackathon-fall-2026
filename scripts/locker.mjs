@@ -253,13 +253,19 @@ export const HUB_OWNED = new Set(["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER
 const LOCAL_RAILWAY = path.join(ROOT, "node_modules", ".bin", process.platform === "win32" ? "railway.cmd" : "railway");
 export const railwayBin = () => (fs.existsSync(LOCAL_RAILWAY) ? `"${LOCAL_RAILWAY}"` : "railway");
 
+// One quoted command line for the shell. (Handing the shell separate arguments makes Node print a
+// security warning, and left values with spaces or & unquoted.)
+export const shellArg = (a) =>
+  /^[\w@%+=:,./\\-]+$/.test(a) ? a : process.platform === "win32" ? `"${a.replaceAll('"', '""')}"` : `'${a.replaceAll("'", "'\\''")}'`;
+const railway = (args, opts) => spawnSync([railwayBin(), ...args.map(shellArg)].join(" "), { ...opts, shell: true });
+
 function railwayArgs(codename) {
   const file = path.join(appDir(codename), ".env");
   const e = readEnv(file);
   if (!e.RAILWAY_TOKEN || !e.RAILWAY_SERVICE_ID) {
     throw new HubError(`apps/${codename}/.env has no deploy settings yet. Run: npm run locker:project -- ${codename}`, 0);
   }
-  const check = spawnSync(railwayBin(), ["--version"], { shell: true, encoding: "utf8" });
+  const check = railway(["--version"], { encoding: "utf8" });
   if (check.status !== 0) {
     throw new HubError("The Railway tool isn't installed. Run npm install in the kit folder (it comes with the kit), then try again.", 0);
   }
@@ -277,7 +283,7 @@ export function deployApp(codename, io = quiet) {
   const { e, childEnv } = railwayArgs(codename);
   addRequestLogging(codename, io);
   io.log(`Uploading apps/${codename}/ to its hosting slot. Railway builds it from source…`);
-  const run = spawnSync(railwayBin(), ["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, shell: true, encoding: "utf8" });
+  const run = railway(["up", "--service", e.RAILWAY_SERVICE_ID, "--detach"], { cwd: dir, env: childEnv, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
   io.write(output);
   // `railway up` can say "Deploy failed" and still exit 0, so read what it printed too.
@@ -334,7 +340,7 @@ export function setSettings(codename, values, io = quiet) {
   }
   const { e, childEnv } = railwayArgs(codename);
   const sets = Object.entries(values).flatMap(([k, v]) => ["--set", `${k}=${v}`]);
-  const run = spawnSync(railwayBin(), ["variables", "--service", e.RAILWAY_SERVICE_ID, ...sets, "--skip-deploys"], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8" });
+  const run = railway(["variables", "--service", e.RAILWAY_SERVICE_ID, ...sets, "--skip-deploys"], { cwd: appDir(codename), env: childEnv, encoding: "utf8" });
   const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
   io.write(output);
   if (run.status !== 0 || /error|unauthorized/i.test(output)) {
@@ -347,16 +353,15 @@ export function setSettings(codename, values, io = quiet) {
 /** The last `lines` log lines (build or runtime), token masked. Fetches instead of streaming, for tools. */
 /** Railway log flags: build logs, only errors (the request log marks failures level "error"), or a text search. */
 export function logFlags({ build = false, errors = false, find } = {}) {
-  // spawnSync runs through a shell (cmd.exe on Windows), so the filter goes in double quotes with none inside.
-  const filter = [errors && "@level:error", find && String(find).replace(/["%^&|<>`$\\]/g, " ").trim()].filter(Boolean).join(" ");
-  return [...(build ? ["--build"] : []), ...(filter ? ["--filter", `"${filter}"`] : [])];
+  const filter = [errors && "@level:error", find && String(find).replaceAll('"', "").trim()].filter(Boolean).join(" ");
+  return [...(build ? ["--build"] : []), ...(filter ? ["--filter", filter] : [])];
 }
 
 export function readLogs(codename, { build = false, lines = 50, errors = false, find } = {}) {
   checkCodename(codename);
   const { e, childEnv } = railwayArgs(codename);
   const extra = logFlags({ build, errors, find });
-  const run = spawnSync(railwayBin(), ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra, "--lines", String(lines)], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8", timeout: 60_000 });
+  const run = railway(["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra, "--lines", String(lines)], { cwd: appDir(codename), env: childEnv, encoding: "utf8", timeout: 60_000 });
   return `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
 }
 
@@ -494,7 +499,7 @@ function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
   const extra = logFlags({ build: args.includes("--build"), errors: args.includes("--errors"), find: flag(args, "find") });
-  const run = spawnSync(railwayBin(), ["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra], { cwd: appDir(codename), env: childEnv, shell: true, stdio: "inherit" });
+  const run = railway(["logs", "--service", e.RAILWAY_SERVICE_ID, ...extra], { cwd: appDir(codename), env: childEnv, stdio: "inherit" });
   process.exitCode = run.status ?? 1;
 }
 

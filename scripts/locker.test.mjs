@@ -154,8 +154,11 @@ test("deploy: LOCKER_OTEL=0 leaves the app alone", async () => {
 
 test("logs: --errors and --find become one Railway filter", async () => {
   const { logFlags } = await import("./locker.mjs");
-  assert.deepEqual(logFlags({ errors: true }), ["--filter", '"@level:error"']);
-  assert.deepEqual(logFlags({ build: true, find: 'POST "/order" $(x)' }), ["--build", "--filter", '"POST  /order   (x)"']);
+  assert.deepEqual(logFlags({ errors: true }), ["--filter", "@level:error"]);
+  assert.deepEqual(logFlags({ build: true, errors: true, find: 'POST "/order"' }), ["--build", "--filter", "@level:error POST /order"]);
+  const { shellArg } = await import("./locker.mjs");
+  assert.equal(shellArg("svc-123"), "svc-123", "plain values stay as they are");
+  assert.equal(shellArg("GREETING=hi & bye"), process.platform === "win32" ? '"GREETING=hi & bye"' : "'GREETING=hi & bye'");
   assert.deepEqual(logFlags({}), []);
 });
 
