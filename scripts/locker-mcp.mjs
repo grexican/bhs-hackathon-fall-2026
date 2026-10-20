@@ -29,6 +29,7 @@ import {
   readFeedback,
   readLogs,
   saveListing,
+  setIcon,
   setSettings,
 } from "./locker.mjs";
 import { CODENAME } from "./new-app.mjs";
@@ -302,10 +303,13 @@ server.registerTool(
       category: z.enum(CATEGORIES).optional().describe("Where it shows up in the directory."),
       icon: z.string().max(16).optional().describe("One emoji, or 1-2 letters."),
       schoolOnly: z.boolean().optional().describe("true when the app uses the school sign-in gate, so its card says it needs a school account."),
+      iconFile: z.string().optional().describe("Path to the app's logo (PNG, JPEG, WebP or SVG, 256 KB max), shown instead of the emoji. Relative to the kit or to apps/<codename>/."),
+      iconFromApp: z.boolean().optional().describe("true: the hub fetches the app's own icon (manifest icon, apple-touch-icon or favicon) from its live address."),
     },
   },
-  tool(async ({ codename, listed = true, tagline, description, category, icon, schoolOnly }) => {
+  tool(async ({ codename, listed = true, tagline, description, category, icon, schoolOnly, iconFile, iconFromApp }) => {
     const l = await saveListing(codename, { listed, tagline, description, category, icon, bhsOnly: schoolOnly });
+    if (iconFile || iconFromApp) await setIcon(codename, { file: iconFile, fromApp: Boolean(iconFromApp) });
     if (!l.listed) return `${codename} isn't listed in the Apps directory anymore.`;
     return `${codename} is listed in the Apps directory: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}). Its hub page shows opens and installs.`;
   }),

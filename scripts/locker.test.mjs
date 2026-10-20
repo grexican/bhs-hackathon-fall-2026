@@ -278,6 +278,27 @@ test("list: lists the app in the directory, explains what's missing, and can hid
   assert.equal(projects.get("lunch-line").listing.tagline, "See the line before you leave class", "fields left out are kept");
 });
 
+test("list: --icon-file sends the image, --icon-from-app asks the hub to fetch it, big files stay home", async () => {
+  const dir = path.join(kit, "apps", "lunch-line");
+  fs.writeFileSync(path.join(dir, "logo.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]));
+  const r = await run(["list", "lunch-line", "--icon-file", "logo.png"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /own image now/);
+  assert.equal(Buffer.from(projects.get("lunch-line").icon.data, "base64")[1], 0x50, "found in apps/<codename>/ and sent as base64");
+
+  const f = await run(["list", "lunch-line", "--icon-from-app"]);
+  assert.equal(f.code, 0, f.out);
+  assert.deepEqual(projects.get("lunch-line").icon, { fetch: true });
+
+  fs.writeFileSync(path.join(dir, "huge.png"), Buffer.alloc(300 * 1024));
+  const big = await run(["list", "lunch-line", "--icon-file", "huge.png"]);
+  assert.equal(big.code, 1);
+  assert.match(big.out, /256 KB/);
+  const none = await run(["list", "lunch-line", "--icon-file", "nope.png"]);
+  assert.equal(none.code, 1);
+  assert.match(none.out, /Can't find the image/);
+});
+
 test("the kit's own Railway tool (node_modules/.bin) is used before one on PATH", async () => {
   const bin = path.join(kit, "node_modules", ".bin");
   fs.mkdirSync(bin, { recursive: true });

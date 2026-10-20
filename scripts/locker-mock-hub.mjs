@@ -85,6 +85,13 @@ export async function startMockHub() {
         feedback: items.slice(0, Number(url.searchParams.get("limit") ?? 50)),
       });
     }
+    const im = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/icon$/);
+    if (req.method === "PUT" && im) {
+      const p = projects.get(im[1]);
+      if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
+      p.icon = body;
+      return send(200, { ...p.listing, iconHash: "abc123", iconType: "image/png" });
+    }
     const lm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/listing$/);
     if (req.method === "PUT" && lm) {
       const p = projects.get(lm[1]);

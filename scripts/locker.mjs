@@ -256,6 +256,20 @@ export async function saveListing(codename, fields) {
   return (await api("PUT", `/api/projects/${codename}/listing`, body)).json;
 }
 
+/**
+ * Sets the image Apps shows for the app: a PNG/JPEG/WebP/SVG file (256 KB max; the hub turns SVG into PNG),
+ * or { fromApp: true } to let the hub fetch the app's own icon from its live address. Returns the listing.
+ */
+export async function setIcon(codename, { file, fromApp = false } = {}) {
+  checkCodename(codename, { mustExist: false });
+  if (fromApp) return (await api("PUT", `/api/projects/${codename}/icon`, { fetch: true })).json;
+  const found = [file, path.join(appDir(codename), file ?? "")].find((f) => f && fs.existsSync(f) && fs.statSync(f).isFile());
+  if (!found) throw new HubError(`Can't find the image "${file}". Give its path, like apps/${codename}/public/icon.png`, 0);
+  const bytes = fs.readFileSync(found);
+  if (bytes.length > 256 * 1024) throw new HubError(`That image is ${Math.ceil(bytes.length / 1024)} KB; the most is 256 KB. Export a 512×512 PNG.`, 0);
+  return (await api("PUT", `/api/projects/${codename}/icon`, { data: bytes.toString("base64") })).json;
+}
+
 // ---------- tester feedback (the app's "Feedback" button, kit/locker/feedback.mjs) ----------
 
 /** What testers sent through the app's feedback button: { summary, feedback: [...] }, newest first. */
@@ -350,7 +364,7 @@ export function refreshKitFiles(codename) {
   const dir = appDir(codename);
   const kit = (rel) => fileURLToPath(new URL(`../kit/${rel}`, import.meta.url));
   const done = [];
-  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs"]) {
+  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs", "browser.mjs"]) {
     const to = path.join(dir, "locker", f);
     if (fs.existsSync(to)) {
       fs.copyFileSync(kit(`locker/${f}`), to);
@@ -549,6 +563,10 @@ async function list(args) {
     icon: flag(args, "icon"),
     bhsOnly: args.includes("--school-only") ? true : undefined,
   });
+  if (flag(args, "icon-file") || args.includes("--icon-from-app")) {
+    await setIcon(codename, { file: flag(args, "icon-file"), fromApp: args.includes("--icon-from-app") });
+    console.log(`✓ Apps shows ${codename}'s own image now (instead of the emoji).`);
+  }
   if (!l.listed) return console.log(`✓ ${codename} isn't listed in Apps anymore. List it again with: npm run locker:list -- ${codename}`);
   console.log(`✓ ${codename} is listed in Apps: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}).`);
   console.log(`  Everyone finds it at ${hubUrl()}/apps. Opens and installs: ${hubUrl()}/p/${codename}`);
