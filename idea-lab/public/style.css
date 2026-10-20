@@ -291,6 +291,10 @@ textarea:focus, input[type="text"]:focus { border-color: var(--fg); outline: non
 .cta .btn-line { color: var(--bg); border-color: var(--bg); }
 .cta .btn-line:hover { background: transparent; opacity: .85; }
 .cta p { margin: 14px 0 0; opacity: .8; }
+.keep { display: grid; gap: 8px; margin-top: 16px; }
+.keep span { opacity: .85; }
+.keep input { font: 500 16px/1.2 var(--body); color: var(--bg); background: transparent; border: 2px solid currentColor; border-radius: 12px; padding: 12px 14px; min-height: 48px; width: 100%; }
+.keep input:focus { border-color: currentColor; box-shadow: none; outline: 3px solid var(--yellow); outline-offset: 2px; }
 .try {
   border-left: 6px solid var(--green); padding: 4px 0 4px 20px; margin: 0 0 36px;
 }
@@ -325,9 +329,11 @@ textarea:focus, input[type="text"]:focus { border-color: var(--fg); outline: non
 .ex-body h2 a:hover { text-decoration: underline; }
 .ex-tag { margin: 0 0 6px; font-weight: 500; }
 .ex-idea { margin: 0 0 10px; color: var(--muted); font-size: 15px; }
-.ex-links { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-weight: 500; }
+.ex-links { margin: 0; display: flex; flex-wrap: wrap; gap: 0 18px; font-weight: 500; }
+.ex-links a, .show-head .by a { display: inline-flex; align-items: center; min-height: 44px; }
 @media (min-width: 760px) {
   .ex-list { grid-template-columns: 1fr 1fr; gap: 28px 32px; }
   .ex { grid-template-columns: 140px 1fr; }
 }
 .hint { margin: 14px 0 0; color: var(--muted); }
+.hint a { display: inline-block; padding: 10px 0; }

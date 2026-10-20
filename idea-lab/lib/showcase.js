@@ -53,7 +53,7 @@ ${row.shots?.desktop ? `<meta property="og:image" content="${esc(base)}/s/${esc(
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700..800&display=swap">
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=5">
 </head>
 <body>
 ${metro()}
@@ -92,7 +92,8 @@ ${metro()}
           <a class="btn btn-red" href="${esc(signup)}" target="_blank" rel="noopener">Sign up</a>
           <button class="btn btn-line" type="button" id="copy">Copy link to this prototype</button>
         </div>
-        <p>Paste this link in the sign-up form.</p>
+        <label class="keep"><span>Keep this link. Paste it in the sign-up form, and on Oct&nbsp;24 type <b>/start</b> in Cursor and paste it there to start building from this idea.</span>
+          <input type="text" id="link" readonly value="${esc(base)}/s/${esc(row.id)}" aria-label="Link to this prototype"></label>
         <p class="sr-only" id="copied" aria-live="polite"></p>
       </section>
       ${open ? `<section class="try">
@@ -105,8 +106,16 @@ ${metro()}
   <p class="foot">This is a prototype with simulated data. Nothing here is real yet.</p>
 </main>
 <script>
-document.getElementById("copy").addEventListener("click", async (e) => {
-  const b = e.currentTarget, url = location.href;
+const link = document.getElementById("link"), copy = document.getElementById("copy");
+const url = location.origin + location.pathname;
+link.value = url;
+link.addEventListener("focus", () => link.select());
+// Phones: the share sheet (send it to yourself, WhatsApp, notes). Laptops: copy.
+if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+  copy.textContent = "Share or save the link";
+  copy.addEventListener("click", () => navigator.share({ title: document.title, url }).catch(() => {}));
+} else copy.addEventListener("click", async (e) => {
+  const b = e.currentTarget;
   try { await navigator.clipboard.writeText(url); }
   catch {
     const t = document.createElement("textarea");
