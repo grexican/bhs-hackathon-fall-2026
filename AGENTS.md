@@ -137,6 +137,7 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 | "Is it good?" / "Would people use it?" | `/test-with-a-friend`. Watch a real person; never ask "would you use it?". |
 | "What next?" | `/whats-next`: one pick, from evidence. |
 | "Upload a photo" / "save images" | `save-files`: files next to the database on `/data`, never elsewhere. |
+| "Add a map" / "near me" | `maps`: Leaflet + OpenStreetMap, no key; location only on a tap, over https. |
 | "I have to present" | `/pitch`. |
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
