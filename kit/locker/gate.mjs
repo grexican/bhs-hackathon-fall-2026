@@ -64,9 +64,14 @@ export function simUser(value) {
   return { sub: `sim:${email}`, email, name: name || email, domain: email.split("@")[1], simulated: true };
 }
 
-/** Returns the signed-in user, undefined when the gate is off, or null when it sent a response. */
+// The app's icon and manifest stay public, so phones can show it on the home screen and the hub's Apps
+// page can fetch it ("Use my app's icon"). Put icons at these addresses (in public/) to use this.
+export const PUBLIC_ICONS = /^\/(manifest\.webmanifest|manifest\.json|favicon\.(ico|png|svg)|apple-touch-icon(-precomposed)?\.png|icon(-\d+)?\.(png|svg)|icons\/[\w.-]+\.(png|svg|webp))$/;
+
+/** Returns the signed-in user, undefined when the gate is off (or for a public icon), or null when it sent a response. */
 export async function gate(req, res) {
   if (!on()) return undefined;
+  if (req.method === "GET" && PUBLIC_ICONS.test(new URL(req.url, "http://x").pathname)) return undefined;
   if (env("LOCKER_GATE_USER")) {
     if (env("RAILWAY_ENVIRONMENT") || env("RAILWAY_ENVIRONMENT_NAME")) {
       res.statusCode = 500;

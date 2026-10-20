@@ -169,6 +169,11 @@ test("school sign-in: off by default; with LOCKER_GATE=1 it sends people to sign
   const hubUrl = `http://127.0.0.1:${hub.address().port}`;
   app = await boot(dir, { PORT: String(await freePort()), DATABASE_PATH: db, LOCKER_GATE: "1", LOCKER_URL: hubUrl, LOCKER_APP_ID: "app_1", LOCKER_APP_SECRET: "gate_secret", APP_URL: "" });
   assert.equal((await fetch(`${app.base}/health`)).status, 200, "the host's health check never needs sign-in");
+  for (const icon of ["/manifest.webmanifest", "/apple-touch-icon.png", "/icon-512.png", "/favicon.ico"]) {
+    assert.notEqual((await fetch(`${app.base}${icon}`, { redirect: "manual" })).status, 302, `${icon} is public (home screen, hub Apps page)`);
+  }
+  assert.equal((await fetch(`${app.base}/icon-512.png.html`, { redirect: "manual" })).status, 302);
+  assert.equal((await fetch(`${app.base}/app.js`, { redirect: "manual" })).status, 302, "everything else still needs sign-in");
   const first = await fetch(`${app.base}/api/me`, { redirect: "manual" });
   assert.equal(first.status, 302);
   const to = new URL(first.headers.get("location"));
