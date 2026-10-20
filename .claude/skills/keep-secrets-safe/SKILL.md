@@ -72,31 +72,21 @@ First, the honest checks (ask the student, one at a time):
   ask the school.
 - **Does the user agree?** They type the password themselves, knowing what the app does with it.
 
-Then build it, server side:
+Then build it, server side, with the kit's browser helper (setup and costs: `headless-browser`):
 
 ```js
-import { chromium } from "playwright";
+import { withBrowser } from "./locker/browser.mjs";   // one browser at a time, always closed
 import { vault } from "./locker/vault.mjs";
 
-// One browser at a time: browsers are heavy, and the site shouldn't see a crowd from one app.
-let busy = Promise.resolve();
-const oneAtATime = (fn) => (busy = busy.then(fn, fn));
-
 export function fetchGrades(user) {
-  return oneAtATime(() =>
-    vault.use(user, "portal-password", "log in to the portal to fetch grades", async (password) => {
-      const browser = await chromium.launch();
-      try {
-        const page = await browser.newPage();
-        await page.goto("https://portal.example.org/login", { timeout: 20_000 });
-        await page.fill("#username", user.email);
-        await page.fill("#password", password);
-        await Promise.all([page.waitForLoadState("networkidle", { timeout: 20_000 }), page.click("button[type=submit]")]);
-        if (await page.locator("text=Invalid").count()) throw new Error("The portal said the password is wrong.");
-        return await page.locator(".grade-row").allTextContents();   // only what the app needs
-      } finally {
-        await browser.close();                                         // always, even after an error
-      }
+  return vault.use(user, "portal-password", "log in to the portal to fetch grades", (password) =>
+    withBrowser(async (page) => {
+      await page.goto("https://portal.example.org/login");
+      await page.fill("#username", user.email);
+      await page.fill("#password", password);
+      await Promise.all([page.waitForLoadState("networkidle"), page.click("button[type=submit]")]);
+      if (await page.locator("text=Invalid").count()) throw new Error("The portal said the password is wrong.");
+      return await page.locator(".grade-row").allTextContents();   // only what the app needs
     }),
   );
 }
@@ -107,10 +97,9 @@ export function fetchGrades(user) {
 - **A wrong password** → tell the person and offer to update it (`vault.put` again). Don't retry in a
   loop: portals lock accounts.
 - **Store results, not the password:** save the grades in SQLite; fetch again later with `vault.use`.
-- **Online, the server needs Chromium:** add `playwright` to the app's dependencies and
-  `"postinstall": "playwright install --with-deps chromium"` to `package.json`, then deploy early and
-  check the build logs (`npm run locker:logs -- <codename> --build`). If the build can't install it, ask
-  an organizer before the demo.
+- **Online, the server needs Chromium:** `npm install playwright` in the app, then
+  `npm run locker:set -- <codename> RAILPACK_NODE_PLAYWRIGHT_INSTALL=1` once, then deploy
+  (`headless-browser` has the details and what it costs).
 
 ## Done means
 

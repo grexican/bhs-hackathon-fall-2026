@@ -52,7 +52,7 @@ function copyTemplate(dir, { codename, name }) {
   fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
   // And the school sign-in gate, the tester "Feedback" button, the vault for users' passwords and keys,
   // and the AI kit (locker/ai: server-side only).
-  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js", "gate.mjs", "vault.mjs"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
+  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js", "gate.mjs", "vault.mjs", "browser.mjs"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
   copyAiKit(dir);
 }
 
