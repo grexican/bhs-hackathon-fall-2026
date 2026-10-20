@@ -17,7 +17,7 @@ There is also a `npm run onboard` script that does the same flow non-interactive
 
 ## What you will do
 
-1. Verify git is installed and Node 22+ is available.
+1. Verify git is installed and Node 22.18+ is available.
 2. Ask the student for their first name, last name, and email.
 3. Configure git's `user.name` and `user.email` (only if they aren't already set, or if the student wants to change them).
 4. Create a branch named `firstname-lastname` and switch to it.
@@ -38,7 +38,7 @@ node --version
 ```
 
 If `git --version` fails: stop, tell the student to install git from git-scm.com, and try again.
-If `node --version` is below 22: stop, tell them to install Node 22+ from nodejs.org.
+If `node --version` is below 22.18: stop, tell them to install the current LTS from nodejs.org.
 
 If `node_modules/` doesn't exist (`ls node_modules` fails), run `npm install` and explain that this downloads everything the project needs.
 
@@ -53,9 +53,12 @@ Say something warm and short. Example:
 Check if git is already configured:
 
 ```bash
-git config user.name
-git config user.email
+git config --global user.name
+git config --global user.email
 ```
+
+Always `--global`: each app in `apps/` is its own git repo, and commits there fail
+("Author identity unknown") if git only knows them inside the kit.
 
 Use `AskUserQuestion` to gather:
 
@@ -91,13 +94,13 @@ Run each command separately, with a one-line "what this does" before each:
 > _Saving your name to git so commits are credited to you:_
 >
 > ```bash
-> git config user.name "Jane Doe"
+> git config --global user.name "Jane Doe"
 > ```
 
 > _Now your email:_
 >
 > ```bash
-> git config user.email "jane@example.com"
+> git config --global user.email "jane@example.com"
 > ```
 
 > _Creating your branch and switching to it:_

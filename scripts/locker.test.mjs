@@ -90,6 +90,20 @@ test("project: re-running on your own project just refreshes it", async () => {
   assert.match(r.out, /already have lunch-line/);
 });
 
+test("project: a setup that failed is retried by running the same command again", async () => {
+  fs.mkdirSync(path.join(kit, "apps", "flaky-app"), { recursive: true });
+  mock.flags.failProvision = true;
+  const first = await run(["project", "flaky-app"]);
+  mock.flags.failProvision = false;
+  assert.equal(first.code, 1);
+  assert.match(first.out, /Railway timed out/);
+  const again = await run(["project", "flaky-app"]);
+  assert.equal(again.code, 0, again.out);
+  assert.match(again.out, /Trying again/);
+  assert.ok(projects.get("flaky-app").retried);
+  assert.equal(readEnv(path.join(kit, "apps", "flaky-app", ".env")).RAILWAY_SERVICE_ID, "svc-123");
+});
+
 test("project: someone else's codename shows the hub's message", async () => {
   fs.mkdirSync(path.join(kit, "apps", "taken-app"), { recursive: true });
   const r = await run(["project", "taken-app"]);

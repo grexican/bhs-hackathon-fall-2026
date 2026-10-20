@@ -56,9 +56,22 @@ export async function startMockHub() {
       if (!/^[a-z0-9-]{3,30}$/.test(body.codename)) return send(400, { error: "Bad codename." });
       if (flags.approvalRequired) return send(403, { error: "Making projects needs an organizer's OK first." });
       if (projects.has(body.codename)) return send(409, { error: "That codename is taken. Pick another one." });
+      if (flags.failProvision) {
+        projects.set(body.codename, { owner: "ana", project: { ...project(body.codename, body.name), role: "owner", status: "failed", error: "Railway timed out" }, body });
+        return send(502, { error: "Setting up your project didn't finish: Railway timed out" });
+      }
       // First answer is "provisioning", like the real hub while Railway spins up.
       projects.set(body.codename, { owner: "ana", project: { ...project(body.codename, body.name), role: "owner" }, body });
       return send(201, { ...project(body.codename, body.name), status: "provisioning" });
+    }
+    const rm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/retry$/);
+    if (req.method === "POST" && rm) {
+      const p = projects.get(rm[1]);
+      if (!p || p.owner !== "ana") return send(404, { error: "No project with that codename." });
+      if (p.project.status !== "failed") return send(409, { error: "Only a project that failed to set up can be retried." });
+      p.project = { ...project(rm[1], p.body.name), role: "owner" };
+      p.retried = true;
+      return send(201, { ...p.project, status: "provisioning" });
     }
     const lm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/listing$/);
     if (req.method === "PUT" && lm) {

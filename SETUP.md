@@ -23,6 +23,17 @@ Install what's missing or too old, then re-check (a new terminal may be needed f
 
 Installers may pop up a permission window: tell the student to click **Yes / Allow**.
 
+Still "not recognized" after installing? The terminal started before the install. Open a new terminal;
+if that doesn't help, tell the student to quit Cursor completely and reopen it (same folder), then
+paste *"continue setup from SETUP.md step 1"*.
+
+**Windows:** `npm` may fail with *"running scripts is disabled on this system"* (PowerShell blocks
+npm's launcher by default). Fix it once, no admin needed, then re-run the command:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+```
+
 ## 2. Get the project
 
 ```bash

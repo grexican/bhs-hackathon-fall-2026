@@ -116,9 +116,9 @@ async function main() {
     process.exit(1);
   }
 
-  const nodeMajor = Number(process.versions.node.split(".")[0]);
-  if (nodeMajor < 22) {
-    fail(`Node ${process.versions.node} is too old. Need 22 or newer.`);
+  const [nodeMajor, nodeMinor] = process.versions.node.split(".").map(Number);
+  if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 18)) {
+    fail(`Node ${process.versions.node} is too old. Need 22.18 or newer.`);
     fail("Install from https://nodejs.org and run this again.");
     process.exit(1);
   }
@@ -138,8 +138,9 @@ async function main() {
 
   // 2. Identity
   header("Who are you?");
-  const existingName = gitOk(["config", "user.name"]).stdout;
-  const existingEmail = gitOk(["config", "user.email"]).stdout;
+  // Global, not just this repo: every app in apps/ is its own git repo and needs to know you too.
+  const existingName = gitOk(["config", "--global", "user.name"]).stdout;
+  const existingEmail = gitOk(["config", "--global", "user.email"]).stdout;
   if (existingName && existingEmail) {
     info(`Git already knows you as: ${existingName} <${existingEmail}>`);
   }
@@ -180,13 +181,13 @@ async function main() {
   // 6. Configure git identity
   header("Configuring git");
   if (existingName !== fullName) {
-    git(["config", "user.name", fullName]);
+    git(["config", "--global", "user.name", fullName]);
     ok(`set git user.name to "${fullName}"`);
   } else {
     ok("user.name already correct");
   }
   if (existingEmail !== email) {
-    git(["config", "user.email", email]);
+    git(["config", "--global", "user.email", email]);
     ok(`set git user.email to "${email}"`);
   } else {
     ok("user.email already correct");
