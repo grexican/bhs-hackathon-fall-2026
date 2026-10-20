@@ -37,7 +37,7 @@ test("new-app copies the starter app, fills in the name, and commits it (without
   const out = newApp("lunch-line", "--name", 'Lunch & "Line"');
   assert.match(out, /npm run dev/);
   const dir = path.join(root, "apps", "lunch-line");
-  for (const f of ["server.js", "db.js", "package.json", "public/index.html", "public/app.js", "public/style.css", "locker/otel.mjs", "AGENTS.md", "docs/idea.md"]) {
+  for (const f of ["server.js", "db.js", "package.json", "public/index.html", "public/app.js", "public/style.css", "locker/otel.mjs", "locker/vault.mjs", "locker/gate.mjs", "AGENTS.md", "docs/idea.md"]) {
     assert.ok(fs.existsSync(path.join(dir, f)), `${f} exists`);
   }
   const pkg = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));

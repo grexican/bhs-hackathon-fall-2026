@@ -350,7 +350,7 @@ export function refreshKitFiles(codename) {
   const dir = appDir(codename);
   const kit = (rel) => fileURLToPath(new URL(`../kit/${rel}`, import.meta.url));
   const done = [];
-  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js"]) {
+  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs"]) {
     const to = path.join(dir, "locker", f);
     if (fs.existsSync(to)) {
       fs.copyFileSync(kit(`locker/${f}`), to);

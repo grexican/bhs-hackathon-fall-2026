@@ -18,4 +18,6 @@ argument-hint: "[the feature]"
    `- **<decision>**: <choice>. Why: <one line>. (<date>)`
 4. End with a 3-line build plan and ask: "Build it?"
 
-A big, hard-to-undo call where they're torn? Offer `/council`.
+A big, hard-to-undo call where they're torn? Offer `/council`. A feature that takes a password or key
+from its users? One decision is already made: it goes in the vault (`keep-secrets-safe`); decide
+what the app tells people and how they delete it.

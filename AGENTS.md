@@ -47,6 +47,8 @@ After `/connect`, every app gets real services from the BHS Incubator hub (setti
 - **Hosting:** its own Railway slot. `/ship` → `npm run deploy -- <codename>`. Listen on `PORT`, add `/health`.
 - **AI:** `OPENROUTER_API_KEY`, the app's own capped key. `kit/ai` reads it as is.
 - **Email:** the hub relay, as an `email` provider with `sim` and `locker` implementations.
+- **Users' passwords and keys:** the vault (`kit/locker/vault.mjs`, in every starter app): encrypted on the hub,
+  read just in time with `vault.use(user, name, purpose, fn)`, deletable by the person. See `keep-secrets-safe`.
 - **Tester feedback:** a "Feedback" button (`kit/locker/feedback.mjs` + `feedback.js`; off by default in the starter app,
   one line in `public/index.html` turns it on). Messages go to the team's inbox on the hub; read them with
   `npm run locker:feedback -- <codename>`. Offline it's simulated (`data/feedback.jsonl`).
@@ -155,6 +157,8 @@ product needs another stack (`--bare` skips it). The rules that apply to every s
 
 ## Code style
 
+- **If your app takes passwords or keys from its users, use the vault** (`keep-secrets-safe`). Never plain text
+  in the database, logs, git, `.env` or the browser.
 - **Plain-English comments** that explain *why*, one line, on anything non-obvious (`explain-like-new`).
 - **One thing per file.** Easy for a beginner to navigate.
 - **No empty `try/catch`.** Show errors so the student can see them.

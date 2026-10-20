@@ -54,6 +54,12 @@ the cap, OpenRouter refuses every AI call until next month, and `kit/ai` throws 
 line, make sure the app catches it and shows the message (`ai-kit`), and ask an organizer to raise the
 cap. Then look at what used it up (a loop, an AI call on every page load, images without a cache).
 
+## Never paste a user's password to debug
+
+If the bug involves a password or key a user gave the app, don't ask for it, print it or put it in a
+test. Test with your own account's password through the vault (`keep-secrets-safe`), and log
+`redact(text)` from `locker/vault.mjs`, not raw responses from the other site.
+
 ## Two fixes didn't work: stop and step back
 
 After two failed fixes for the same problem, **don't try a third guess**. Say so to the student, then:

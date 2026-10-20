@@ -50,8 +50,9 @@ function copyTemplate(dir, { codename, name }) {
   }
   // The same request logging the app gets online (npm run deploy refreshes this copy).
   fs.mkdirSync(path.join(dir, "locker"), { recursive: true });
-  // And the school sign-in gate, the tester "Feedback" button, and the AI kit (locker/ai: server-side only).
-  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js", "gate.mjs"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
+  // And the school sign-in gate, the tester "Feedback" button, the vault for users' passwords and keys,
+  // and the AI kit (locker/ai: server-side only).
+  for (const f of ["otel.mjs", "feedback.mjs", "feedback.js", "gate.mjs", "vault.mjs"]) fs.copyFileSync(path.join(KIT, "kit", "locker", f), path.join(dir, "locker", f));
   copyAiKit(dir);
 }
 
@@ -86,6 +87,7 @@ ${bare ? "" : `
   "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Its "Ask the AI" box is one
   uncommented line in \`public/index.html\`.
 - School sign-in: off until \`LOCKER_GATE=1\`; then \`user\` in every route is whoever is signed in (\`GET /api/me\`).
+- Users' passwords or API keys: \`locker/vault.mjs\` (\`keep-secrets-safe\`), never the database.
 - \`locker/\`: kit files (request logging, sign-in gate, Feedback button, AI kit). The deploy refreshes them; don't edit.
 
 Switching to Vite, Next.js or another stack is fine (\`stack-picker\`): keep \`PORT\`, \`/health\`,

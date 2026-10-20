@@ -17,7 +17,10 @@ const SLOW_MS = 1000;
 
 /** Prints one JSON line. Railway reads "level" and "message" and keeps the rest as fields you can filter on. */
 function line(level, message, fields = {}) {
-  process.stdout.write(JSON.stringify({ level, message, ...fields }) + "\n");
+  let text = JSON.stringify({ level, message, ...fields });
+  // Secrets the app is using right now (locker/vault.mjs registers them) never reach the logs.
+  for (const s of globalThis.__lockerSecrets ?? []) text = text.replaceAll(JSON.stringify(s).slice(1, -1), "[redacted]");
+  process.stdout.write(text + "\n");
 }
 
 function requestLine({ kind, method, target, status, ms, error, traceId }) {

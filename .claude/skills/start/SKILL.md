@@ -40,7 +40,8 @@ and one line on **why it matters**. Only ask questions whose answers change the 
 - A **hard trade-off** with a cost on each side (fun or realistic, solo or shared, saved or instant).
 - Does it need to **remember** things (accounts, saved data)? Default: no accounts in version 1.
 - Does it talk to the **outside world** (WhatsApp, payments, email)? Explain that we'll build a
-  simulator first so they can test everything today.
+  simulator first so they can test everything today. Does it need a **password or key from its users**
+  (log in to a portal for them, their own API key)? That's fine: it goes in the vault (`keep-secrets-safe`).
 - How will we know it works? "A friend can ___ in 30 seconds."
 
 Push back once on vague answers.
