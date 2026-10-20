@@ -26,6 +26,9 @@ import {
   pullEnv,
   readEnv,
   formatFeedback,
+  checkHealth,
+  getProject,
+  healthText,
   myAppRequests,
   requestApp,
   readFeedback,
@@ -136,9 +139,21 @@ const server = new McpServer({ name: "bhs-locker", version: "1.0.0" });
 
 server.registerTool(
   "locker_status",
-  { description: "Shows whether this laptop is connected to the incubator hub, as whom, and the student's projects (role, live URL, AI budget, hosting cost)." },
-  tool(async () => {
+  {
+    description:
+      "Shows whether this laptop is connected to the incubator hub, as whom, and the student's projects (role, live URL, AI budget, hosting cost). With a codename: that project plus 'Is it working?' (live and answering / last deploy failed with its error lines / down / never deployed / building) and hints. Check this FIRST when the live app is broken or a deploy seems stuck; check: true asks the hub for a fresh check (once a minute).",
+    inputSchema: {
+      codename: codename.optional(),
+      check: z.boolean().optional().describe("true: ask the hub to check the app right now before answering."),
+    },
+  },
+  tool(async ({ codename, check } = {}) => {
     if (!isConnected()) return "This laptop isn't connected to the hub yet. Use locker_connect to sign in (it opens the browser).";
+    if (codename) {
+      const note = check ? (await checkHealth(codename)).note : null;
+      const p = await getProject(codename);
+      return [...(note ? [note] : []), projectLine(p), ...healthText(codename, p.health).map((l, i) => (i ? `  ${l}` : `  Is it working? ${l}`))].join("\n");
+    }
     const json = await me();
     const head = `Connected as ${json.student?.name ?? "?"} (${json.student?.email ?? "?"}).`;
     if (!json.projects?.length) return `${head} No projects yet: make one with new_app, then locker_create_project.`;

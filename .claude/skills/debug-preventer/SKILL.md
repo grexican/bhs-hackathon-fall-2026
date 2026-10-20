@@ -40,6 +40,11 @@ When the student confirms, change only what's needed to fix the specific error. 
 
 ## Works on my laptop, broken online
 
+**First, ask the hub** (it checks every app every 10 minutes): `npm run locker:status -- <codename>`
+(add `--check` for a fresh check), or the `locker_status` tool with the codename. It says whether
+the last deploy failed (with its error lines), the app isn't answering, it's still building, or it
+was never deployed. Start from what it says.
+
 Get the server's own error first: `npm run locker:logs -- <codename> --errors` (add `--build` if the
 deploy failed). Each failed request, failed AI/API call and crash is one line there, with the stack. The usual causes, in order: listening on a fixed port instead of `PORT`, saving the
 database or files somewhere other than `/data`, a setting that's in the laptop's `.env` but not on

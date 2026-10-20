@@ -46,6 +46,11 @@ version): that's normal, not a failure. Wait for `<APP_URL>/health` to answer `o
 up to 5 min) before you open it or tell the student anything. A failure? Read `npm run locker:logs -- <codename> --build`, explain the cause in one
 sentence, fix, deploy again. Two failed fixes: tell them to raise a hand.
 
+**Not sure what state it's in?** Ask the hub first: `npm run locker:status -- <codename> --check` (or the
+`locker_status` tool with the codename and `check: true`). It answers "Live and answering in N ms",
+"Building…", "The last deploy failed to build" with the error lines, "isn't answering", or "Never
+deployed yet", plus hints like "Last 2 deploys failed". Start from that, not from guesses.
+
 ## 3. Prove it's live
 
 Only after `/health` says ok, use **`verify-in-browser`** on the live address (`APP_URL` in the app's `.env`):

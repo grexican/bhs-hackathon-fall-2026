@@ -165,6 +165,12 @@ test("bring_app asks for an app hosted elsewhere and lists requests", async () =
   assert.match((await call("locker_bring_app", {})).text, /quiz-night\): pending/);
 });
 
+test("status with a codename includes 'Is it working?' so the agent can self-diagnose", async () => {
+  const r = await call("locker_status", { codename: "lunch-line", check: true });
+  assert.equal(r.isError, false, r.text);
+  assert.match(r.text, /Is it working\? Live and answering in 120 ms/);
+});
+
 test("feedback reads the inbox as plain lines", async () => {
   const r = await call("locker_feedback", { codename: "lunch-line" });
   assert.equal(r.isError, false, r.text);

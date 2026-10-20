@@ -512,6 +512,7 @@ ${p.name} (${p.codename}): ${p.status}${role}`);
   if (p.ai) console.log(`  AI budget:      $${(p.ai.usedUsd ?? 0).toFixed(2)} used of $${p.ai.monthlyLimitUsd} this month`);
   if (p.costs) console.log(`  Hosting cost:   $${(p.costs.railwayUsdThisMonth ?? 0).toFixed(2)} this month`);
   if (p.railway?.inviteUrl) console.log(`  See logs in Railway (optional, free account): ${p.railway.inviteUrl}`);
+  if (p.health !== undefined) console.log(healthText(p.codename, p.health).map((l, i) => (i ? `    ${l}` : `  Is it working?  ${l}`)).join("\n"));
 }
 
 async function join(args) {
@@ -538,7 +539,12 @@ async function env(args) {
 
 async function status(args) {
   if (args[0]) {
-    printProject(await getProject(needCodename(args, { mustExist: false })));
+    const codename = needCodename(args, { mustExist: false });
+    if (args.includes("--check")) {
+      const r = await checkHealth(codename);
+      if (r.note) console.log(r.note);
+    }
+    printProject(await getProject(codename));
     return;
   }
   const json = await me();
@@ -616,6 +622,36 @@ async function feedbackCmd(args) {
   const data = await readFeedback(codename, { unread: args.includes("--new"), limit: Number(flag(args, "limit") ?? 50) });
   console.log(formatFeedback(codename, data));
   console.log(`\nMark it read or delete it on ${hubUrl()}/p/${codename}#feedback`);
+}
+
+// ---------- is it working? (the hub checks every app every 10 minutes) ----------
+
+/** Plain lines about a project's health: the status sentence, then hints and error lines. */
+export function healthText(codename, h) {
+  if (!h) return ["Not checked yet. Run: npm run locker:status -- " + codename + " --check"];
+  const ms = h.up?.ms;
+  const crashed = h.deploy?.status === "CRASHED";
+  const line = {
+    healthy: `Live and answering${ms != null ? ` in ${ms} ms` : ""}.`,
+    building: "Building… a deploy is on its way (usually 1–3 minutes).",
+    failing: `The last deploy ${crashed ? "crashed after starting" : "failed to build"}. More: npm run locker:logs -- ${codename} ${crashed ? "--errors" : "--build"}`,
+    down: `Deployed, but it isn't answering${h.up?.status ? ` (it said ${h.up.status})` : ""}. Check it listens on PORT and has /health, then: npm run locker:logs -- ${codename}`,
+    "never-deployed": "Never deployed yet: npm run deploy -- " + codename,
+    idle: "Asleep or removed. Deploy again: npm run deploy -- " + codename,
+  }[h.status] ?? "The hub couldn't check it right now. Try again in a minute.";
+  const when = h.checkedAt ? ` (checked ${new Date(h.checkedAt).toISOString().slice(11, 16)} UTC)` : "";
+  return [line + when, ...(h.hints ?? []).map((x) => `- ${x}`), ...(h.deploy?.errorLines ?? []).map((x) => `| ${x}`)];
+}
+
+/** Asks the hub to check the project now (at most once a minute). Returns { health, note }. */
+export async function checkHealth(codename) {
+  checkCodename(codename, { mustExist: false });
+  try {
+    return { health: (await api("POST", `/api/projects/${codename}/health/check`)).json.health };
+  } catch (err) {
+    if (err.status === 429) return { health: null, note: "Checked less than a minute ago; showing that check." };
+    throw err;
+  }
 }
 
 // ---------- bring an app hosted elsewhere (an organizer approves it on the hub) ----------

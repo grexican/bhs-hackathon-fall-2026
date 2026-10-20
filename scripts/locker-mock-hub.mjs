@@ -81,6 +81,15 @@ export async function startMockHub() {
       flags.requests.push(r);
       return send(201, r);
     }
+    const hm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/health\/check$/);
+    if (req.method === "POST" && hm) {
+      const p = projects.get(hm[1]);
+      if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
+      flags.healthChecks = (flags.healthChecks ?? 0) + 1;
+      if (flags.healthChecks > 1) return send(429, { error: "Checked less than a minute ago. Try again in a moment." });
+      p.project.health = { status: "healthy", hints: [], deploy: { id: "d1", status: "SUCCESS", createdAt: "2026-10-24T10:00:00Z", errorLines: [] }, up: { ok: true, status: 200, ms: 120 }, errors1h: 0, checkedAt: "2026-10-24T12:00:00Z" };
+      return send(200, { health: p.project.health });
+    }
     const fm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/feedback$/);
     if (req.method === "GET" && fm) {
       const p = projects.get(fm[1]);

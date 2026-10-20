@@ -391,3 +391,23 @@ test("bring: asks to bring an app hosted elsewhere, shows the ownership line, th
   const list = await run(["bring"]);
   assert.match(list.out, /Quiz Night \(quiz-night\): pending/);
 });
+
+test("status shows 'Is it working?' with hints and error lines, and --check asks for a fresh check", async () => {
+  projects.get("lunch-line").project.health = {
+    status: "failing",
+    hints: ["Last 2 deploys failed"],
+    deploy: { id: "d2", status: "FAILED", createdAt: "2026-10-24T11:00:00Z", errorLines: ["npm ERR! missing script: start"] },
+    up: null,
+    errors1h: null,
+    checkedAt: "2026-10-24T11:05:00Z",
+  };
+  const r = await run(["status", "lunch-line"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Is it working\?  The last deploy failed to build\. More: npm run locker:logs -- lunch-line --build \(checked 11:05 UTC\)/);
+  assert.match(r.out, /- Last 2 deploys failed/);
+  assert.match(r.out, /\| npm ERR! missing script: start/);
+  const fresh = await run(["status", "lunch-line", "--check"]);
+  assert.match(fresh.out, /Live and answering in 120 ms/);
+  const again = await run(["status", "lunch-line", "--check"]);
+  assert.match(again.out, /Checked less than a minute ago/);
+});
