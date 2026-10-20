@@ -9,6 +9,7 @@
   },
   "scripts": {
     "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "onboard": "node scripts/onboard.mjs",
     "new-app": "node scripts/new-app.mjs",
     "port": "node scripts/port.mjs",

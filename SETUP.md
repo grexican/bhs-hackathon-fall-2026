@@ -49,7 +49,10 @@ folder (File → Open Folder) and paste *"continue setup from SETUP.md step 3"* 
 npm run setup
 ```
 
-Say: "Installing the tools the project needs, about a minute."
+Say: "Installing the tools the project needs, about a minute." It ends by running `npm run doctor`:
+fix every ✗ it prints, one at a time, with the fix it gives (run `npm run doctor` again after each).
+A "–" line (not connected to the hub yet) is fine for now. On Windows, if npm says "running scripts is
+disabled on this system", run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (or use `npm.cmd`).
 
 ## 4. Their name and branch
 

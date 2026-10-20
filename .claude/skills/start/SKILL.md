@@ -55,9 +55,17 @@ Everything from here is built in `apps/<codename>/`.
 
 ## 2. Pick the stack
 
-Use **`stack-picker`**. Say the choice and the trade-off in two lines. Scaffold it into
-`apps/<codename>/`, non-interactively. The dev server must take its port
-from `npm run port` so it never collides with anything else running.
+The folder already holds the **starter app**: a tiny Node server (`server.js`) with `/health`, a
+SQLite database (`db.js`, `node:sqlite` at `DATABASE_PATH`), a phone-first page in `public/`, and its
+own port in `.env`. `npm run dev` in the folder runs it, and it already passes every `/ship` check.
+For most first apps (forms, lists, a feed, an AI helper) **build on it**: add routes to `server.js`,
+tables to `db.js`, screens to `public/`.
+
+When the product needs something else (a game engine, 3D, React with many screens), use
+**`stack-picker`**: say the choice and the trade-off in two lines, then scaffold over the starter,
+non-interactively. Keep what the host needs: `PORT`, `/health`, `DATABASE_PATH` for data, a `start`
+script, and `locker/otel.mjs`. A static-only site serves with `locker/static.mjs` (see `/ship`).
+Never hard-code a port: the one in `.env` (or `npm run port`).
 
 ## 3. Design before code
 

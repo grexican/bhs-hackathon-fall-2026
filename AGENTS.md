@@ -97,7 +97,11 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 ## Stack
 
 **There is no default stack.** Every app gets the best-in-class stack for what it is. Use
-`stack-picker` before scaffolding. The rules that apply to every stack:
+`stack-picker` before scaffolding. What there is: a **starter app** that `npm run new-app` puts in every
+new folder (plain Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, a phone-first
+`public/`, its port in `.env`, request logging in `locker/otel.mjs`). It runs with `npm run dev`,
+needs no packages and already passes `/ship`. Build on it when plain Node fits; replace it when the
+product needs another stack (`--bare` skips it). The rules that apply to every stack:
 
 - **Boots in seconds, runs locally.** No Docker, no cloud databases, no paid services required to run.
   SQLite beats Postgres here. Plain static files are fine when that's all it needs.
@@ -114,7 +118,8 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 | Script | What it does |
 |---|---|
 | `npm run setup` | One-time: install tools, the Playwright browser, and git hooks. |
-| `npm run new-app -- <codename>` | Make `apps/<codename>/`, its own git repo. |
+| `npm run doctor` | Checks the laptop (Node, git, npm, Railway tool, hub connection) and gives one fix per problem. |
+| `npm run new-app -- <codename>` | Make `apps/<codename>/`, its own git repo, with the starter app (`--bare`: empty). |
 | `npm run locker:connect / project / env / status / logs / list` | Talk to the incubator hub (`/connect`). |
 | `npm run deploy -- <codename>` | Upload the app to its hosting slot (`/ship`). |
 | `npm test` | The kit's own tests. |

@@ -42,6 +42,9 @@ If `node --version` is below 22.18: stop, tell them to install the current LTS f
 
 If `node_modules/` doesn't exist (`ls node_modules` fails), run `npm install` and explain that this downloads everything the project needs.
 
+Then run `npm run doctor`. It prints ✓ or ✗ per tool with one fix each: walk the student through each ✗,
+one at a time, and run it again. A "–" (not connected to the hub yet) is fine until `/connect`.
+
 ### 2. Greeting
 
 Say something warm and short. Example:

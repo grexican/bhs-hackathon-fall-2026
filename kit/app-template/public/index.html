@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{name}}</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- The starting page. /start replaces this with your real app. -->
+  <main>
+    <h1>{{name}}</h1>
+    <p>Your app is running. Tap the button: the count is saved in the database, so it stays after a restart.</p>
+    <button id="tap" type="button">Tap me</button>
+    <p class="count"><span id="count">…</span> taps so far</p>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

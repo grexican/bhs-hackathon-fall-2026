@@ -1,0 +1,14 @@
+{
+  "name": "{{codename}}",
+  "version": "0.1.0",
+  "private": true,
+  "description": {{nameJson}},
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env --disable-warning=ExperimentalWarning --import ./locker/otel.mjs server.js",
+    "start": "node server.js"
+  }
+}

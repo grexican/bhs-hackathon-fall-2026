@@ -21,6 +21,25 @@ Then type your idea:
 /start a study app that quizzes me on the stuff I got wrong last time
 ```
 
+### Setting up by hand (or if the paste didn't work)
+
+1. Install three things: **[Node.js LTS](https://nodejs.org)** (the green button), **[git](https://git-scm.com/downloads)**
+   (all default options are fine) and **[Cursor](https://cursor.com/download)**. Then open a new terminal.
+2. In Cursor's terminal:
+
+   ```
+   git clone https://github.com/grexican/bhs-hackathon-fall-2026 hackathon
+   cd hackathon
+   npm run setup
+   npm run doctor
+   ```
+
+3. `npm run doctor` checks everything and prints **one fix for each ✗**. Fix, run it again, until it's all ✓.
+
+No Docker, no database to install: your app's database is a file, built into Node.
+**Windows, "running scripts is disabled on this system"?** Run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force` in PowerShell once, or type `npm.cmd` instead of `npm`.
+
 ## Commands
 
 | Type | It does |

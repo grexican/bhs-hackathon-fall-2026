@@ -1,0 +1,31 @@
+/* Phone first: this is how most people will see the app. Bigger screens just get more room. */
+:root {
+  --bg: #fbfaf7;
+  --text: #1d1b18;
+  --accent: #2f5bff;
+  font-family: system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+}
+main { width: 100%; max-width: 32rem; text-align: center; }
+h1 { font-size: clamp(2rem, 8vw, 3rem); margin: 0 0 0.5rem; }
+button {
+  font: inherit;
+  font-size: 1.25rem;
+  min-height: 48px; /* big enough for a thumb */
+  padding: 0 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+.count { font-size: 1.1rem; }
