@@ -28,9 +28,10 @@ Read the code and fix what's missing (one line each on what you changed):
   the BHS sign-in gate in front. GitHub Pages is fine if they prefer it.
 - **Only for BHS people?** Ask once: "Should only people with a school account be able to open it?"
   Yes → copy `kit/locker/` into the app (if not there yet), call `gate(req, res)` first in the
-  server (see the top of `locker/gate.mjs`; static sites already do), and set `LOCKER_GATE=1` in the
-  app's `.env` and on Railway (`npm run locker:env -- <codename>` shows how). Visitors then sign in
-  with their school Google account; no login code to write.
+  server (see the top of `locker/gate.mjs`; static sites already do), and turn it on with
+  `npm run locker:set -- <codename> LOCKER_GATE=1` (sets it on the server and in the app's `.env`; it
+  applies on the next deploy). Visitors then sign in with their school Google account; no login code
+  to write.
 - **Secrets** come from env vars. The hub already set them on the server; `.env` is never uploaded.
 
 Run it once the production way (`npm run build`, then `npm start` with a `PORT`) and open it.

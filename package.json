@@ -31,6 +31,7 @@
     "locker:connect": "node scripts/locker.mjs connect",
     "locker:project": "node scripts/locker.mjs project",
     "locker:join": "node scripts/locker.mjs join",
+    "locker:set": "node scripts/locker.mjs set",
     "locker:env": "node scripts/locker.mjs env",
     "locker:status": "node scripts/locker.mjs status",
     "deploy": "node scripts/locker.mjs deploy",

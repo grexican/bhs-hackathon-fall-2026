@@ -4,6 +4,7 @@
 //   npm run locker:connect
 //   npm run locker:project -- <codename> [--name "Lunch Line"] [--pitch "..."] [--idea-url <link>]
 //   npm run locker:join -- <codename>      (teammate: fetch the settings for a project you were added to)
+//   npm run locker:set -- <codename> KEY=VALUE [KEY=VALUE...]   (app settings on the server, no redeploy)
 //   npm run locker:env -- <codename>
 //   npm run locker:status -- [codename]
 //   npm run locker:logs -- <codename> [--build]
@@ -284,6 +285,31 @@ async function deploy(args) {
   console.log(`  Watch it run:   npm run locker:logs -- ${codename}`);
 }
 
+const HUB_OWNED = new Set(["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER_APP_SECRET", "LOCKER_APP_ID", "LOCKER_URL"]);
+
+function set(args) {
+  const codename = needCodename(args);
+  const pairs = args.filter((a) => a !== codename);
+  if (!pairs.length) throw new HubError(`Which settings? Like: npm run locker:set -- ${codename} LOCKER_GATE=1`, 0);
+  const values = {};
+  for (const pair of pairs) {
+    const m = pair.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/s);
+    if (!m) throw new HubError(`"${pair.split("=")[0]}" needs a value, written KEY=VALUE.`, 0);
+    if (HUB_OWNED.has(m[1])) throw new HubError(`${m[1]} comes from the hub, so you can't set it here. Run: npm run locker:env -- ${codename}`, 0);
+    values[m[1]] = m[2];
+  }
+  const { e, childEnv } = railwayArgs(codename);
+  const sets = Object.entries(values).flatMap(([k, v]) => ["--set", `${k}=${v}`]);
+  const run = spawnSync("railway", ["variables", "--service", e.RAILWAY_SERVICE_ID, ...sets, "--skip-deploys"], { cwd: appDir(codename), env: childEnv, shell: true, encoding: "utf8" });
+  const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.replaceAll(e.RAILWAY_TOKEN, "***");
+  process.stdout.write(output);
+  if (run.status !== 0 || /error|unauthorized/i.test(output)) {
+    throw new HubError("Railway didn't accept the settings (see above).", 0);
+  }
+  mergeEnv(path.join(appDir(codename), ".env"), values);
+  console.log(`Saved ${Object.keys(values).join(", ")}. They apply on your next deploy (npm run deploy -- ${codename}).`);
+}
+
 function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
@@ -294,13 +320,13 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, join, env, status, deploy, logs };
+const COMMANDS = { connect, project, join, set, env, status, deploy, logs };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|join|env|status|deploy|logs> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs> [codename]");
     process.exit(1);
   }
   Promise.resolve(fn(rest)).catch((err) => {

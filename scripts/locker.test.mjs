@@ -267,3 +267,23 @@ test("project: builder-approval 403 is shown as-is plus what to do", async () =>
   assert.match(r.out, /needs an organizer's OK/);
   assert.match(r.out, /Tell an organizer your school email\./);
 });
+
+test("set: pushes variables with the project token, updates .env, never shows the token", async () => {
+  const r = await run(["set", "lunch-line", "LOCKER_GATE=1", "GREETING=hi there"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /railway variables --service svc-123 --set LOCKER_GATE=1 --set GREETING=hi there --skip-deploys/);
+  assert.match(r.out, /token present/);
+  assert.doesNotMatch(r.out, new RegExp(RW_TOKEN));
+  assert.match(r.out, /Saved LOCKER_GATE, GREETING\. They apply on your next deploy \(npm run deploy -- lunch-line\)\./);
+  const env = readEnv(path.join(kit, "apps", "lunch-line", ".env"));
+  assert.equal(env.LOCKER_GATE, "1");
+  assert.equal(env.GREETING, "hi there");
+});
+
+test("set: refuses settings that come from the hub", async () => {
+  for (const key of ["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER_APP_SECRET", "LOCKER_APP_ID", "LOCKER_URL"]) {
+    const r = await run(["set", "lunch-line", `${key}=x`]);
+    assert.equal(r.code, 1);
+    assert.match(r.out, /comes from the hub/);
+  }
+});
