@@ -25,7 +25,9 @@ Then type your idea:
 
 | Type | It does |
 |---|---|
-| `/start <idea>` | Idea → questions → design → first working version |
+| `/start <idea>` | Idea (no idea yet? it helps) → questions → design → first working version |
+| `/connect` | Your app's own web address, AI key and email, from the BHS Incubator |
+| `/ship` | Puts your app online |
 | `/wrap` | Saves your work (`/wrap push` also uploads it) |
 | `/caveman` | Short answers, saves credits |
 

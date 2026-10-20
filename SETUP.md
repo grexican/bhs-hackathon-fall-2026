@@ -64,4 +64,5 @@ npm run ai -- ask fast "hi"
 
 ## 7. Done
 
-Say, in two lines: "You're set up on your own branch. Type **/start** and your idea in one sentence."
+Say, in two lines: "You're set up on your own branch. Type **/start** and your idea in one sentence
+(no idea yet? just type **/start**)." Once their first version runs, offer **/connect** to put it online.
