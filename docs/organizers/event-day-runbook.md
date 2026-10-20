@@ -12,11 +12,11 @@ problems we expect. The hub is **BHS Locker** at https://locker.bhslabs.org; its
    ask the school's IT to allow the OAuth client of the hub's Google Cloud project `bhs-locker`
    (Admin console → Security → API controls → App access control → trust it). Do this before
    anything else: without it, nobody can `/connect`.
-2. **Fill the spare pool.** Railway lets a workspace create **one project every 30 seconds**. The hub
-   keeps spare project slots ready so `/connect` takes seconds even when everyone does it at once.
-   Set `POOL_TARGET` on the hub's Railway service to about the number of builders (it fills one
-   every ~35 s, so 40 spares take ~25 minutes). `/admin` shows "Spare project slots ready: N of M".
-   Empty spares cost nothing.
+2. **Spare slots (optional).** Railway lets a workspace create **one project every 30 seconds**, so
+   when many students make projects at once the hub queues them (each student sees their place in
+   line). Usually that's fine. To make a big rush instant, set `POOL_TARGET` on the hub's Railway
+   service to about the number of builders a day ahead (one spare per ~35 s); set it back to 0
+   after. `/admin` shows "Spare project slots ready: N of M". Empty spares cost nothing.
 3. **Check the project cap.** The workspace holds at most **100 projects** (spares included);
    `/admin` shows how many are in use. If builders × projects-per-builder + spares could pass that,
    lower `MAX_PROJECTS_PER_STUDENT` (default 3) or ask Railway to raise the cap.
