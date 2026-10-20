@@ -329,7 +329,7 @@ if (process.argv[1]?.endsWith("locker.mjs")) {
     console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs> [codename]");
     process.exit(1);
   }
-  Promise.resolve(fn(rest)).catch((err) => {
+  Promise.resolve().then(() => fn(rest)).catch((err) => {
     console.error(`✗ ${err instanceof HubError ? err.message : err.stack}`);
     process.exit(1);
   });
