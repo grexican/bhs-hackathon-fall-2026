@@ -31,6 +31,7 @@ import {
   healthText,
   myAppRequests,
   requestApp,
+  withdrawAppRequest,
   readFeedback,
   readLogs,
   saveListing,
@@ -345,9 +346,15 @@ server.registerTool(
       url: z.string().url().optional().describe("The app's address, https only, no port, like https://lunch-line.example.com"),
       name: z.string().min(1).max(60).optional().describe("Display name, like Lunch Line."),
       pitch: z.string().max(300).optional().describe("One sentence on what it does."),
+      withdraw: z.boolean().optional().describe("true (with codename): take back that request while it's still waiting."),
     },
   },
-  tool(async ({ codename, url, name, pitch }) => {
+  tool(async ({ codename, url, name, pitch, withdraw }) => {
+    if (withdraw) {
+      if (!codename) throw new HubError("Which request? Give its codename.", 0);
+      await withdrawAppRequest(codename);
+      return `Withdrew the request for ${codename}.`;
+    }
     if (!codename) {
       const reqs = await myAppRequests();
       return reqs.length ? reqs.map((r) => `- ${r.name} (${r.codename}): ${r.status}${r.note ? ` (${r.note})` : ""} ${r.url}`).join("\n") : "No requests yet.";

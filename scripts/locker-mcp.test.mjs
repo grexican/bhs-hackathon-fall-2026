@@ -163,6 +163,8 @@ test("bring_app asks for an app hosted elsewhere and lists requests", async () =
   assert.equal(r.isError, false, r.text);
   assert.match(r.text, /Asked to bring Quiz Night/);
   assert.match((await call("locker_bring_app", {})).text, /quiz-night\): pending/);
+  assert.match((await call("locker_bring_app", { codename: "quiz-night", withdraw: true })).text, /Withdrew the request for quiz-night/);
+  assert.match((await call("locker_bring_app", {})).text, /quiz-night\): withdrawn/);
 });
 
 test("status with a codename includes 'Is it working?' so the agent can self-diagnose", async () => {

@@ -411,3 +411,13 @@ test("status shows 'Is it working?' with hints and error lines, and --check asks
   const again = await run(["status", "lunch-line", "--check"]);
   assert.match(again.out, /Checked less than a minute ago/);
 });
+
+test("bring --withdraw takes back a waiting request; a second time says there's none", async () => {
+  const r = await run(["bring", "--withdraw", "quiz-night"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Withdrew the request for quiz-night/);
+  assert.match((await run(["bring"])).out, /Quiz Night \(quiz-night\): withdrawn/);
+  const again = await run(["bring", "--withdraw", "quiz-night"]);
+  assert.equal(again.code, 1);
+  assert.match(again.out, /no waiting request/);
+});

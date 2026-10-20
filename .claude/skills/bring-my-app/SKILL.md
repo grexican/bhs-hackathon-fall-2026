@@ -30,7 +30,8 @@ One question at a time. Never delete or overwrite their original.
    tool, or "Bring an app you already host" on My Locker). An organizer approves it; the student gets an
    email. Optional, makes approval quicker: serve the token it prints at `https://<host>/.well-known/locker-verify.txt`.
    After approval: `mkdir apps/<codename>` and `npm run locker:join -- <codename>` for its settings, then
-   `school-sign-in`. `npm run locker:bring` (no codename) shows where requests stand.
+   `school-sign-in`. `npm run locker:bring` (no codename) shows where requests stand (also on My Locker);
+   `npm run locker:bring -- --withdraw <codename>` takes one back while it's waiting.
 
 If it's not a web app (a mobile-only app, a Python script, a game engine project), say what the
 kit can and can't do for it today, and suggest the web version or a web companion page.

@@ -664,7 +664,18 @@ export async function requestApp({ codename, name, url, pitch }) {
 
 export const myAppRequests = async () => (await api("GET", "/api/app-requests")).json.requests;
 
+/** Takes back a request that's still waiting. */
+export async function withdrawAppRequest(codename) {
+  checkCodename(codename, { mustExist: false });
+  return (await api("POST", `/api/app-requests/${codename}/withdraw`)).json.withdrawn;
+}
+
 async function bring(args) {
+  const withdraw = flag(args, "withdraw");
+  if (withdraw) {
+    await withdrawAppRequest(withdraw);
+    return console.log(`✓ Withdrew the request for ${withdraw}. Ask again any time with npm run locker:bring -- ${withdraw} --url https://…`);
+  }
   if (!args.length) {
     const reqs = await myAppRequests();
     if (!reqs.length) return console.log('No requests yet. Ask with: npm run locker:bring -- <codename> --url https://your-app.example.com --name "Your App"');

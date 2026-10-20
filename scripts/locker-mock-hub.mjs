@@ -73,6 +73,13 @@ export async function startMockHub() {
       p.retried = true;
       return send(201, { ...p.project, status: "provisioning" });
     }
+    const wm = url.pathname.match(/^\/api\/app-requests\/([a-z0-9-]+)\/withdraw$/);
+    if (req.method === "POST" && wm) {
+      const r = (flags.requests ?? []).find((x) => x.codename === wm[1] && x.status === "pending");
+      if (!r) return send(404, { error: `You have no waiting request for "${wm[1]}".` });
+      r.status = "withdrawn";
+      return send(200, { withdrawn: true });
+    }
     if (url.pathname === "/api/app-requests") {
       flags.requests ??= [];
       if (req.method === "GET") return send(200, { requests: flags.requests });
