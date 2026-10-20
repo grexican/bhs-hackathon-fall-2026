@@ -40,6 +40,6 @@ export function isListening(port) {
   return Promise.all([probe("127.0.0.1"), probe("::1")]).then(([a, b]) => a || b);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log(await freePort());
 }
