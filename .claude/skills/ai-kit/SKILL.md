@@ -65,6 +65,25 @@ No `OPENROUTER_API_KEY`, or `AI_PROVIDER=sim`: `ask` returns a labelled `[Simula
 SVG, and Jev returns `null` (so your rule fallback runs). Every result has `simulated: true`. Show
 a small "Simulated AI" tag in the UI when it's true.
 
+## When the AI budget runs out
+
+Each online app's key has a monthly cap (about $5). When it's used up, OpenRouter refuses and `kit/ai`
+throws an **`AiBudgetError`** (`err.code === "AI_BUDGET_USED_UP"`, with `err.resetsAt`) and logs one
+error line. Every route that calls AI must catch it and keep the app usable:
+
+```ts
+try {
+  const { text } = await ask("fast", prompt);
+  return json({ text });
+} catch (err) {
+  if (err instanceof AiBudgetError) return json({ error: err.message }, 503); // show it, don't crash
+  throw err;
+}
+```
+
+The page shows that message (or a fallback without AI) instead of a blank screen. The hub emails the
+team at 80% and 100% of the budget; an organizer can raise it. Before a demo: `npm run locker:status`.
+
 ## Rules
 
 - **Structured output:** use `askJson` with a JSON schema (`additionalProperties: false`, every field

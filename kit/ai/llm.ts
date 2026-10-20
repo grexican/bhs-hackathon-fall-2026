@@ -70,6 +70,41 @@ const openRouterProvider: LlmProvider = {
   },
 };
 
+/**
+ * The app's AI money for the month has run out (each app's key has a monthly cap). The app should
+ * catch it and show a friendly message, not crash:
+ *   catch (err) { if (err instanceof AiBudgetError) return res.status(503).json({ error: err.message }); throw err; }
+ * `err.code` is always "AI_BUDGET_USED_UP", so `err.code === "AI_BUDGET_USED_UP"` works too.
+ */
+export class AiBudgetError extends Error {
+  code = "AI_BUDGET_USED_UP" as const;
+  status: number;
+  resetsAt: string | null;
+  constructor(message: string, status: number, resetsAt: string | null = null) {
+    super(message);
+    this.name = "AiBudgetError";
+    this.status = status;
+    this.resetsAt = resetsAt;
+  }
+}
+
+/** Turns OpenRouter's "out of budget" answers into an AiBudgetError; anything else gives null. */
+export function budgetError(status: number, json: { error?: { message?: string; metadata?: { limit_source?: string } } } | null): AiBudgetError | null {
+  const message = json?.error?.message ?? "";
+  // 403 "Key limit exceeded (monthly limit) ... resets 2026-11-01T00:00:00.000Z." (checked against OpenRouter)
+  if (status === 403 && (json?.error?.metadata?.limit_source === "openrouter_key_limit" || /key limit exceeded/i.test(message))) {
+    const resetsAt = message.match(/resets (\d{4}-\d{2}-\d{2}T[\d:.]+Z)/)?.[1] ?? null;
+    return new AiBudgetError("This app's AI budget for the month is used up. Ask an organizer to raise it.", status, resetsAt);
+  }
+  // 402: what's left can't pay for this request ("can only afford ...") or the incubator's credit ran out.
+  if (status === 402) {
+    return /afford/i.test(message)
+      ? new AiBudgetError("This app's AI budget for the month is almost used up. Shorter answers (a lower maxTokens) may still work; ask an organizer to raise it.", status)
+      : new AiBudgetError("The incubator's AI credit has run out. Tell an organizer.", status);
+  }
+  return null;
+}
+
 async function post(body: Record<string, unknown>) {
   const res = await fetch(OPENROUTER, {
     method: "POST",
@@ -77,8 +112,14 @@ async function post(body: Record<string, unknown>) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(120_000),
   });
-  const json = await res.json();
-  if (!res.ok || json.error) throw new Error(`OpenRouter ${res.status}: ${json.error?.message ?? "request failed"}`);
+  const json = await res.json().catch(() => null);
+  const budget = budgetError(res.status, json);
+  if (budget) {
+    // One error line in the logs (npm run locker:logs -- <codename> --errors), same shape as the request logs.
+    console.error(JSON.stringify({ level: "error", message: `AI budget: ${budget.message}`, kind: "ai-budget", status: res.status, resets_at: budget.resetsAt }));
+    throw budget;
+  }
+  if (!res.ok || json?.error) throw new Error(`OpenRouter ${res.status}: ${json?.error?.message ?? "request failed"}`);
   return json;
 }
 

@@ -45,6 +45,15 @@ deploy failed). Each failed request, failed AI/API call and crash is one line th
 database or files somewhere other than `/data`, a setting that's in the laptop's `.env` but not on
 the server (`npm run locker:set`), and a missing `start` script. `/ship` has the full checklist.
 
+## The AI suddenly stopped answering (online)
+
+Check the budget before touching code: `npm run locker:status` shows "AI budget: $X used of $5". At
+the cap, OpenRouter refuses every AI call until next month, and `kit/ai` throws `AiBudgetError`
+("This app's AI budget for the month is used up"). The logs show it as one error line
+(`npm run locker:logs -- <codename> --errors`). It's not a bug in their code: tell the student in one
+line, make sure the app catches it and shows the message (`ai-kit`), and ask an organizer to raise the
+cap. Then look at what used it up (a loop, an AI call on every page load, images without a cache).
+
 ## Two fixes didn't work: stop and step back
 
 After two failed fixes for the same problem, **don't try a third guess**. Say so to the student, then:
