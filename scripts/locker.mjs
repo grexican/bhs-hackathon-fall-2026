@@ -54,7 +54,12 @@ export function mergeEnv(file, values) {
 
 // ---------- talking to the hub ----------
 
-export const hubUrl = () => (process.env.LOCKER_URL || readEnv(ROOT_ENV).LOCKER_URL || DEFAULT_URL).replace(/\/+$/, "");
+// The hub's original Railway address answers too; it's the fallback if the bhslabs.org name doesn't
+// resolve on this network (or hasn't finished propagating).
+const FALLBACK_URL = "https://locker-production-7e62.up.railway.app";
+let useFallback = false;
+const configuredUrl = () => process.env.LOCKER_URL || readEnv(ROOT_ENV).LOCKER_URL;
+export const hubUrl = () => (configuredUrl() || (useFallback ? FALLBACK_URL : DEFAULT_URL)).replace(/\/+$/, "");
 const token = () => process.env.LOCKER_TOKEN || readEnv(ROOT_ENV).LOCKER_TOKEN;
 
 export class HubError extends Error {
@@ -72,10 +77,21 @@ async function api(method, route, body, { auth = true } = {}) {
     headers.Authorization = `Bearer ${t}`;
   }
   let res;
+  const send = () => fetch(hubUrl() + route, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(90_000) });
   try {
-    res = await fetch(hubUrl() + route, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(90_000) });
-  } catch {
-    throw new HubError(`Can't reach the hub at ${hubUrl()}. Check your internet. If it keeps failing, the hub isn't live yet: tell an organizer.`, 0);
+    res = await send();
+  } catch (err) {
+    // The default name didn't resolve: try the Railway address once, then remember it for this run.
+    const notFound = /ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(String(err?.cause?.code ?? err?.cause?.message ?? err?.message));
+    if (!configuredUrl() && !useFallback && notFound) {
+      useFallback = true;
+      try {
+        res = await send();
+      } catch {
+        res = null;
+      }
+    }
+    if (!res) throw new HubError(`Can't reach the hub at ${hubUrl()}. Check your internet. If it keeps failing, the hub isn't live yet: tell an organizer.`, 0);
   }
   const json = await res.json().catch(() => null);
   if (res.ok && json) return { status: res.status, json };
