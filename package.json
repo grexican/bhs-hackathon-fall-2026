@@ -35,6 +35,7 @@
     "locker:env": "node scripts/locker.mjs env",
     "locker:logs": "node scripts/locker.mjs logs",
     "locker:status": "node scripts/locker.mjs status",
+    "locker:list": "node scripts/locker.mjs list",
     "deploy": "node scripts/locker.mjs deploy",
     "test": "node --test scripts/*.test.mjs"
   },

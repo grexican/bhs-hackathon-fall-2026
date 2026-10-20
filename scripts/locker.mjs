@@ -222,6 +222,17 @@ export async function pullEnv(codename) {
   return { project: p, keys: await writeAppEnv(codename, p) };
 }
 
+// ---------- the app directory ----------
+
+export const CATEGORIES = ["School life", "Money", "Wellbeing", "Language", "Families", "Expat life", "Games", "Clubs", "Other"];
+
+/** Lists the app in the hub's Apps directory (or hides it with listed: false). Fields left out keep their value. Returns the listing. */
+export async function saveListing(codename, fields) {
+  checkCodename(codename, { mustExist: false });
+  const body = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+  return (await api("PUT", `/api/projects/${codename}/listing`, body)).json;
+}
+
 // ---------- deploying ----------
 
 export const HUB_OWNED = new Set(["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER_APP_SECRET", "LOCKER_APP_ID", "LOCKER_URL"]);
@@ -400,6 +411,22 @@ function set(args) {
   console.log(`Saved ${keys.join(", ")}. They apply on your next deploy (npm run deploy -- ${codename}).`);
 }
 
+async function list(args) {
+  const codename = needCodename(args, { mustExist: false });
+  const off = args.includes("--off");
+  const l = await saveListing(codename, {
+    listed: !off,
+    tagline: flag(args, "tagline"),
+    description: flag(args, "description"),
+    category: flag(args, "category"),
+    icon: flag(args, "icon"),
+    bhsOnly: args.includes("--school-only") ? true : undefined,
+  });
+  if (!l.listed) return console.log(`✓ ${codename} isn't listed in Apps anymore. List it again with: npm run locker:list -- ${codename}`);
+  console.log(`✓ ${codename} is listed in Apps: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}).`);
+  console.log(`  Everyone finds it at ${hubUrl()}/apps. Opens and installs: ${hubUrl()}/p/${codename}`);
+}
+
 function logs(args) {
   const codename = needCodename(args);
   const { e, childEnv } = railwayArgs(codename);
@@ -410,13 +437,13 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, join, set, env, status, deploy, logs };
+const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list> [codename]");
     process.exit(1);
   }
   Promise.resolve().then(() => fn(rest)).catch((err) => {

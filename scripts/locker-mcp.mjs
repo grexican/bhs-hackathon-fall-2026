@@ -11,6 +11,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import {
+  CATEGORIES,
   HUB_OWNED,
   HubError,
   ROOT,
@@ -25,6 +26,7 @@ import {
   pullEnv,
   readEnv,
   readLogs,
+  saveListing,
   setSettings,
 } from "./locker.mjs";
 import { CODENAME } from "./new-app.mjs";
@@ -279,6 +281,28 @@ server.registerTool(
   tool(async ({ codename, build = false, lines = 50 }) => {
     const text = lastLines(readLogs(codename, { build, lines }), lines);
     return text ? `Last ${build ? "build" : "app"} logs for ${codename}:\n${text}` : `No ${build ? "build" : "app"} logs for ${codename} yet. Deploy first with locker_deploy, or try again in a minute.`;
+  }),
+);
+
+server.registerTool(
+  "locker_list_app",
+  {
+    description:
+      "Lists the app in the hub's Apps directory, where other students find it and add it to their locker (or hides it with listed: false). Listing needs a tagline and a category; fields left out keep their current value. The app must be set up and online.",
+    inputSchema: {
+      codename,
+      listed: z.boolean().optional().describe("false hides it from the directory. Default true."),
+      tagline: z.string().max(90).optional().describe("One short line on what it does for the user (90 characters max)."),
+      description: z.string().max(400).optional().describe("A few sentences more (400 characters max)."),
+      category: z.enum(CATEGORIES).optional().describe("Where it shows up in the directory."),
+      icon: z.string().max(16).optional().describe("One emoji, or 1-2 letters."),
+      schoolOnly: z.boolean().optional().describe("true when the app uses the school sign-in gate, so its card says it needs a school account."),
+    },
+  },
+  tool(async ({ codename, listed = true, tagline, description, category, icon, schoolOnly }) => {
+    const l = await saveListing(codename, { listed, tagline, description, category, icon, bhsOnly: schoolOnly });
+    if (!l.listed) return `${codename} isn't listed in the Apps directory anymore.`;
+    return `${codename} is listed in the Apps directory: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}). Its hub page shows opens and installs.`;
   }),
 );
 

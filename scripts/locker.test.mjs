@@ -197,3 +197,17 @@ test("set: refuses settings that come from the hub", async () => {
     assert.match(r.out, /comes from the hub/);
   }
 });
+
+test("list: lists the app in the directory, explains what's missing, and can hide it", async () => {
+  const missing = await run(["list", "lunch-line"]);
+  assert.equal(missing.code, 1);
+  assert.match(missing.out, /Add a tagline/);
+  const r = await run(["list", "lunch-line", "--tagline", "See the line before you leave class", "--category", "School life", "--icon", "L", "--school-only"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /lunch-line is listed in Apps: L See the line before you leave class \(School life\)/);
+  assert.equal(projects.get("lunch-line").listing.bhsOnly, true);
+  const off = await run(["list", "lunch-line", "--off"]);
+  assert.equal(off.code, 0, off.out);
+  assert.match(off.out, /isn't listed in Apps anymore/);
+  assert.equal(projects.get("lunch-line").listing.tagline, "See the line before you leave class", "fields left out are kept");
+});

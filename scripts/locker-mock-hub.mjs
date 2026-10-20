@@ -60,6 +60,17 @@ export async function startMockHub() {
       projects.set(body.codename, { owner: "ana", project: { ...project(body.codename, body.name), role: "owner" }, body });
       return send(201, { ...project(body.codename, body.name), status: "provisioning" });
     }
+    const lm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/listing$/);
+    if (req.method === "PUT" && lm) {
+      const p = projects.get(lm[1]);
+      if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
+      const next = { listed: false, tagline: null, description: null, category: null, icon: null, bhsOnly: false, ...p.listing };
+      for (const k of Object.keys(next)) if (body[k] !== undefined) next[k] = body[k];
+      if (next.listed && !next.tagline) return send(400, { error: "Add a tagline before you list the app: one short line that says what it does." });
+      if (next.listed && !next.category) return send(400, { error: "Pick a category before you list the app." });
+      p.listing = next;
+      return send(200, next);
+    }
     const m = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)(\/env)?$/);
     if (m) {
       const p = projects.get(m[1]);

@@ -46,6 +46,7 @@ test("lists every tool, each with a description", async () => {
     "locker_create_project",
     "locker_deploy",
     "locker_join_project",
+    "locker_list_app",
     "locker_logs",
     "locker_pull_env",
     "locker_set",
@@ -141,6 +142,17 @@ test("logs fetch a fixed number of lines instead of streaming", async () => {
   const r = await call("locker_logs", { codename: "lunch-line", build: true, lines: 20 });
   assert.equal(r.isError, false, r.text);
   assert.match(r.text, /railway logs --service svc-123 --build --lines 20/);
+});
+
+test("list_app: needs a tagline, then lists the app", async () => {
+  const missing = await call("locker_list_app", { codename: "lunch-line" });
+  assert.equal(missing.isError, true);
+  assert.match(missing.text, /Add a tagline/);
+  const r = await call("locker_list_app", { codename: "lunch-line", tagline: "See the line before you leave class", category: "School life" });
+  assert.equal(r.isError, false, r.text);
+  assert.match(r.text, /listed in the Apps directory/);
+  const bad = await call("locker_list_app", { codename: "lunch-line", category: "Homework" });
+  assert.equal(bad.isError, true, "unknown category rejected before the hub");
 });
 
 test("join: a non-member gets a friendly error result", async () => {
