@@ -97,6 +97,8 @@ test("project: a setup that failed is retried by running the same command again"
   mock.flags.failProvision = false;
   assert.equal(first.code, 1);
   assert.match(first.out, /Railway timed out/);
+  const st = await run(["status"]);
+  assert.match(st.out, /flaky-app\): failed[\s\S]*Setup didn't finish: Railway timed out[\s\S]*Try again with: npm run locker:project -- flaky-app/);
   const again = await run(["project", "flaky-app"]);
   assert.equal(again.code, 0, again.out);
   assert.match(again.out, /Trying again/);

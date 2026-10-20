@@ -97,7 +97,8 @@
       if (!res.ok) throw new Error(json.error || "Couldn't send it. Try again.");
       form.reset();
       paintStars();
-      msg.textContent = "Thanks! The team will read it.";
+      // Not connected yet: it's kept on this laptop (data/feedback.jsonl), not sent to the team's hub page.
+      msg.textContent = json.simulated ? "Saved on this laptop only (data/feedback.jsonl). After /connect it goes to the team." : "Thanks! The team will read it.";
       setTimeout(() => sheet.close(), 1500);
     } catch (err) {
       msg.textContent = err.message;

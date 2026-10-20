@@ -508,6 +508,10 @@ function printProject(p) {
   const role = p.role === "member" ? " [teammate]" : p.role === "owner" ? " [owner]" : "";
   console.log(`
 ${p.name} (${p.codename}): ${p.status}${role}`);
+  if (p.status === "failed") {
+    console.log(`  Setup didn't finish${p.error ? `: ${p.error}` : "."}`);
+    if (p.role === "owner") console.log(`  Try again with: npm run locker:project -- ${p.codename}   (fails twice? tell an organizer)`);
+  }
   if (p.url) console.log(`  Live address:   ${p.url}`);
   if (p.ai) console.log(`  AI budget:      $${(p.ai.usedUsd ?? 0).toFixed(2)} used of $${p.ai.monthlyLimitUsd} this month`);
   if (p.costs) console.log(`  Hosting cost:   $${(p.costs.railwayUsdThisMonth ?? 0).toFixed(2)} this month`);
