@@ -28,6 +28,11 @@ Then type your idea:
 | `/start <idea>` | Idea (no idea yet? it helps) → questions → design → first working version |
 | `/connect` | Your app's own web address, AI key and email, from the BHS Incubator |
 | `/ship` | Puts your app online |
+| `/on-my-phone` | Opens it on your phone and makes it installable, like a real app |
+| `/test-with-a-friend` | Watch someone use it, then pick the one fix |
+| `/share-it` | Nice link previews, a QR code, and a count of who came back |
+| `/whats-next` | Picks the next thing to build, from what testers did |
+| `/pitch` | Gets you ready for Demo Day |
 | `/wrap` | Saves your work (`/wrap push` also uploads it) |
 | `/caveman` | Short answers, saves credits |
 

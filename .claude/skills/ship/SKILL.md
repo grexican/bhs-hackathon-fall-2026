@@ -48,4 +48,4 @@ sentence, fix, deploy again. Two failed fixes: tell them to raise a hand.
 After the build, use **`verify-in-browser`** on the live address (`APP_URL` in the app's `.env`):
 `/health` says ok, phone and desktop screenshots, zero console errors. Only then say "It's live" and
 give them the link to share. Errors while running: `npm run locker:logs -- <codename>`.
-Then suggest `/wrap`.
+Then suggest `/wrap`. First deploy? Offer `/on-my-phone` (install it on your phone) and `/share-it` (link preview, QR code, Locker listing).

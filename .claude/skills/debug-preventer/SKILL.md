@@ -38,6 +38,24 @@ This forces you to actually understand the problem and gives the student a chanc
 
 When the student confirms, change only what's needed to fix the specific error. Don't refactor surrounding code, don't add error handling for unrelated edge cases, don't rewrite the function "while you're here."
 
+## Works on my laptop, broken online
+
+Get the server's own error first: `npm run locker:logs -- <codename>` (add `--build` if the deploy
+failed). The usual causes, in order: listening on a fixed port instead of `PORT`, saving the
+database or files somewhere other than `/data`, a setting that's in the laptop's `.env` but not on
+the server (`npm run locker:set`), and a missing `start` script. `/ship` has the full checklist.
+
+## Two fixes didn't work: stop and step back
+
+After two failed fixes for the same problem, **don't try a third guess**. Say so to the student, then:
+
+1. **What changed?** `git diff` and `git log --oneline -5` inside the app. Bugs usually live in the last change.
+2. **Go back to working.** If the last commit worked, offer to put the broken file back to it
+   (`git restore <file>`) and redo the change in a smaller step. Ask first: it throws away changes.
+3. **Make it smaller.** Find the smallest thing that still breaks (one page, one button, one input).
+4. **New hypothesis**, in plain English, from what you learned. Still stuck after that: fresh chat
+   with a short summary (`fresh-chat-coach`), or raise a hand for a mentor. Both are normal.
+
 ## Why this matters
 
 Vague reports → guessing → wrong fixes → more bugs → frustrated student → wasted credits.
