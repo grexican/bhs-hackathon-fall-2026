@@ -448,9 +448,9 @@ export function setSettings(codename, values, io = quiet) {
   const envFile = path.join(appDir(codename), ".env");
   mergeEnv(envFile, values);
   // School sign-in on: locally the gate acts signed in as a test user, so the laptop never bounces to the hub.
-  if (values.LOCKER_GATE === "1" && !readEnv(envFile).LOCKER_GATE_USER) {
+  if (["1", "lazy"].includes(values.LOCKER_GATE) && !readEnv(envFile).LOCKER_GATE_USER) {
     mergeEnv(envFile, { LOCKER_GATE_USER: `"${LOCAL_TEST_USER}"` });
-    io.log(`On your laptop you're signed in as ${LOCAL_TEST_USER} (LOCKER_GATE_USER in apps/${codename}/.env; change it or delete it). Online, people sign in with their school account.`);
+    io.log(`On your laptop you're signed in as ${LOCAL_TEST_USER} (LOCKER_GATE_USER in apps/${codename}/.env; change it or delete it). Online, people sign in through the hub.`);
   }
   return Object.keys(values);
 }

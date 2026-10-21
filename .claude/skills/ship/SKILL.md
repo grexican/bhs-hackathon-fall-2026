@@ -26,14 +26,31 @@ Read the code and fix what's missing (one line each on what you changed):
 - **A `/health` route** that answers `ok` with status 200.
 - **Static sites** ship here too: copy `kit/locker/` into the app as `locker/` and use
   `"start": "node locker/static.mjs dist"` (or `.` for plain HTML). It serves `/health` and can put
-  the BHS sign-in gate in front. GitHub Pages is fine if they prefer it.
-- **Only for BHS people?** Ask once: "Should only people with a school account be able to open it?"
-  Yes → copy `kit/locker/` into the app (if not there yet), call `gate(req, res)` first in the
-  server (see the top of `locker/gate.mjs`; static sites already do), and turn it on with
-  `npm run locker:set -- <codename> LOCKER_GATE=1` (sets it on the server and in the app's `.env`; it
-  applies on the next deploy). Visitors then sign in with their school Google account; no login code
-  to write. On the laptop the app acts signed in as `LOCKER_GATE_USER` (a test user `locker:set` adds
-  to `.env`; change the name to try someone else), so local testing never needs the hub.
+  the BHS sign-in gate in front (of everything, or only of some folders). GitHub Pages is fine if they prefer it.
+- **Sign-in?** Ask once: "Should people sign in to use all of it, some of it (like 'My list' or an
+  admin page), or none of it?" Copy `kit/locker/` into the app (if not there yet), call
+  `gate(req, res)` first in the server (see the top of `locker/gate.mjs`; static sites already do),
+  and pick a mode with `npm run locker:set -- <codename> LOCKER_GATE=...` (sets it on the server and
+  in the app's `.env`; it applies on the next deploy):
+  - `LOCKER_GATE=1`: **every page** needs sign-in.
+  - `LOCKER_GATE=lazy`: the app is **public**; `gate()` returns the user if they're signed in (else
+    `undefined`), and only the pages you choose need sign-in:
+    ```js
+    const user = await gate(req, res); if (user === null) return;
+    if (url.pathname.startsWith("/my")) { const u = requireUser(req, res); if (!u) return; /* u.sub ... */ }
+    ```
+    Express: `const signedIn = (req, res, next) => { const u = requireUser(req, res); if (u !== null) { req.user = u; next(); } };`
+    then `app.get("/my", signedIn, ...)`. A "Sign in" button links to `signInUrl("/my")`, "Sign out" to
+    `/_locker/logout`. A fetch() or form POST that needs sign-in gets 401 `{ error: "sign_in_required", signIn }`:
+    send the page to `signIn`. Static sites: `LOCKER_GATE_PATHS=/admin,/my` lists the folders that
+    need sign-in, and `fetch("/_locker/me")` says who is signed in.
+  - not set (or `0`): off. `gate()`, `currentUser()` and `requireUser()` return `undefined` and let everyone in.
+
+  No login code to write. Who may sign in is the app's audience on the hub: "school" (school accounts
+  only) or "everyone" (parents and guests too), so don't assume the user is a student: `user.domain`
+  tells you. On the laptop the app acts signed in as `LOCKER_GATE_USER` (a test user `locker:set` adds
+  to `.env`; change the name to try someone else), so local testing never needs the hub. With `lazy`,
+  `/_locker/logout` shows the signed-out app there too.
 - **Secrets** come from env vars. The hub already set them on the server; `.env` is never uploaded.
 
 Run it once the production way (`npm run build`, then `npm start` with a `PORT`) and open it.

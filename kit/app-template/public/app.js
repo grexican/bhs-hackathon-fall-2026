@@ -6,7 +6,7 @@ const button = document.querySelector("#tap");
 const res = await fetch("/api/taps");
 countEl.textContent = (await res.json()).count;
 
-// Who's using it? Only known when the school sign-in is on (LOCKER_GATE=1, see server.js).
+// Who's using it? Only known when the sign-in gate is on and they signed in (LOCKER_GATE, see server.js).
 const { user } = await (await fetch("/api/me")).json();
 if (user) document.querySelector("#hello").textContent = `Hi, ${user.name ?? user.email}!`;
 

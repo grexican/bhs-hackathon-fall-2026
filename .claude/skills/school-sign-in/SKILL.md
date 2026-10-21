@@ -6,8 +6,9 @@ description: Add the school sign-in (the incubator hub's "Sign in with…" butto
 # School sign-in for any app
 
 The hub is a standard **OpenID Connect** provider, so ready-made login libraries do the hard part.
-In the kit's starter app you don't need this: `LOCKER_GATE=1` turns sign-in on with no code
-(see `server.js`). This skill is for every other app.
+In the kit's starter app you don't need this: `LOCKER_GATE=1` (every page) or `LOCKER_GATE=lazy` (a public
+app where only the pages you pick need sign-in) turns it on with no login code (see `/ship` and
+`locker/gate.mjs`). This skill is for every other app.
 
 ## 1. The three settings
 
@@ -150,7 +151,9 @@ def logout():
 - **Store people by `sub`**, not email (emails can change; `sub` is stable for your app).
 - **Logging out** clears your app's session. The person stays signed in on the hub (that's normal: the
   next "Sign in" is one click).
-- **Only school accounts?** Check `domain` on your server after sign-in.
+- **Who can sign in** is the app's audience on the hub: "school" lets in only school accounts; "everyone"
+  also lets in parents and guests (Google or email + password). So with "everyone", don't assume a
+  student: check `domain` on your server when something is for school accounts only.
 - **The secret stays on the server.** If it leaks, ask an organizer for a new one.
 - Each person only sees their own data: filter queries by the session's `sub` (`ai-safety` section 4).
 

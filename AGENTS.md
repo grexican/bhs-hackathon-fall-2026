@@ -53,9 +53,11 @@ After `/connect`, every app gets real services from the BHS Incubator hub (setti
   one line in `public/index.html` turns it on). Messages go to the team's inbox on the hub; read them with
   `npm run locker:feedback -- <codename>`. Offline it's simulated (`data/feedback.jsonl`).
 - **Database:** `node:sqlite` (built into Node 22.18+), file at `DATABASE_PATH`. Never anywhere else in production.
-- **Sign-in:** none until the app needs it. School-only app: the **BHS sign-in gate** (`kit/locker/gate.mjs`,
-  `LOCKER_GATE=1`) or "Sign in with BHS" per page. Public app (families, expats): its own simple
-  sign-in. Locally: the `sim` provider.
+- **Sign-in:** none until the app needs it. Then the **BHS sign-in gate** (`kit/locker/gate.mjs`):
+  `LOCKER_GATE=1` = every page needs sign-in; `LOCKER_GATE=lazy` = a public app where only the pages you
+  pick need it (`requireUser(req, res)`, "Sign in" links via `signInUrl()`). Who may sign in is the app's
+  audience on the hub: "school" (school accounts) or "everyone" (parents, guests too), so check
+  `user.domain` before assuming a student. Details: `/ship`. Locally: `LOCKER_GATE_USER`.
 
 Details: `providers-and-services` → "Incubator services".
 
@@ -105,7 +107,7 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 `stack-picker` before scaffolding. What there is: a **starter app** that `npm run new-app` puts in every
 new folder (plain Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, a phone-first
 `public/`, its port in `.env`, request logging in `locker/otel.mjs`, a working AI route `POST /api/ask` that already
-handles "no key yet" and "budget used up", the school sign-in gate off until `LOCKER_GATE=1`, and the Feedback button). It runs with `npm run dev`,
+handles "no key yet" and "budget used up", the sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button). It runs with `npm run dev`,
 needs no packages and already passes `/ship`. Build on it when plain Node fits; replace it when the
 product needs another stack (`--bare` skips it). The rules that apply to every stack:
 
@@ -153,7 +155,7 @@ product needs another stack (`--bare` skips it). The rules that apply to every s
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
 | "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). If it reads users' text or the app's data: `ai-safety`. |
-| "Log in with my school account" | Starter app: `LOCKER_GATE=1`. Any other app or stack, or hosted elsewhere: `school-sign-in`. |
+| "Log in with my school account" | Starter app: `LOCKER_GATE=1` (every page) or `lazy` (only the pages you pick). Any other app or stack, or hosted elsewhere: `school-sign-in`. |
 | "Calculate / count / check if…" | `test-first`: one small test that says what right looks like, then the code. |
 | "Deploy it" | `/ship` (after `/connect`). Their own Railway slot from the hub, static sites included. |
 

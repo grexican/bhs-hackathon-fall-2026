@@ -30,7 +30,7 @@ await vault.has(user, "portal-password");               // { name, hint, updated
 await vault.remove(user, "portal-password");            // the "Forget my password" button
 ```
 
-- `user` is the signed-in person: the `user` from the school sign-in (`LOCKER_GATE=1`), or your app's
+- `user` is the signed-in person: the `user` from the sign-in gate (`LOCKER_GATE=1` or `lazy`), or your app's
   own id for them. With the school sign-in, people can also see and delete what your app keeps on the
   hub (My Locker → "Passwords apps keep for you").
 - `use` fetches the secret **at that moment** (just in time), with a purpose the hub records (who,

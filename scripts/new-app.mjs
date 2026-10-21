@@ -100,7 +100,9 @@ ${bare ? "" : `
 - Tester **Feedback button**: the other commented line in \`public/index.html\` (\`/test-with-a-friend\`). The starter
   page shows a small "Turn on: Ask the AI · Feedback button" hint so the student knows both exist; drop it when
   the real page replaces the starter.
-- School sign-in: off until \`LOCKER_GATE=1\`; then \`user\` in every route is whoever is signed in (\`GET /api/me\`).
+- Sign-in gate: off until \`LOCKER_GATE=1\` (every page) or \`lazy\` (public; \`requireUser\` on the pages that need it);
+  then \`user\` in every route is whoever is signed in (\`GET /api/me\`). If the app is for "everyone" on the hub,
+  parents and guests can sign in too: check \`user.domain\`, don't assume a student.
   On this laptop, \`LOCKER_GATE_USER="Ana Garcia <ana@example.org>"\` in \`.env\` signs you in as that person.
 - Routes with a blank in the address: \`"GET /api/things/:id"\` in \`server.js\` gives the handler \`params.id\`.
 - Users' passwords or API keys: \`locker/vault.mjs\` (\`keep-secrets-safe\`), never the database.

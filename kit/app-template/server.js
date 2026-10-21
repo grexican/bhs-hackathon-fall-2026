@@ -101,9 +101,10 @@ http
       // The host checks this to know the app is up. Keep it first, before the sign-in.
       if (url === "/health") return res.end("ok");
 
-      // School sign-in for the whole app: OFF until you set LOCKER_GATE=1
-      // (npm run locker:set -- <codename> LOCKER_GATE=1, and LOCKER_GATE=1 in .env to try it here).
-      // When it's on, `user` is { sub, email, name } of whoever is signed in.
+      // Sign-in gate: OFF until you set LOCKER_GATE (npm run locker:set -- <codename> LOCKER_GATE=1;
+      // it goes in .env too, to try it here). =1: every page needs sign-in. =lazy: the app is public and
+      // only pages that call requireUser(req, res) need it (see the top of locker/gate.mjs).
+      // `user` is { sub, email, name, domain } of whoever is signed in, or undefined.
       const user = await gate(req, res);
       if (user === null) return; // the gate already answered (sent them to sign in)
 

@@ -50,8 +50,11 @@ contain a token or key, so secrets stay out of the chat. Tests: `scripts/locker-
 - **People outside the school:** organizers add their email on `/admin` (an invite). Guests, mentors
   and parents can then sign in.
 - **Delete a project:** `/admin` removes a project (hosting, AI key). Use it to free a student's slot.
-- **Sign-in gate:** `LOCKER_GATE=1` on an app puts the school sign-in in front of the whole app.
-  Server apps call `gate(req, res)` first; static sites use `kit/locker/static.mjs`. No login code.
+- **Sign-in gate:** `LOCKER_GATE=1` on an app puts BHS sign-in in front of the whole app;
+  `LOCKER_GATE=lazy` keeps it public and only the pages the student picks need sign-in
+  (`requireUser`, or `LOCKER_GATE_PATHS=/admin,/my` for static sites). Server apps call `gate(req, res)`
+  first; static sites use `kit/locker/static.mjs`. No login code. Who may sign in is the app's audience
+  on the hub ("school" or "everyone"), checked by the hub.
 
 ## Sign-in default
 

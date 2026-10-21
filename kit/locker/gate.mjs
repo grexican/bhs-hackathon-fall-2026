@@ -1,27 +1,42 @@
-// BHS sign-in gate: put "Sign in with BHS" in front of a whole app with one setting.
-// With LOCKER_GATE=1 every page needs a school Google account (signed in through BHS Locker).
-// Without it, nothing changes. Copy this file into your app (the deploy only uploads the app
-// folder); /ship and /connect do that for you. No packages needed.
+// BHS sign-in gate: "Sign in with BHS" (through BHS Locker) for your app, with one setting.
+//   LOCKER_GATE=1     every page needs sign-in.
+//   LOCKER_GATE=lazy  the app is public; you choose which pages need sign-in (requireUser).
+//   not set (or 0)    off: nothing changes, nobody is signed in.
+// Copy this file into your app (the deploy only uploads the app folder); /ship and /connect do that
+// for you. No packages needed.
 //
-//   import { gate } from "./locker/gate.mjs";
+//   import { gate, requireUser, signInUrl } from "./locker/gate.mjs";
 //   http.createServer(async (req, res) => {
 //     const user = await gate(req, res);   // null = the gate already answered (redirect / login)
 //     if (user === null) return;
-//     // user is { sub, email, name, domain } when the gate is on, or undefined when it's off
+//     // user is { sub, email, name, domain } when someone is signed in, or undefined when nobody is
+//     // (gate off, or LOCKER_GATE=lazy and not signed in yet)
+//     if (url.pathname.startsWith("/my")) {      // with lazy: only these pages need sign-in
+//       const u = requireUser(req, res);          // null = sent them to sign in; stop here
+//       if (!u) return;
+//     }
 //   });
+//
+// "Sign in" button: <a href="${signInUrl("/my")}">Sign in</a>. "Sign out": <a href="/_locker/logout">.
+// Who can sign in is set on the hub: "school" apps only let in school accounts; "everyone" apps also
+// let in parents and guests. So don't assume the user is a student: user.domain tells you.
 //
 // On your laptop: LOCKER_GATE_USER="Ana Garcia <ana@example.org>" in the app's .env makes the gate act
 // signed in as that person, without the hub (so you can see the signed-in app). `npm run locker:set --
-// <codename> LOCKER_GATE=1` adds a test user for you. It's refused on the server (Railway).
+// <codename> LOCKER_GATE=1` (or =lazy) adds a test user for you. It's refused on the server (Railway).
+// With lazy, "Sign out" on the laptop shows the signed-out app until you sign in again.
 //
 // Express: app.use(async (req, res, next) => { const u = await gate(req, res); if (u !== null) { req.user = u; next(); } });
+//   Pages that need sign-in: const signedIn = (req, res, next) => { const u = requireUser(req, res); if (u !== null) { req.user = u; next(); } };
+//   app.get("/my", signedIn, (req, res) => ...)
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const COOKIE = "bhs_gate";
+const SIM_OUT = "bhs_gate_sim_out"; // laptop only: "signed out" of the pretend user (lazy)
 const DAY = 24 * 60 * 60;
 
-const on = () => process.env.LOCKER_GATE === "1";
 const env = (k) => process.env[k] ?? "";
+const mode = () => (env("LOCKER_GATE") === "1" ? "full" : env("LOCKER_GATE") === "lazy" ? "lazy" : "off");
 
 const sign = (value) => createHmac("sha256", env("LOCKER_APP_SECRET")).update(value).digest("base64url");
 function seal(obj) {
@@ -54,6 +69,10 @@ function redirect(res, to, setCookie) {
   return null;
 }
 
+// Only go back to a page of this app ("/my/list"), never to another site.
+const local = (path) => (typeof path === "string" && /^\/(?![/\\])/.test(path) ? path : "/");
+const onRailway = () => Boolean(env("RAILWAY_ENVIRONMENT") || env("RAILWAY_ENVIRONMENT_NAME"));
+
 /** "Ana Garcia <ana@example.org>", "ana@example.org" or "Ana Garcia" → a pretend signed-in user. */
 export function simUser(value) {
   const m = String(value).match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
@@ -68,30 +87,98 @@ export function simUser(value) {
 // page can fetch it ("Use my app's icon"). Put icons at these addresses (in public/) to use this.
 export const PUBLIC_ICONS = /^\/(manifest\.webmanifest|manifest\.json|favicon\.(ico|png|svg)|apple-touch-icon(-precomposed)?\.png|icon(-\d+)?\.(png|svg)|icons\/[\w.-]+\.(png|svg|webp))$/;
 
-/** Returns the signed-in user, undefined when the gate is off (or for a public icon), or null when it sent a response. */
-export async function gate(req, res) {
-  if (!on()) return undefined;
-  if (req.method === "GET" && PUBLIC_ICONS.test(new URL(req.url, "http://x").pathname)) return undefined;
+/** The address for a "Sign in" link: signs in, then comes back to `returnTo` (a page of this app). */
+export function signInUrl(returnTo = "/") {
+  return `/_locker/login?back=${encodeURIComponent(local(returnTo))}`;
+}
+
+/** Who is signed in: the user, null when nobody is, undefined when the gate is off. Never answers the request. */
+export function currentUser(req) {
+  if (mode() === "off") return undefined;
   if (env("LOCKER_GATE_USER")) {
-    if (env("RAILWAY_ENVIRONMENT") || env("RAILWAY_ENVIRONMENT_NAME")) {
-      res.statusCode = 500;
-      res.end("LOCKER_GATE_USER is only for your laptop. Remove it from the app's settings on the server.");
-      return null;
-    }
-    if (new URL(req.url, "http://x").pathname === "/_locker/logout") return redirect(res, "/");
-    return simUser(env("LOCKER_GATE_USER"));
+    if (onRailway()) return null; // the pretend user never counts on the server
+    return mode() === "lazy" && cookies(req)[SIM_OUT] === "1" ? null : simUser(env("LOCKER_GATE_USER"));
   }
-  if (!env("LOCKER_APP_ID") || !env("LOCKER_APP_SECRET") || !env("LOCKER_URL")) {
+  const user = open(cookies(req)[COOKIE]);
+  if (!user) return null;
+  const { exp, ...who } = user;
+  return who;
+}
+
+// Can sign-in work here? If not, it answers 500 with what to fix and returns false.
+function ready(res) {
+  if (env("LOCKER_GATE_USER")) {
+    if (!onRailway()) return true;
     res.statusCode = 500;
-    res.end("LOCKER_GATE=1 but LOCKER_URL / LOCKER_APP_ID / LOCKER_APP_SECRET are missing. Run /connect.");
-    return null;
+    res.end("LOCKER_GATE_USER is only for your laptop. Remove it from the app's settings on the server.");
+    return false;
   }
+  if (env("LOCKER_APP_ID") && env("LOCKER_APP_SECRET") && env("LOCKER_URL")) return true;
+  res.statusCode = 500;
+  res.end(`LOCKER_GATE=${env("LOCKER_GATE")} but LOCKER_URL / LOCKER_APP_ID / LOCKER_APP_SECRET are missing. Run /connect.`);
+  return false;
+}
+
+// Off to BHS Locker, then back to `back`. On the laptop: straight back, signed in as the test user.
+function startSignIn(req, res, back) {
+  if (env("LOCKER_GATE_USER")) return redirect(res, signInUrl(back));
+  const callback = `${origin(req)}/_locker/callback`;
+  const state = seal({ back: local(back), n: randomBytes(8).toString("hex"), exp: Math.floor(Date.now() / 1000) + 600 });
+  const to = new URL(`${env("LOCKER_URL")}/oauth/authorize`);
+  to.search = new URLSearchParams({ client_id: env("LOCKER_APP_ID"), redirect_uri: callback, state }).toString();
+  return redirect(res, to.toString());
+}
+
+/**
+ * For a page that needs sign-in. Returns the user, or null after sending them to sign in (stop there).
+ * A page (GET) goes to sign-in and comes back to the same page. A form POST or a fetch() gets
+ * 401 { error: "sign_in_required", signIn } instead: send the person to `signIn`.
+ * Gate off: returns undefined and lets everyone through.
+ */
+export function requireUser(req, res) {
+  if (mode() === "off") return undefined;
+  if (!ready(res)) return null;
+  const user = currentUser(req);
+  if (user) return user;
+  const url = new URL(req.url, "http://x");
+  const fetchMode = req.headers["sec-fetch-mode"];
+  const isPage = (req.method === "GET" || req.method === "HEAD") && !/application\/json/.test(req.headers.accept ?? "") && (!fetchMode || fetchMode === "navigate");
+  if (isPage) return startSignIn(req, res, url.pathname + url.search);
+  let back = "/";
+  try {
+    const ref = new URL(req.headers.referer);
+    if (ref.host === req.headers.host) back = ref.pathname + ref.search;
+  } catch {}
+  res.statusCode = 401;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify({ error: "sign_in_required", signIn: signInUrl(back) }));
+  return null;
+}
+
+/**
+ * Call it first for every request. Returns the signed-in user; undefined when nobody is signed in and
+ * that's fine (gate off, lazy, or a public icon); or null when it sent a response (stop there).
+ */
+export async function gate(req, res) {
+  if (mode() === "off") return undefined;
+  if (req.method === "GET" && PUBLIC_ICONS.test(new URL(req.url, "http://x").pathname)) return undefined;
+  if (!ready(res)) return null;
   const url = new URL(req.url, origin(req));
   const secure = url.protocol === "https:" ? "; Secure" : "";
-  const callback = `${origin(req)}/_locker/callback`;
+  const back = local(url.searchParams.get("back"));
+
+  if (env("LOCKER_GATE_USER")) {
+    if (url.pathname === "/_locker/logout") return redirect(res, "/", `${SIM_OUT}=1; Path=/; HttpOnly; SameSite=Lax`);
+    if (url.pathname === "/_locker/login") return redirect(res, back, `${SIM_OUT}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`);
+    return currentUser(req) ?? undefined;
+  }
 
   if (url.pathname === "/_locker/logout") {
     return redirect(res, "/", `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${secure}`);
+  }
+
+  if (url.pathname === "/_locker/login") {
+    return currentUser(req) ? redirect(res, back) : startSignIn(req, res, back);
   }
 
   if (url.pathname === "/_locker/callback") {
@@ -100,7 +187,7 @@ export async function gate(req, res) {
     const r = await fetch(`${env("LOCKER_URL")}/oauth/token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ client_id: env("LOCKER_APP_ID"), client_secret: env("LOCKER_APP_SECRET"), code: url.searchParams.get("code"), redirect_uri: callback }),
+      body: JSON.stringify({ client_id: env("LOCKER_APP_ID"), client_secret: env("LOCKER_APP_SECRET"), code: url.searchParams.get("code"), redirect_uri: `${origin(req)}/_locker/callback` }),
     });
     const body = await r.json().catch(() => ({}));
     if (!r.ok || !body.user) {
@@ -109,18 +196,13 @@ export async function gate(req, res) {
       return null;
     }
     const token = seal({ ...body.user, exp: Math.floor(Date.now() / 1000) + 7 * DAY });
-    return redirect(res, state.back || "/", `${COOKIE}=${token}; Path=/; Max-Age=${7 * DAY}; HttpOnly; SameSite=Lax${secure}`);
+    return redirect(res, local(state.back), `${COOKIE}=${token}; Path=/; Max-Age=${7 * DAY}; HttpOnly; SameSite=Lax${secure}`);
   }
 
-  const user = open(cookies(req)[COOKIE]);
-  if (user) {
-    const { exp, ...who } = user;
-    return who;
-  }
+  const user = currentUser(req);
+  if (user) return user;
+  if (mode() === "lazy") return undefined; // a public page; requireUser() decides where sign-in is needed
 
   // Not signed in: off to BHS Locker, then back to the page they wanted.
-  const state = seal({ back: url.pathname + url.search, n: randomBytes(8).toString("hex"), exp: Math.floor(Date.now() / 1000) + 600 });
-  const to = new URL(`${env("LOCKER_URL")}/oauth/authorize`);
-  to.search = new URLSearchParams({ client_id: env("LOCKER_APP_ID"), redirect_uri: callback, state }).toString();
-  return redirect(res, to.toString());
+  return startSignIn(req, res, url.pathname + url.search);
 }
