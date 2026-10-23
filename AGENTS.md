@@ -103,13 +103,16 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 
 ## Stack
 
-**There is no default stack.** Every app gets the best-in-class stack for what it is. Use
-`stack-picker` before scaffolding. What there is: a **starter app** that `npm run new-app` puts in every
-new folder (plain Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, a phone-first
-`public/`, its port in `.env`, request logging in `locker/otel.mjs`, a working AI route `POST /api/ask` that already
-handles "no key yet" and "budget used up", the sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button). It runs with `npm run dev`,
-needs no packages and already passes `/ship`. Build on it when plain Node fits; replace it when the
-product needs another stack (`--bare` skips it). The rules that apply to every stack:
+**The default stack is the React starter**, and agents should lean students toward it: `npm run new-app`
+makes Vite + React + TypeScript + Tailwind + shadcn/ui with the component galleries (React Bits, Magic UI,
+Aceternity UI) one command away (`beautiful-components`). Switch only for a strong preference or a product
+that is clearly another shape (2D game, 3D world, content site): `stack-picker`. **Phone first:** most
+users open these apps on a phone; design the 375px screen first. Both starters share the same server:
+Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, its port in `.env`, request logging in
+`locker/otel.mjs`, a working AI route `POST /api/ask` that already handles "no key yet" and "budget used up", the
+sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The React starter's page is `src/`
+(Vite in dev, built to `dist/` on deploy); `--plain` gives a no-packages page in `public/` instead. Both run with
+`npm run dev` and already pass `/ship`. `--bare` makes an empty folder for another stack. The rules that apply to every stack:
 
 - **Boots in seconds, runs locally.** No Docker, no cloud databases, no paid services required to run.
   SQLite beats Postgres here. Plain static files are fine when that's all it needs.

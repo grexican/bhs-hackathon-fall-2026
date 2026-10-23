@@ -27,10 +27,15 @@ command that never stops to ask a question.
 
 ## Decide in 30 seconds
 
+**Default: the React starter** that `npm run new-app` already made (Vite + React + TS + Tailwind +
+shadcn/ui, galleries wired in, on the kit's Node server). Keep it unless the student has a strong
+preference or the product is clearly one of the shapes below. Most apps are not.
+
 Ask these in order. Take the first match.
 
 | If the product is... | Pick | Tradeoff in one line |
 |---|---|---|
+| Almost anything: tools, quizzes, planners, feeds, dashboards, AI helpers, apps with saved data | **The React starter (keep it)** | Everything is set up, and the component galleries make it look great fast. |
 | Mostly content: a portfolio, club site, event page, blog | **Astro** | Fastest pages and great for content; heavy interactivity needs islands. |
 | A tiny page or toy with a little JS | **Vite + vanilla TS** | Nothing to learn; you hand-roll every UI update. |
 | An interactive app (tools, quizzes, planners, dashboards) with no accounts | **Vite + React + TS** | Huge ecosystem and instant HMR; data lives in the browser only. |

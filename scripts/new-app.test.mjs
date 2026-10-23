@@ -1,4 +1,4 @@
-// Tests scripts/new-app.mjs and the starter app it copies (kit/app-template): the files, the first
+// Tests scripts/new-app.mjs and the starter apps it copies (kit/app-template with --plain, kit/app-template-react by default): the files, the first
 // commit, and that the app really runs: /health, the SQLite example surviving a restart, files from public/.
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
@@ -35,7 +35,7 @@ async function boot(dir, env) {
 }
 
 test("new-app copies the starter app, fills in the name, and commits it (without .env)", () => {
-  const out = newApp("lunch-line", "--name", 'Lunch & "Line"');
+  const out = newApp("lunch-line", "--name", 'Lunch & "Line"', "--plain");
   assert.match(out, /npm run dev/);
   const dir = path.join(root, "apps", "lunch-line");
   for (const f of ["server.js", "db.js", "package.json", "public/index.html", "public/app.js", "public/style.css", "locker/otel.mjs", "locker/vault.mjs", "locker/gate.mjs", "AGENTS.md", "docs/idea.md"]) {
@@ -49,7 +49,7 @@ test("new-app copies the starter app, fills in the name, and commits it (without
   // The request-logging packages are there from day one, so the first deploy doesn't change package.json.
   assert.deepEqual(pkg.dependencies, OTEL_PACKAGES);
   assert.doesNotMatch(out, /made from the codename/, "no name hint when --name was given");
-  assert.match(newApp("name-hint"), /The app is called "Name Hint" \(made from the codename\)[\s\S]*--name/);
+  assert.match(newApp("name-hint", "--plain"), /The app is called "Name Hint" \(made from the codename\)[\s\S]*--name/);
   assert.match(fs.readFileSync(path.join(dir, "public/index.html"), "utf8"), /<title>Lunch &amp; &quot;Line&quot;<\/title>/);
   for (const f of ["server.js", "package.json", "public/index.html"]) assert.doesNotMatch(fs.readFileSync(path.join(dir, f), "utf8"), /\{\{/);
   assert.match(fs.readFileSync(path.join(dir, ".env"), "utf8"), /^PORT=\d{4}$/m);
@@ -221,4 +221,27 @@ test("--bare makes just the folder, for a scaffolder", () => {
 test("an existing folder or a bad codename is refused", () => {
   assert.throws(() => newApp("lunch-line"), /already exists/);
   assert.throws(() => newApp("Not OK"), /won't work as a codename/);
+});
+
+test("by default it makes the React starter, with the component galleries wired in", () => {
+  const out = newApp("react-app", "--name", 'React & "App"', "--no-install");
+  const dir = path.join(root, "apps", "react-app");
+  for (const f of ["server.js", "db.js", "package.json", "index.html", "vite.config.ts", "tsconfig.json", "components.json", "src/main.tsx", "src/App.tsx", "src/index.css", "src/lib/utils.ts", "src/components/ui/button.tsx", "src/components/AskBox.tsx", "locker/otel.mjs", "locker/gate.mjs", "AGENTS.md"]) {
+    assert.ok(fs.existsSync(path.join(dir, f)), `missing ${f}`);
+  }
+  assert.ok(!fs.existsSync(path.join(dir, "public/index.html")), "the React starter's page is index.html + src/, not public/");
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+  assert.equal(pkg.name, "react-app");
+  assert.equal(pkg.description, 'React & "App"');
+  assert.equal(pkg.scripts.start, "node server.js");
+  assert.equal(pkg.scripts.build, "vite build");
+  assert.match(pkg.scripts.dev, /server\.js --dev$/);
+  // The build tools are dependencies (not devDependencies), so the host's build always has them.
+  for (const dep of ["vite", "react", "tailwindcss", "@vitejs/plugin-react", "@opentelemetry/sdk-node"]) assert.ok(pkg.dependencies[dep], dep);
+  const registries = JSON.parse(fs.readFileSync(path.join(dir, "components.json"), "utf8")).registries;
+  assert.deepEqual(Object.keys(registries).sort(), ["@aceternity", "@magicui", "@react-bits"]);
+  assert.match(fs.readFileSync(path.join(dir, "index.html"), "utf8"), /<title>React &amp; &quot;App&quot;<\/title>/);
+  for (const f of ["server.js", "package.json", "index.html", "src/App.tsx"]) assert.doesNotMatch(fs.readFileSync(path.join(dir, f), "utf8"), /\{\{(name|codename|nameJson)\}\}/);
+  assert.match(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /beautiful-components/);
+  assert.match(out, /npm install && npm run dev/, "with --no-install it says to install first");
 });

@@ -502,6 +502,44 @@
       "ref": "ca21b2a1f9237163291a3a936b1cbb86752f4895",
       "license": "MIT",
       "patches": []
+    },
+    {
+      "name": "hyperframes",
+      "source": "https://github.com/heygen-com/hyperframes",
+      "path": "skills/hyperframes",
+      "ref": "84119565344493e005c23c9fe29c3571a463143d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "hyperframes-cli",
+      "source": "https://github.com/heygen-com/hyperframes",
+      "path": "skills/hyperframes-cli",
+      "ref": "84119565344493e005c23c9fe29c3571a463143d",
+      "license": "Apache-2.0",
+      "patches": [
+        "references/upgrade-info-misc.md: one agent-runtime name dropped from a list for provenance (re-run scripts/check-provenance.mjs after sync)"
+      ]
+    },
+    {
+      "name": "hyperframes-registry",
+      "source": "https://github.com/heygen-com/hyperframes",
+      "path": "skills/hyperframes-registry",
+      "ref": "84119565344493e005c23c9fe29c3571a463143d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "media-use",
+      "source": "https://github.com/heygen-com/hyperframes",
+      "path": "skills/media-use",
+      "ref": "84119565344493e005c23c9fe29c3571a463143d",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "beautiful-components",
+      "source": "local",
+      "path": ".claude/skills/beautiful-components",
+      "ref": null,
+      "license": "same as repo"
     }
   ]
 }

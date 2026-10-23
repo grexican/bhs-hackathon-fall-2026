@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 // Creates apps/<codename>/ as its own git repo, ready for /start to build in.
-//   npm run new-app -- lunch-line [--name "Lunch Line"] [--bare]
-// By default it holds the starter app (kit/app-template): a tiny Node server with /health, SQLite
-// (node:sqlite) at DATABASE_PATH and a phone-first page, so it runs with `npm run dev` and passes every
-// /ship check before anything else is built. --bare makes just the folder (for a scaffolder like Vite).
+//   npm run new-app -- lunch-line [--name "Lunch Line"] [--plain | --bare] [--no-install]
+// By default it holds the React starter (kit/app-template-react): Vite + React + TypeScript + Tailwind +
+// shadcn/ui, with the component galleries (React Bits, Magic UI, Aceternity) ready to add, on the same small
+// Node server as always (/health, SQLite at DATABASE_PATH, the AI route, the sign-in gate). It runs with
+// `npm run dev` and passes every /ship check before anything else is built. It installs its packages
+// (--no-install skips that). --plain: the no-packages starter (kit/app-template: plain HTML, CSS and JS).
+// --bare: just the folder (for another scaffolder).
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -13,7 +16,7 @@ import { freePort } from "./port.mjs";
 // LOCKER_KIT_ROOT: the same test hook as locker.mjs (the MCP tests scaffold into a throwaway folder).
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = process.env.LOCKER_KIT_ROOT ?? KIT;
-const TEMPLATE = path.join(KIT, "kit", "app-template");
+const TEMPLATES = { react: path.join(KIT, "kit", "app-template-react"), plain: path.join(KIT, "kit", "app-template") };
 
 export const CODENAME = /^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/;
 export const titleCase = (codename) => codename.split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -35,7 +38,8 @@ export function copyAiKit(dir) {
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 /** Copies the starter app into dir, filling in the app's name. */
-function copyTemplate(dir, { codename, name }) {
+function copyTemplate(dir, { codename, name, template }) {
+  const TEMPLATE = TEMPLATES[template];
   for (const entry of fs.readdirSync(TEMPLATE, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue;
     const from = path.join(entry.parentPath, entry.name);
@@ -56,13 +60,48 @@ function copyTemplate(dir, { codename, name }) {
   copyAiKit(dir);
 }
 
+/** The app's AGENTS.md section for the React starter (kit/app-template-react). */
+const REACT_STARTER_DOC = `
+## The starter app (React)
+
+\`npm run dev\` in this folder runs it on the port in \`.env\`: one server, and the page updates as you save.
+
+- \`src/App.tsx\`: the page (phone first: one column, the main button at thumb height). Replace the "Tap me"
+  example with the real app. \`src/components/\` for your own components, \`src/components/ui/\` for library ones.
+- **Make it beautiful with the component galleries** (\`beautiful-components\` skill). Add any of them with one command:
+  - shadcn/ui, the base pieces: \`npx shadcn@latest add dialog tabs sheet\`
+  - React Bits, animated text, backgrounds and cards: \`npx shadcn@latest add @react-bits/SplitText-TS-TW\`
+  - Magic UI, marketing motion (globe, marquee, number ticker): \`npx shadcn@latest add @magicui/marquee\`
+  - Aceternity UI, heroes, spotlights, 3D cards, bento grids: \`npx shadcn@latest add @aceternity/bento-grid\`
+  The starter already uses one of each (SplitText, NumberTicker, Spotlight) so you can see how they fit.
+- \`server.js\`: the server. \`/health\` (keep it) and the API routes the page calls with \`fetch("/api/…")\`.
+  On this laptop it hands the page to Vite; online it serves the built files in \`dist/\` (\`npm run build\`, the deploy runs it).
+- \`db.js\`: SQLite (\`node:sqlite\`) at \`DATABASE_PATH\` (\`./data/app.db\` here, \`/data/app.db\` online).
+- \`POST /api/ask\` in \`server.js\` + \`src/components/AskBox.tsx\`: a working AI example (\`locker/ai\`). It already handles
+  "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Turn the box on with
+  \`SHOW_ASK_THE_AI\` in \`src/App.tsx\`.
+- Tester **Feedback button**: the commented line in \`index.html\` (\`/test-with-a-friend\`). The starter page shows a small
+  "Turn on: Ask the AI · Feedback button" hint; drop it when the real page replaces the starter.
+- Sign-in gate: off until \`LOCKER_GATE=1\` (every page) or \`lazy\` (public; \`requireUser\` on the routes that need it);
+  then \`user\` in every route is whoever is signed in (\`GET /api/me\`). If the app is for "everyone" on the hub,
+  parents and guests can sign in too: check \`user.domain\`, don't assume a student.
+  On this laptop, \`LOCKER_GATE_USER="Ana Garcia <ana@example.org>"\` in \`.env\` signs you in as that person.
+- Routes with a blank in the address: \`"GET /api/things/:id"\` in \`server.js\` gives the handler \`params.id\`.
+- Users' passwords or API keys: \`locker/vault.mjs\` (\`keep-secrets-safe\`), never the database.
+- \`locker/\`: kit files (request logging, sign-in gate, Feedback button, AI kit). The deploy refreshes them; don't edit.
+- \`npm run typecheck\` finds TypeScript mistakes. The build doesn't block on them.
+
+Keep \`PORT\`, \`/health\`, \`DATABASE_PATH\` and the \`build\` + \`start\` scripts: the host needs them.
+`;
+
 async function main() {
   const args = process.argv.slice(2);
   const codename = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--"));
-  if (!codename) fail('Usage: npm run new-app -- <codename> [--name "Lunch Line"] [--bare]');
+  if (!codename) fail('Usage: npm run new-app -- <codename> [--name "Lunch Line"] [--plain | --bare] [--no-install]');
   if (!CODENAME.test(codename)) fail(`"${codename}" won't work as a codename. Use 3–30 lowercase letters, digits or dashes, like lunch-line.`);
   const name = flag(args, "name") ?? titleCase(codename);
   const bare = args.includes("--bare");
+  const template = args.includes("--plain") ? "plain" : "react";
   const dir = path.join(ROOT, "apps", codename);
   if (fs.existsSync(dir)) fail(`apps/${codename}/ already exists. Pick another codename, or keep building in that folder.`);
   // The codename becomes the app's web address, so it must be free on the hub. Ask now, not at /connect.
@@ -86,7 +125,7 @@ This app lives inside the hackathon kit. Follow the kit's rules in \`../../AGENT
 - This folder is its **own git repo**: run git commands here, not in the kit.
 - Deploy from the kit root: \`npm run deploy -- ${codename}\` (see \`/ship\`).
 - Secrets go in \`.env\` in this folder (written by \`npm run locker:project\`). Never commit it.
-${bare ? "" : `
+${bare ? "" : template === "react" ? REACT_STARTER_DOC : `
 ## The starter app
 
 \`npm run dev\` in this folder runs it on the port in \`.env\`. It's plain Node, no packages:
@@ -119,7 +158,7 @@ Switching to Vite, Next.js or another stack is fine (\`stack-picker\`): keep \`P
     "docs/idea.md": `# ${name}\n\n_Filled in by /start: who it's for, the one thing it nails, what's cut to "later", and the 30-second test._\n`,
   };
   if (!bare) {
-    copyTemplate(dir, { codename, name });
+    copyTemplate(dir, { codename, name, template });
     // A free port of its own, so several apps (and demos) can run side by side.
     files[".env"] = `# Local settings for this app. Never commit this file.
 PORT=${await freePort()}
@@ -128,6 +167,20 @@ PORT=${await freePort()}
   for (const [rel, text] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
     fs.writeFileSync(path.join(dir, rel), text);
+  }
+
+  // The React starter needs its packages (Vite, React, Tailwind, the UI pieces). Installed now, so
+  // `npm run dev` works the first time; package-lock.json goes in the first commit.
+  let installed = template !== "react" || bare;
+  if (!installed && !args.includes("--no-install")) {
+    console.log("Installing the starter's packages (React, Vite, Tailwind, UI pieces). About a minute…");
+    // On Windows npm is a .cmd, which needs a shell; one command string (no args array) keeps Node quiet about it.
+    const npm =
+      process.platform === "win32"
+        ? spawnSync("npm install --no-audit --no-fund --loglevel=error", { cwd: dir, stdio: "inherit", shell: true })
+        : spawnSync("npm", ["install", "--no-audit", "--no-fund", "--loglevel=error"], { cwd: dir, stdio: "inherit" });
+    installed = npm.status === 0;
+    if (!installed) console.log(`The install didn't finish (no internet?). Run it yourself when you can: cd apps/${codename} && npm install`);
   }
 
   const git = (...a) => execFileSync("git", a, { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -142,8 +195,9 @@ PORT=${await freePort()}
   git(...id, "commit", "-q", "-m", `Start ${name}`);
 
   console.log(`Created apps/${codename}/ (${name}), its own git repo with a first commit.`);
-  if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in public/index.html (or start over with --name "…").`);
-  if (!bare) console.log(`Try it: cd apps/${codename} && npm run dev   (a starter app with a database, ready to change)`);
+  if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in ${template === "react" ? "index.html and src/App.tsx" : "public/index.html"} (or start over with --name "…").`);
+  if (!bare && template === "react") console.log(`Try it: cd apps/${codename} && ${installed ? "" : "npm install && "}npm run dev   (a React starter with a database and UI galleries ready to add)`);
+  if (!bare && template === "plain") console.log(`Try it: cd apps/${codename} && npm run dev   (a starter app with a database, ready to change)`);
   console.log(`Next: build in apps/${codename}/. When you want it online: /connect, then /ship.`);
   if (unchecked) console.log(unchecked);
 }

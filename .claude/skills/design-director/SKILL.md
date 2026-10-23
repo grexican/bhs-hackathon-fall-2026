@@ -13,6 +13,8 @@ Run the five phases in order. Do not skip phase 1. Do not write UI code before p
 1. Read the brief. Name the **mode**: Persuade (landing, pitch), Operate (app, tool, dashboard),
    Read (docs, blog), Experience (portfolio, game, art piece).
 2. Name the **audience** and **one feeling** the UI must give (e.g. "calm and trusted", "loud arcade energy").
+   **Assume a phone.** Most people open these apps on a phone: every direction must work at 375px first
+   (one column, the main action at thumb height, tap targets of 44px or more, no hover-only effects).
 3. Propose **3 directions** that are genuinely different, not three shades of one idea. For each:
    - a name and a one-line mood ("Swiss poster", "Y2K chrome", "field notebook", "neon arcade")
    - a style from the library: `python .claude/skills/ui-ux-pro-max/scripts/search.py "<mood keywords>" --domain style -n 5`
@@ -38,6 +40,8 @@ Preset aesthetics you can hand off to when the direction matches:
 ## Phase 3 — Build with conviction
 
 - Follow `frontend-design`: commit to the tone, make bold choices on purpose, no timid middle.
+- Ready-made beautiful pieces (React Bits, Magic UI, Aceternity UI, shadcn/ui, Uiverse), fonts, palettes and
+  shader backgrounds: `beautiful-components`. Take 2 or 3 standout pieces, then unify them with the tokens.
 - Components and Tailwind/shadcn setup: `ui-styling`. Modern CSS/HTML patterns (dialogs, popovers,
   container queries, view transitions): `modern-web-guidance`.
 - Motion: decide with `animate` (should it move, why, which curve, how it exits). GSAP work:
