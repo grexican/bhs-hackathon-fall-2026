@@ -107,6 +107,10 @@ team at 80% and 100% of the budget; an organizer can raise it. Before a demo: `n
 
 - **Structured output:** use `askJson` with a JSON schema (`additionalProperties: false`, every field
   `required`). Don't regex JSON out of prose.
+- **AI edits a document? Ask for operations, not a rewrite.** Schema a short list like
+  `{op: "set_item" | "insert_item" | "delete_item" | "move_item", at, item}` and apply it in code. Faster
+  and cheaper than copying the whole document back, and the parts the user didn't ask about can't drift.
+  Show the result as an unsaved draft the user keeps or discards; never save an AI change on its own.
 - **Stream nothing you don't show.** Short `maxTokens` for short answers keeps `fast` fast.
 - **Log `ms` and `cost`** while building; show them in a dev panel. Students learn what AI costs.
 - **Cache** expensive results (images, `thinking` answers) by input, in SQLite or a JSON file.
