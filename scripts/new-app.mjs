@@ -154,7 +154,7 @@ Switching to Vite, Next.js or another stack is fine (\`stack-picker\`): keep \`P
 
 - The idea: \`docs/idea.md\`
 `,
-    ".gitignore": "node_modules/\n.env\n.env.*\n!.env.example\ndata/\n*.db\n*.db-*\ndist/\n.next/\n.DS_Store\n",
+    ".gitignore": "node_modules/\n.env\n.env.*\n!.env.example\ndata/\n*.db\n*.db-*\ndist/\n.next/\n.DS_Store\n*.log\n",
     "docs/idea.md": `# ${name}\n\n_Filled in by /start: who it's for, the one thing it nails, what's cut to "later", and the 30-second test._\n`,
   };
   if (!bare) {

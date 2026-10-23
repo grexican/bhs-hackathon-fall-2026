@@ -13,7 +13,7 @@
 //     // (gate off, or LOCKER_GATE=lazy and not signed in yet)
 //     if (url.pathname.startsWith("/my")) {      // with lazy: only these pages need sign-in
 //       const u = requireUser(req, res);          // null = sent them to sign in; stop here
-//       if (!u) return;
+//       if (u === null) return;                  // (undefined: the gate is off, so there is no user to check)
 //     }
 //   });
 //

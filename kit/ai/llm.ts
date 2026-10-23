@@ -17,6 +17,17 @@ export interface AskOptions {
   system?: string;
   maxTokens?: number;
   temperature?: number;
+  /**
+   * Search the web first (OpenRouter's web search, any model). true = up to 5 results; or { maxResults }.
+   * The answer then cites what it found: result.sources lists the pages. Costs about half a cent per call.
+   */
+  web?: boolean | { maxResults?: number };
+}
+
+/** A page the answer used, when web search was on. */
+export interface Source {
+  url: string;
+  title: string;
 }
 
 export interface AskResult {
@@ -25,6 +36,8 @@ export interface AskResult {
   ms: number;
   cost: number;
   simulated: boolean;
+  /** The web pages the answer cited (only with opts.web). */
+  sources?: Source[];
 }
 
 export interface LlmProvider {
@@ -50,6 +63,7 @@ const openRouterProvider: LlmProvider = {
       ...(opts.schema && {
         response_format: { type: "json_schema", json_schema: { name: "result", strict: true, schema: opts.schema } },
       }),
+      ...(opts.web && { plugins: [{ id: "web", max_results: typeof opts.web === "object" ? (opts.web.maxResults ?? 5) : 5 }] }),
     };
     let json;
     try {
@@ -65,12 +79,22 @@ const openRouterProvider: LlmProvider = {
         });
       } else throw cantDoIt(tier, cfg.model, opts);
     }
+    // With web search on, the answer's citations arrive as url_citation annotations.
+    const notes: { type?: string; url_citation?: { url?: string; title?: string } }[] = json.choices?.[0]?.message?.annotations ?? [];
+    const seen = new Set<string>();
+    const sources = notes.flatMap((a) => {
+      const url = a.type === "url_citation" ? a.url_citation?.url : undefined;
+      if (!url || seen.has(url)) return [];
+      seen.add(url);
+      return [{ url, title: a.url_citation?.title || url }];
+    });
     return {
       text: json.choices?.[0]?.message?.content ?? "",
       model: json.model ?? cfg.model,
       ms: Date.now() - t0,
       cost: json.usage?.cost ?? 0,
       simulated: false,
+      ...(opts.web && { sources }),
     };
   },
   async image(prompt) {
@@ -156,7 +180,7 @@ const simProvider: LlmProvider = {
     const text = opts.schema
       ? JSON.stringify(sampleFromSchema(opts.schema, prompt))
       : `[Simulated ${tier} reply] ${prompt.slice(0, 80)}${prompt.length > 80 ? "…" : ""}`;
-    return { text, model: `sim/${tier}`, ms: 0, cost: 0, simulated: true };
+    return { text, model: `sim/${tier}`, ms: 0, cost: 0, simulated: true, ...(opts.web && { sources: [] }) };
   },
   async image(prompt) {
     const label = prompt.replace(/[<&>"]/g, "").slice(0, 40);

@@ -37,6 +37,16 @@ description: How apps here use AI. Ask for a KIND of model (lite, fast, smart, t
 | `auto` | Let a router pick model + effort per request | varies |
 | (`jev.ts`) | Yes/no, pick-one, scales: routing, guards, triage | ~0.5 s, ~$0.00002 |
 
+**Web search (fresh facts, with sources).** Any tier can search the web first: pass `web: true` (up to 5
+results) or `web: { maxResults: 3 }`. The answer cites what it found, and `result.sources` lists the pages
+(`{ url, title }`), so show them as links. About half a cent per call; only turn it on for questions that need
+today's facts (prices, news, "is there an app that already does this?"), not for every chat message.
+
+```ts
+const r = await ask("fast", "What do Barcelona schools charge for lunch?", { web: true });
+// r.text: the answer with citations · r.sources: [{ url, title }, ...]
+```
+
 ## Routing doctrine
 
 - **Start `lite`.** It's a prototype. Most steps never need more.

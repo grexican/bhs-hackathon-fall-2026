@@ -20,12 +20,12 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-// Reads the JSON the page sent (small requests only).
+// Reads the JSON the page sent (up to 100 KB: notes and form data, not files; uploads use save-files).
 async function readJson(req) {
   let raw = "";
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 10_000) throw Object.assign(new Error("Too long"), { status: 413 });
+    if (raw.length > 100_000) throw Object.assign(new Error("Too long"), { status: 413 });
   }
   return raw ? JSON.parse(raw) : {};
 }

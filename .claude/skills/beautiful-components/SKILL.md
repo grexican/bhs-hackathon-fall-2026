@@ -48,6 +48,10 @@ Run every command inside `apps/<codename>/`, never at the kit root. Add `-y` so 
 6. **Screenshot before "done":** `npm run shot -- http://localhost:<port>` (desktop and phone).
 
 If a component needs a package the CLI didn't install, the error names it: `npm install <name>`.
+
+**Gotcha with `cn()`:** it drops a `leading-*` (line height) that comes BEFORE a text size like `text-[clamp(...)]`
+or `text-5xl`. Put line height last: `cn("font-bold", size, "leading-tight")`. Symptom: huge gaps between the lines of
+a big heading.
 If two galleries both have one (bento grid), pick the one that matches the chosen direction.
 
 ## Plain HTML apps (`--plain` starter, no React)
