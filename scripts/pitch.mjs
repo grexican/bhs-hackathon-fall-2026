@@ -354,7 +354,7 @@ function build(codename, args) {
       console.log(`✓ copied to public/pitch.html: after /ship it lives at ${url ? url.replace(/\/$/, "") : "<your app>"}/pitch.html`);
     }
   }
-  console.log("See every slide: npm run pitch -- look ${codename}. Present: double-click the file. Keys: → next · F full screen · P presenter window · N notes · D open the app.");
+  console.log(`See every slide: npm run pitch -- look ${codename}. Present: double-click the file. Keys: → next · F full screen · P presenter window · N notes · D open the app.`);
 }
 
 // A picture of every slide, so the agent can SEE the deck the way the room will.
