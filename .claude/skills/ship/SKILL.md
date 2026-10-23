@@ -63,6 +63,15 @@ version): that's normal, not a failure. Wait for `<APP_URL>/health` to answer `o
 up to 5 min) before you open it or tell the student anything. A failure? Read `npm run locker:logs -- <codename> --build`, explain the cause in one
 sentence, fix, deploy again. Two failed fixes: tell them to raise a hand.
 
+**Which address? Ask the hub, don't assume.** A new app's friendly address (`<codename>.apps.bhslabs.org`)
+needs a security certificate, and on a first deploy that can take a few minutes, sometimes longer. Until it
+exists, the friendly address shows a certificate error. That is not your app's fault and waiting on it does
+nothing. The hub hands out the address that works: `npm run locker:status -- <codename>` prints it as "Live
+address" (the `*.up.railway.app` one while the certificate is coming, the friendly one once it's ready). Give
+the student THAT address, and test with it. Sign in with BHS works on both. The hub checks every 10 minutes and
+switches on its own; `--check` asks it right now. Never tell a student their app is broken because the friendly
+address fails while the "Live address" works.
+
 **Not sure what state it's in?** Ask the hub first: `npm run locker:status -- <codename> --check` (or the
 `locker_status` tool with the codename and `check: true`). It answers "Live and answering in N ms",
 "Building…", "The last deploy failed to build" with the error lines, "isn't answering", or "Never
