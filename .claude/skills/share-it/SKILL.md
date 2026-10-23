@@ -64,4 +64,4 @@ and it means no privacy notice is needed.
 
 Help the student write the message they'll actually send (group chat, class, club): one line on
 what it is, the link, and one ask ("try rating today's lunch, tell me what's confusing"). Then point
-them to `/test-with-a-friend` for the people who answer.
+them to `/playtest` for the people who answer.

@@ -56,4 +56,4 @@ the address bar hides (`100dvh`, not `100vh`), and hover effects that stick afte
 `npm run shot -- <url> --mobile` and look at the picture. Then the real test: the student opens it
 from the home-screen icon and does the app's one main thing with one thumb. It counts only when that works.
 
-Suggest `/wrap` to save it. Next good step: `/test-with-a-friend`.
+Suggest `/wrap` to save it. Next good step: `/playtest`.

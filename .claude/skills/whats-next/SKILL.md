@@ -23,7 +23,7 @@ where you saw it), **MISS** (it didn't: say by how much and the most likely reas
 (nobody checked or nothing counted it). Write the verdict under that decision. A MISS is useful, not
 a failure; an UNMEASURED means the next pick needs a way to count it (`share-it` has a counter).
 
-No tester feedback yet? Say so: the best next step is almost always `/test-with-a-friend`, not a feature.
+No tester feedback yet? Say so: the best next step is almost always `/playtest`, not a feature.
 
 ## 2. Offer 2–3 options
 

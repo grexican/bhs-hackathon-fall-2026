@@ -12,7 +12,7 @@ you'll use it (each one makes the agent read more). Run the command from the kit
 | [Expo skills](https://github.com/expo/skills) | Real phone apps (iOS and Android) with Expo | `npx skills@latest add expo/skills --skill '*'` |
 | [skills.sh](https://skills.sh) | Search thousands more | browse, then `npx skills add <owner>/<repo>` |
 
-**Already in the kit** (no install): after the first version, `/on-my-phone`, `/test-with-a-friend`, `/share-it`,
+**Already in the kit** (no install): after the first version, `/on-my-phone`, `/playtest`, `/share-it`,
 `/whats-next` and `/pitch`; uploads and AI images that survive deploys (`save-files`); maps with no key (`maps`); safe AI features (`ai-safety`); one test before tricky logic (`test-first`); school sign-in for any stack (`school-sign-in`); design taste (`design-director`, `ui-ux-pro-max`, `impeccable`,
 `design-taste-frontend`, `high-end-visual-design`, `minimalist-ui`), ready-made components from the React galleries
 (`beautiful-components`), video from HTML (`hyperframes`, `hyperframes-cli`, `hyperframes-registry`, `media-use`), motion (`gsap-*`, `animate`),

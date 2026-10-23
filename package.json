@@ -40,7 +40,8 @@
     "locker:feedback": "node scripts/locker.mjs feedback",
     "locker:bring": "node scripts/locker.mjs bring",
     "deploy": "node scripts/locker.mjs deploy",
-    "test": "node --test scripts/*.test.mjs"
+    "test": "node --test scripts/*.test.mjs",
+    "pitch": "node scripts/pitch.mjs"
   },
   "devDependencies": {
     "@railway/cli": "^5.71.0",

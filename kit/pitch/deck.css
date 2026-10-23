@@ -1,0 +1,173 @@
+/* Pitch deck styles. scripts/pitch.mjs inlines this, after the app's brand tokens, into
+   apps/<codename>/pitch/index.html. The deck draws on a fixed 1600x900 stage that is scaled
+   to the screen, so it looks the same on a laptop and on the projector. */
+:root {
+  --bg: #0d0e12;
+  --panel: #17181e;
+  --ink: #f5f2ea;
+  --muted: #9a978f;
+  --accent: #ffcf3f;
+  --accent-ink: #15130b;
+  --line: rgba(245, 242, 234, 0.12);
+  --display: ui-sans-serif, "Segoe UI Variable Display", "SF Pro Display", system-ui, sans-serif;
+  --body: ui-sans-serif, "Segoe UI Variable Text", "SF Pro Text", system-ui, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+body { font-family: var(--body); -webkit-font-smoothing: antialiased; cursor: default; }
+
+.stage { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px; transform-origin: center; }
+.slide {
+  position: absolute; inset: 0; padding: 96px 120px; display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; transform: translateX(40px); pointer-events: none; transition: opacity .45s ease, transform .55s cubic-bezier(.2, .8, .2, 1);
+}
+.slide.past { transform: translateX(-40px); }
+.slide.on { opacity: 1; transform: none; pointer-events: auto; }
+.slide.on > * { animation: rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+.slide.on > *:nth-child(2) { animation-delay: .08s; }
+.slide.on > *:nth-child(3) { animation-delay: .16s; }
+.slide.on > *:nth-child(4) { animation-delay: .24s; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .slide, .slide.on > * { transition: none; animation: none; } }
+/* The first slide shows at once: a big file can hold the first frame back, and a blank screen
+   while the room waits is the worst start. Motion begins with the first move. */
+body.boot .slide, body.boot .slide.on > * { transition: none; animation: none; }
+
+.eyebrow { font: 600 22px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 36px; }
+h1 { font: 800 132px/0.95 var(--display); letter-spacing: -0.035em; }
+h2 { font: 750 76px/1.02 var(--display); letter-spacing: -0.025em; margin-bottom: 40px; max-width: 1300px; }
+.lede { font-size: 40px; line-height: 1.3; color: var(--muted); max-width: 1150px; margin-top: 36px; }
+mark { background: none; color: var(--accent); }
+
+/* title */
+.k-title { justify-content: flex-end; padding-bottom: 130px; }
+.k-title .logo { position: absolute; top: 96px; left: 120px; width: 112px; height: 112px; border-radius: 26px; object-fit: cover; }
+.k-title h1 { font-size: 184px; }
+.k-title .lede { color: var(--ink); opacity: .85; }
+.k-title::after { content: ""; position: absolute; right: -180px; top: -180px; width: 760px; height: 760px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 62%); opacity: .22; }
+
+/* big statement (the hook) */
+.k-big h1 { font-size: 112px; max-width: 1360px; }
+.k-big .lede { font-size: 44px; }
+
+/* screenshots in device frames */
+.k-shot { flex-direction: row; align-items: center; gap: 88px; }
+.k-shot .copy { flex: 1 1 0; min-width: 0; }
+.k-shot h2 { font-size: 66px; margin-bottom: 28px; }
+.k-shot .lede { font-size: 34px; margin-top: 0; }
+.k-shot ul { list-style: none; margin-top: 36px; }
+.k-shot li { font-size: 32px; line-height: 1.35; padding-left: 44px; position: relative; margin-bottom: 18px; }
+.k-shot li::before { content: counter(pt); counter-increment: pt; position: absolute; left: 0; top: 3px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font: 700 18px/30px var(--mono); text-align: center; }
+.k-shot ul { counter-reset: pt; }
+.shots { display: flex; gap: 36px; align-items: center; flex: 0 0 auto; }
+.phone { width: 330px; aspect-ratio: 390 / 844; border-radius: 52px; padding: 12px; background: #050506;
+  box-shadow: 0 0 0 2px #2a2b31, 0 40px 90px rgba(0, 0, 0, .55); position: relative; }
+.phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 40px; display: block; }
+.shots.n2 .phone, .shots.n3 .phone { width: 290px; }
+.browser { width: 860px; border-radius: 18px; overflow: hidden; background: var(--panel); box-shadow: 0 0 0 1px var(--line), 0 40px 90px rgba(0, 0, 0, .5); }
+.browser .bar { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.browser .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3b42; }
+.browser .bar span { margin-left: 14px; flex: 1; font: 500 17px/1 var(--mono); color: var(--muted); background: rgba(255, 255, 255, .05); padding: 9px 14px; border-radius: 8px; }
+.browser img { width: 100%; display: block; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.k-shot.wide { flex-direction: column; align-items: flex-start; justify-content: center; gap: 36px; }
+.k-shot.wide .shots { align-self: center; }
+.k-shot.wide .browser { width: 1100px; }
+.k-shot.wide .browser img { aspect-ratio: 16 / 8; }
+.caption { font: 500 22px/1.3 var(--mono); color: var(--muted); margin-top: 18px; }
+
+/* live demo */
+.k-demo { align-items: flex-start; }
+.k-demo .live { display: inline-flex; align-items: center; gap: 14px; font: 700 24px/1 var(--mono); letter-spacing: .12em; color: #ff5a4f; margin-bottom: 32px; }
+.k-demo .live::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: #ff5a4f; animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+.k-demo ol { list-style: none; counter-reset: st; display: flex; gap: 24px; margin: 8px 0 56px; flex-wrap: wrap; }
+.k-demo ol li { counter-increment: st; font-size: 30px; padding: 22px 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); max-width: 420px; }
+.k-demo ol li::before { content: counter(st); display: block; font: 700 20px/1 var(--mono); color: var(--accent); margin-bottom: 10px; }
+.go { display: inline-flex; align-items: center; gap: 16px; font: 750 36px/1 var(--display); color: var(--accent-ink); background: var(--accent);
+  padding: 28px 44px; border-radius: 999px; text-decoration: none; box-shadow: 0 20px 60px color-mix(in srgb, var(--accent) 35%, transparent); }
+.go small { font: 500 22px/1 var(--mono); opacity: .7; }
+.backup { display: flex; gap: 18px; position: absolute; right: 120px; bottom: 96px; opacity: .55; }
+.backup img { height: 150px; border-radius: 12px; box-shadow: 0 0 0 1px var(--line); }
+.backup::before { content: "backup"; position: absolute; top: -32px; left: 0; font: 600 16px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* tester quote */
+.k-quote blockquote { font: 700 84px/1.08 var(--display); letter-spacing: -0.02em; max-width: 1360px; text-indent: -0.42em; }
+.k-quote blockquote::before { content: "\201C"; color: var(--accent); }
+.k-quote blockquote::after { content: "\201D"; color: var(--accent); }
+.k-quote .who { font: 500 30px/1.3 var(--mono); color: var(--muted); margin-top: 48px; }
+.k-quote .who::before { content: "— "; }
+
+/* numbers */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 32px; }
+.stat { border-top: 4px solid var(--accent); padding-top: 28px; }
+.stat b { display: block; font: 800 150px/0.9 var(--display); letter-spacing: -0.04em; }
+.stat span { display: block; font-size: 30px; line-height: 1.3; color: var(--muted); margin-top: 18px; }
+.source { font: 500 20px/1 var(--mono); color: var(--muted); margin-top: 48px; opacity: .7; }
+
+/* what testers did → what we changed */
+.rounds { display: grid; gap: 22px; }
+.round { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; gap: 20px; }
+.round > div { padding: 26px 30px; border-radius: 18px; font-size: 30px; line-height: 1.3; }
+.round .saw { background: var(--panel); border: 1px solid var(--line); }
+.round .changed { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+.round .arrow { text-align: center; font-size: 44px; color: var(--accent); padding: 0; }
+.round-head { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; font: 600 20px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.round-head span:last-child { grid-column: 3; }
+
+/* before / after */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+.compare > div { padding: 40px 44px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
+.compare .after { border-color: var(--accent); }
+.compare h3 { font: 600 22px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 26px; }
+.compare .after h3 { color: var(--accent); }
+.compare li { list-style: none; font-size: 32px; line-height: 1.35; margin-bottom: 16px; }
+.compare .before li { color: var(--muted); }
+
+/* the ask */
+.k-ask { flex-direction: row; align-items: center; gap: 100px; }
+.k-ask .copy { flex: 1; }
+.k-ask h2 { font-size: 88px; }
+.k-ask .lede { color: var(--ink); }
+.qr { flex: 0 0 auto; text-align: center; }
+.qr .code { width: 360px; height: 360px; padding: 22px; background: #fff; border-radius: 28px; }
+.qr .code svg, .qr .code img { width: 100%; height: 100%; display: block; }
+.qr .url { font: 600 26px/1.2 var(--mono); color: var(--accent); margin-top: 24px; }
+
+/* chrome */
+.progress { position: fixed; left: 0; right: 0; bottom: 0; height: 5px; background: var(--line); }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s ease; }
+.count { position: fixed; right: 22px; bottom: 16px; font: 500 14px/1 var(--mono); color: var(--muted); opacity: .6; }
+.hint { position: fixed; left: 22px; bottom: 16px; font: 500 14px/1 var(--mono); color: var(--muted); opacity: .5; transition: opacity 1s 4s; }
+body.started .hint { opacity: 0; }
+.notes { display: none; }
+.notes-overlay { display: none; position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); width: min(900px, 92vw); max-height: 34vh; overflow: auto;
+  background: rgba(10, 10, 12, .94); border: 1px solid var(--line); border-radius: 16px; padding: 20px 26px; font-size: 20px; line-height: 1.45; z-index: 5; }
+.notes-overlay .label { font: 600 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+body.show-notes .notes-overlay { display: block; }
+:fullscreen .hint, :fullscreen .count { display: none; }
+
+/* presenter window (same file, opened with #presenter) */
+.presenter-view { display: none; }
+body.presenter { overflow: auto; }
+body.presenter .stage, body.presenter .progress, body.presenter .count, body.presenter .hint, body.presenter .notes-overlay { display: none; }
+body.presenter .presenter-view { display: flex; flex-direction: column; gap: 22px; padding: 28px 34px; min-height: 100vh; }
+.presenter-view .top { display: flex; justify-content: space-between; align-items: baseline; font: 500 18px/1.2 var(--mono); color: var(--muted); }
+.presenter-view .clock { font: 700 46px/1 var(--mono); color: var(--accent); }
+.presenter-view .pnotes { font-size: 30px; line-height: 1.45; flex: 1; }
+.presenter-view .pnext { font: 500 20px/1.3 var(--mono); color: var(--muted); }
+.presenter-view .buttons { display: flex; gap: 12px; }
+.presenter-view button { font: 600 20px/1 var(--body); padding: 16px 22px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.presenter-view .papp { background: var(--accent); color: var(--accent-ink); border: 0; }
+
+/* Print / Save as PDF: one slide per page (a handout and a last-resort backup). */
+@media print {
+  @page { size: 1600px 900px; margin: 0; }
+  html, body { overflow: visible; height: auto; }
+  .stage { position: static; transform: none !important; width: 1600px; height: auto; }
+  .slide { position: relative; opacity: 1; transform: none; width: 1600px; height: 900px; page-break-after: always; break-after: page; }
+  .slide > * { animation: none !important; }
+  .progress, .count, .hint, .notes-overlay, .presenter-view { display: none !important; }
+}

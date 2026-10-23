@@ -91,8 +91,8 @@ never return keys. Prefer them over the npm commands when they're available.
 | `/branding` | Vibe, palette, fonts, logo → `apps/<codename>/brand/`. |
 | `/think-it-through` · `/council` · `/research` | Decide before a big feature · five advisor takes · web research with sources. |
 | `/on-my-phone` · `/share-it` | Open it on a phone and make it installable · link preview, QR code, Locker listing, visit counter. |
-| `/test-with-a-friend` · `/whats-next` | Watch a real person use it, pick one fix · choose the next thing from evidence. |
-| `/pitch` | Demo Day: a short pitch, a demo that can't break, a backup, a rehearsal. |
+| `/playtest` · `/whats-next` | Swap with another team: watch a real person use it, fix one thing, repeat (`docs/feedback.md`) · choose the next thing from evidence. |
+| `/pitch` | Demo Day: the spoken pitch, a slide deck built from real screenshots (`npm run pitch`), a demo that can't break, a rehearsal. |
 | `/demo <idea>` | The fair demo: a no-skills control build vs. the full build, revealed side by side. |
 | `/wrap [push]` | Review the diff, write a clear commit, optionally push. |
 
@@ -150,11 +150,11 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 | "It's broken" | Get the exact error or a screenshot (`debug-preventer`), say a hypothesis in plain English, then fix. |
 | "Make it look better" | `design-director`. Name the direction before touching CSS. |
 | "Moving on to…" | Offer a fresh-chat handoff summary (`fresh-chat-coach`). |
-| "Is it good?" / "Would people use it?" | `/test-with-a-friend`. Watch a real person; never ask "would you use it?". |
+| "Is it good?" / "Would people use it?" | `/playtest`. Watch a real person; never ask "would you use it?". |
 | "What next?" | `/whats-next`: one pick, from evidence. |
 | "Upload a photo" / "save images" | `save-files`: files next to the database on `/data`, never elsewhere. |
 | "Add a map" / "near me" | `maps`: Leaflet + OpenStreetMap, no key; location only on a tap, over https. |
-| "I have to present" | `/pitch`. |
+| "I have to present" / "make slides" | `/pitch`: slides come from `docs/pitch.json` via `npm run pitch`, never hand-written. |
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
 | "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). If it reads users' text or the app's data: `ai-safety`. |

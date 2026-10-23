@@ -295,7 +295,7 @@ export async function readFeedback(codename, { unread = false, limit = 50 } = {}
 /** Plain-text lines for a terminal or a chat. */
 export function formatFeedback(codename, { summary, feedback }) {
   const head = `${codename}: ${summary.total} feedback, ${summary.unread} new${summary.averageRating ? `, average rating ${summary.averageRating} of 5` : ""}.`;
-  if (!feedback.length) return `${head}\nNothing to show yet. Turn on the Feedback button in the app (/test-with-a-friend) and share the link.`;
+  if (!feedback.length) return `${head}\nNothing to show yet. Turn on the Feedback button in the app (/playtest) and share the link.`;
   const lines = feedback.map((f) => {
     const meta = [new Date(f.createdAt).toISOString().slice(0, 16).replace("T", " "), f.read ? null : "new", f.rating ? `${f.rating}/5` : null, f.page, f.contact ? `from ${f.contact}` : null].filter(Boolean);
     return `- [${meta.join(" · ")}] ${f.message.replace(/\s+/g, " ")}`;

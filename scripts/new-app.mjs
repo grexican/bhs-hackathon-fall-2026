@@ -80,7 +80,7 @@ const REACT_STARTER_DOC = `
 - \`POST /api/ask\` in \`server.js\` + \`src/components/AskBox.tsx\`: a working AI example (\`locker/ai\`). It already handles
   "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Turn the box on with
   \`SHOW_ASK_THE_AI\` in \`src/App.tsx\`.
-- Tester **Feedback button**: the commented line in \`index.html\` (\`/test-with-a-friend\`). The starter page shows a small
+- Tester **Feedback button**: the commented line in \`index.html\` (\`/playtest\`). The starter page shows a small
   "Turn on: Ask the AI · Feedback button" hint; drop it when the real page replaces the starter.
 - Sign-in gate: off until \`LOCKER_GATE=1\` (every page) or \`lazy\` (public; \`requireUser\` on the routes that need it);
   then \`user\` in every route is whoever is signed in (\`GET /api/me\`). If the app is for "everyone" on the hub,
@@ -136,7 +136,7 @@ ${bare ? "" : template === "react" ? REACT_STARTER_DOC : `
 - \`POST /api/ask\` in \`server.js\`: a working AI example (\`locker/ai\`, the kit's AI helper). It already handles
   "no key yet" (a simulated answer) and "AI budget used up" (a friendly message). Its "Ask the AI" box is one
   uncommented line in \`public/index.html\`.
-- Tester **Feedback button**: the other commented line in \`public/index.html\` (\`/test-with-a-friend\`). The starter
+- Tester **Feedback button**: the other commented line in \`public/index.html\` (\`/playtest\`). The starter
   page shows a small "Turn on: Ask the AI · Feedback button" hint so the student knows both exist; drop it when
   the real page replaces the starter.
 - Sign-in gate: off until \`LOCKER_GATE=1\` (every page) or \`lazy\` (public; \`requireUser\` on the pages that need it);

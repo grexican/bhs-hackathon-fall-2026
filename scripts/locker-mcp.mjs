@@ -369,7 +369,7 @@ server.registerTool(
   "locker_feedback",
   {
     description:
-      "Reads what testers sent through the app's Feedback button (newest first): message, rating, page, optional contact, and whether the team read it. Use it in /test-with-a-friend and /whats-next as evidence.",
+      "Reads what testers sent through the app's Feedback button (newest first): message, rating, page, optional contact, and whether the team read it. Use it in /playtest and /whats-next as evidence.",
     inputSchema: {
       codename,
       unread: z.boolean().optional().describe("true: only feedback nobody marked as read yet."),

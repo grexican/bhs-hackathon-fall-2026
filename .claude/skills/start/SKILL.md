@@ -103,7 +103,7 @@ console errors, and fix what looks wrong. Then show the student the screenshots 
 
 Once the first version works, offer once: "Want it online with a real web address? `/connect`
 gets you a hosting slot, then `/ship` puts it live." Before a big next feature, offer `/think-it-through`.
-Before adding more features, offer `/test-with-a-friend`: one real person using it beats any guess.
+Before adding more features, offer `/playtest`: one real person using it beats any guess.
 
 ## 7. Save
 
