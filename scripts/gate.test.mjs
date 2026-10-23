@@ -185,7 +185,8 @@ test("static sites: LOCKER_GATE_PATHS needs sign-in only under those folders", a
 });
 
 test("sign-in comes back to the address it started on, when that's one of the app's own", async () => {
-  setEnv({ LOCKER_GATE: "1", APP_URL: "https://lunch.apps.example.org", RAILWAY_PUBLIC_DOMAIN: "lunch-production.up.railway.app" });
+  // Railway sets RAILWAY_PUBLIC_DOMAIN to the custom domain once there is one, so the railway.app name is matched by shape.
+  setEnv({ LOCKER_GATE: "1", APP_URL: "https://lunch.apps.example.org", RAILWAY_PUBLIC_DOMAIN: "lunch.apps.example.org" });
   const redirectFor = async (host) => {
     const r = res();
     await gate(req("/", { headers: { host } }), r);
