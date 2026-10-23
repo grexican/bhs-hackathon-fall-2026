@@ -225,9 +225,20 @@ export async function ask(tier: Tier, input: string | Message[], opts: AskOption
 }
 
 export async function askJson<T = unknown>(tier: Tier, input: string | Message[], schema: JsonSchema, opts: AskOptions = {}): Promise<AskResult & { data: T }> {
+  const parse = (text: string) => JSON.parse(text.trim().replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
   const result = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema });
-  const raw = result.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, "");
-  return { ...result, data: JSON.parse(raw) as T };
+  try {
+    return { ...result, data: parse(result.text) };
+  } catch {
+    // Cut off: thinking models spend part of maxTokens on reasoning, so the JSON can stop mid-string.
+    // Once more with twice the room; then a plain message instead of a JSON parse error.
+    const again = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema, maxTokens: (opts.maxTokens ?? 2000) * 2 });
+    try {
+      return { ...again, cost: result.cost + again.cost, data: parse(again.text) };
+    } catch {
+      throw new Error(`The AI's answer came back cut off twice (${tier} tier). Give it a bigger maxTokens, or ask for less in one go.`);
+    }
+  }
 }
 
 export async function image(prompt: string) {

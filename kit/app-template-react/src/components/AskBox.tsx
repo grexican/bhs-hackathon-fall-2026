@@ -3,6 +3,7 @@
 // your server, never the AI directly. Turn it on in src/App.tsx.
 import { useState, type FormEvent } from "react"
 
+import { Markdown } from "@/components/Markdown"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,7 +36,8 @@ export function AskBox() {
           <Input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={500} placeholder="What should I eat for lunch?" className="h-12 text-base" />
           <Button type="submit" className="h-12 px-5">Ask</Button>
         </form>
-        <p role="status" className="mt-3 text-sm text-muted-foreground">{answer}</p>
+        {/* AI answers come back in Markdown (**bold**, lists, links): show them formatted, never as raw stars. */}
+        <div role="status" className="mt-3 text-muted-foreground"><Markdown>{answer}</Markdown></div>
       </CardContent>
     </Card>
   )

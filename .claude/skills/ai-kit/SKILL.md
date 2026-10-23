@@ -47,6 +47,10 @@ const r = await ask("fast", "What do Barcelona schools charge for lunch?", { web
 // r.text: the answer with citations · r.sources: [{ url, title }, ...]
 ```
 
+**Showing AI text in the page.** Models answer in Markdown (`**bold**`, lists, links). Never put it in a plain
+`<p>`: the student sees raw stars. The React starter has `src/components/Markdown.tsx` (safe: raw HTML is shown as
+text, links open in a new tab): `<Markdown>{text}</Markdown>`. Plain-HTML apps: ask the model for plain text instead.
+
 ## Routing doctrine
 
 - **Start `lite`.** It's a prototype. Most steps never need more.
