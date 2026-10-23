@@ -11,7 +11,7 @@ import { currentUser, gate, requireUser, signInUrl } from "../kit/locker/gate.mj
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HUB = "https://locker.test";
-const KEYS = ["LOCKER_GATE", "LOCKER_GATE_USER", "LOCKER_URL", "LOCKER_APP_ID", "LOCKER_APP_SECRET", "APP_URL", "RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME"];
+const KEYS = ["LOCKER_GATE", "LOCKER_GATE_USER", "LOCKER_URL", "LOCKER_APP_ID", "LOCKER_APP_SECRET", "APP_URL", "RAILWAY_PUBLIC_DOMAIN", "RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME"];
 
 function setEnv(values) {
   for (const k of KEYS) delete process.env[k];
@@ -182,4 +182,18 @@ test("static sites: LOCKER_GATE_PATHS needs sign-in only under those folders", a
     await new Promise((r) => { child.once("exit", r); child.kill(); });
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("sign-in comes back to the address it started on, when that's one of the app's own", async () => {
+  setEnv({ LOCKER_GATE: "1", APP_URL: "https://lunch.apps.example.org", RAILWAY_PUBLIC_DOMAIN: "lunch-production.up.railway.app" });
+  const redirectFor = async (host) => {
+    const r = res();
+    await gate(req("/", { headers: { host } }), r);
+    return new URL(r.headers.location).searchParams.get("redirect_uri");
+  };
+  // The friendly address's certificate may not exist yet: people on railway.app must stay there.
+  assert.equal(await redirectFor("lunch-production.up.railway.app"), "https://lunch-production.up.railway.app/_locker/callback");
+  assert.equal(await redirectFor("lunch.apps.example.org"), "https://lunch.apps.example.org/_locker/callback");
+  // Anything else (a made-up Host header) never becomes the callback.
+  assert.equal(await redirectFor("evil.example.com"), "https://lunch.apps.example.org/_locker/callback");
 });

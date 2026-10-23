@@ -55,8 +55,15 @@ function open(token) {
 
 const cookies = (req) => Object.fromEntries((req.headers.cookie ?? "").split(/;\s*/).filter(Boolean).map((c) => [c.slice(0, c.indexOf("=")), decodeURIComponent(c.slice(c.indexOf("=") + 1))]));
 
+// The address sign-in comes back to: the one this request arrived on, when that's one of the app's own
+// addresses (its friendly APP_URL, or the railway.app one Railway sets as RAILWAY_PUBLIC_DOMAIN). A brand-new
+// friendly address can take a while to get its security certificate; meanwhile people use the railway.app
+// one, and sign-in must stay there. Any other Host header falls back to APP_URL.
 function origin(req) {
-  if (env("APP_URL") && !/localhost|127\.0\.0\.1/.test(req.headers.host ?? "")) return env("APP_URL").replace(/\/$/, "");
+  const host = String(req.headers.host ?? "").toLowerCase();
+  const own = [env("RAILWAY_PUBLIC_DOMAIN"), env("APP_URL") && new URL(env("APP_URL")).host].filter(Boolean).map((h) => h.toLowerCase());
+  if (own.includes(host)) return `https://${host}`;
+  if (env("APP_URL") && !/localhost|127\.0\.0\.1/.test(host)) return env("APP_URL").replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] ?? (req.socket?.encrypted ? "https" : "http");
   return `${proto}://${req.headers.host}`;
 }
