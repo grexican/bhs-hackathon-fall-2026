@@ -224,19 +224,38 @@ export async function ask(tier: Tier, input: string | Message[], opts: AskOption
   return provider().chat(tier, toMessages(input, opts.system), opts);
 }
 
+/** Every string in a JSON value, however deep. */
+const strings = (v: unknown): string[] =>
+  typeof v === "string" ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
+
+/**
+ * A hollow answer: valid JSON whose text is "..." placeholders. Some providers behind a cheap model do this now and then
+ * under a strict schema: the shape is right and nothing is in it. Empty strings don't count (unused fields are often
+ * legitimately ""); half or more of the rest being "..." = hollow.
+ */
+export function hollow(data: unknown): boolean {
+  const s = strings(data).filter((x) => x.trim());
+  const dots = s.filter((x) => /^\s*(\.{2,}|…)[\s.…]*$/.test(x)).length;
+  return dots >= 2 && dots * 2 >= s.length;
+}
+
 export async function askJson<T = unknown>(tier: Tier, input: string | Message[], schema: JsonSchema, opts: AskOptions = {}): Promise<AskResult & { data: T }> {
-  const parse = (text: string) => JSON.parse(text.trim().replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
+  const parse = (text: string) => {
+    const data = JSON.parse(text.trim().replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
+    if (hollow(data)) throw new Error("hollow");
+    return data;
+  };
   const result = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema });
   try {
     return { ...result, data: parse(result.text) };
   } catch {
-    // Cut off: thinking models spend part of maxTokens on reasoning, so the JSON can stop mid-string.
-    // Once more with twice the room; then a plain message instead of a JSON parse error.
+    // Cut off (thinking models spend part of maxTokens on reasoning, so the JSON can stop mid-string) or hollow.
+    // Once more with twice the room; then a plain message instead of a JSON parse error or an answer of "...".
     const again = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema, maxTokens: (opts.maxTokens ?? 2000) * 2 });
     try {
       return { ...again, cost: result.cost + again.cost, data: parse(again.text) };
     } catch {
-      throw new Error(`The AI's answer came back cut off twice (${tier} tier). Give it a bigger maxTokens, or ask for less in one go.`);
+      throw new Error(`The AI's answer came back empty or cut off twice (${tier} tier). Try again; if it keeps happening, give it a bigger maxTokens or another model for this tier.`);
     }
   }
 }

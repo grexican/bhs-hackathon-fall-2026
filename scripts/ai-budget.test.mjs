@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { AiBudgetError, ask, askJson, budgetError, image } from "../kit/ai/index.ts";
+import { hollow } from "../kit/ai/llm.ts";
 
 const KEY_LIMIT = {
   error: {
@@ -90,4 +91,23 @@ test("no endpoint even without the extras: a plain message that names the tier a
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+test("askJson with a hollow answer (every field \"...\"): asked once more, and the real answer is used", async () => {
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  process.env.OPENROUTER_API_KEY = "sk-or-test-not-real";
+  delete process.env.AI_PROVIDER;
+  const answers = ['{"note":"...","items":["...","..."]}', '{"note":"A real note","items":["one",""]}'];
+  globalThis.fetch = async () => new Response(JSON.stringify({ model: "m", choices: [{ message: { content: answers[calls++] } }] }), { status: 200 });
+  try {
+    const schema = { type: "object", properties: { note: { type: "string" }, items: { type: "array", items: { type: "string" } } }, required: ["note", "items"], additionalProperties: false };
+    const { data } = await askJson("fast", "hi", schema);
+    assert.equal(data.note, "A real note");
+    assert.equal(calls, 2);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  assert.equal(hollow({ op: "delete_slide", title: "", text: "", note: "Removed slide 3." }), false, "unused empty fields are not hollow");
+  assert.equal(hollow({ title: "Wait...", note: "Hmm... ok" }), false, "an ellipsis inside real text is fine");
 });
