@@ -1,98 +1,117 @@
 ---
 name: pitch
-description: Get the student ready to present their app at a demo or Demo Day - a spoken pitch (problem, who, live demo of the one main thing, what's next), a slide-by-slide deck built from real screenshots of their app (presenter mode, speaker notes, one key to jump into the live demo, works offline), a demo path that can't break on stage, and a timed rehearsal. Writes apps/<codename>/docs/pitch.md, docs/pitch.json and pitch/index.html. Use when a student types /pitch, says "I have to present", "demo day", "help me pitch", "make slides", "make a deck", "what do I say", or the event is in its last few hours. Not the /demo workshop (that one compares two builds).
-argument-hint: "[codename] [how many minutes]"
+description: Get the student ready to pitch their app, through Pitch Lab (the school's pitch coach at pitch-lab.apps.bhslabs.org). Connects Pitch Lab to the editor (the pitch-lab MCP tools), starts a new pitch or continues one, feeds it what only the code knows (what really works, what's simulated, the live address, real numbers, playtest quotes), then sends the student to Pitch Lab to be grilled by the people they'll pitch to and to get a deck they can present and share. Then makes the live demo unbreakable and rehearses it. Use when a student types /pitch, says "I have to present", "demo day", "help me pitch", "make slides", "make a deck", "what do I say", or the event is in its last few hours. Not the /demo workshop (that one compares two builds).
+argument-hint: "[codename]"
 ---
 
-# /pitch: show it off without it breaking
+# /pitch: from your app to a pitch that lands
 
-People remember one thing from a demo: the moment the app did something they wanted. The pitch
-sets up that moment, shows it, and gets out. The slides are there to frame the live demo, not to
-replace it: the real interaction happens **in the app**, and the deck shows the screenshots,
-the story and the proof around it. Short lines, one question at a time.
+**Pitch Lab** is the school's pitch coach: the student sets the pitch up, adds context, gets **grilled**
+by the people they'll pitch to (three hard questions a round, judged honestly), then it writes a deck
+they can present full screen and share with a link. Your job is the part only you can do: **you can
+read the code**, so you tell Pitch Lab what the app really does. The student's job is the thinking.
 
-## 1. Two questions
+**The one rule: you never answer the Grill.** Not in the chat, not in Pitch Lab, not as a "draft for
+them to edit". The questions are how they learn to defend their idea; an answer you wrote teaches
+nothing and the judges will hear it. You *can* find facts in the code when a question needs one.
 
-1. **"How long do you get?"** (Don't know? Plan for 2 minutes. Shorter is always fine.)
-2. **"Who's watching, and what do you want from them?"** (Judges: a prize. Classmates: users.
-   Teachers or parents: help or a mentor.) That decides the last slide.
+Short lines, one question at a time.
 
-Read `apps/<codename>/docs/idea.md` and `docs/feedback.md` (from `/playtest`) if they exist. Real
-tester quotes and real "we saw this, so we changed that" beat anything you could write. No
-playtests yet and there's time? Say so: one round of `/playtest` makes a much stronger pitch.
+## 1. Connect Pitch Lab (once per laptop)
 
-## 2. Write what they'll say (one idea per beat)
+- Use the `pitch-lab` tools (`pitch_connect`, `pitch_list`, …). Not there?
+  - **Cursor:** Settings → MCP (Tools & Integrations) → switch on **pitch-lab**. Still missing: Command
+    Palette → "Reload Window".
+  - **Claude Code:** approve the `pitch-lab` server when asked, or run `/mcp`.
+  - Still not listed: the kit is older than the tools. Update it: `git pull origin main`, then reload.
+- `pitch_connect` → show the student the code it gives you → they sign in with their school account,
+  check the code matches and click **Allow** → `pitch_connect_check`.
 
-| Beat | Time (2 min) | What it says |
-|---|---|---|
-| Hook | 15 s | The problem as a moment everyone in the room has lived. ("It's 12:40, the line is out the door, and you don't know if there's pasta left.") No "Hi, my app is called…" first. |
-| Who | 10 s | Who it's for, and one real fact or quote. A tester's words are perfect here. |
-| Demo | 60 s | **Live**, the one main thing, start to finish. Say what you're doing as you tap. |
-| Why it's different | 15 s | What's new compared with what people do now. What playtests made you change goes here. |
-| Next + ask | 20 s | What you'll build next, and exactly what you want from this audience. |
+## 2. New pitch, or carry on?
 
-Longer slot? Make the demo longer, not the talking. Write it to `apps/<codename>/docs/pitch.md` as
-what they'll actually **say**, in their own voice. Cut every sentence that isn't needed. Ask:
-"Does this sound like you?" and fix what doesn't.
+`pitch_list`. One for this app already? `pitch_status` on it and pick up where it stands (step 3 if it
+has no context from the code yet, else step 4 or 5). Pitching the same app to a different audience is
+a new pitch; Pitch Lab can also copy one for a new audience from the pitch's Setup step.
 
-## 3. Build the deck
+New pitch: ask, one at a time, and **write down their words, don't polish them**:
 
-The deck is one HTML file, built by a script from `docs/pitch.json`. **You write the words and pick
-the moments; the script takes the pictures and draws the slides.** Never hand-write slide HTML.
-The shape of `pitch.json`, every slide kind and a full example: `references/pitch-json.md`.
+1. "What's it called?"
+2. "In one or two sentences: what does it do, and why does it matter?" (their words go in `idea`)
+3. "Who are you pitching to, and what do you want from them?" (judges: a prize; classmates: users;
+   the school: a yes; investors: money) → `audience`, `audience_detail`, `goal`
+4. "How long do you get?" (don't know: 3 minutes)
 
-1. **Plan the slides from the beats**: usually 5 to 7. Title → hook (`big`) → one or two `shot`
-   slides → `demo` → proof (`quote`, `changes`, `numbers`) → `ask`. Each slide's `say` is that
-   part of `pitch.md`: it becomes the speaker notes.
-2. **Pick the screenshots as goals.** Each shot says what the picture must *prove* ("the quiz
-   catching the one you got wrong"), not just which page. Give it the steps to get there and an
-   `expect` text that is only on that screen. Phone size unless the app is a laptop app.
-3. **Take them** with the app running: `npm run pitch -- shots <codename>` (it uses `local`
-   in pitch.json, or `--url http://localhost:<port>`). Fill the app with real-looking data first,
-   so no screen is empty.
-4. **Look at every picture** (open the .jpg files in `apps/<codename>/pitch/shots/`). Does it
-   prove its goal? Wrong screen, a spinner, an error, an empty list: fix the steps and take it again.
-   The script already refuses two shots that came out identical.
-5. **Build**: `npm run pitch -- build <codename>`. It prints ✗ for anything wrong and – for
-   anything weak; fix the ✗ lines. Colors come from `brand/tokens.css` (`/branding`) or `theme`
-   in pitch.json; the logo from `brand/` or the app's icon.
-6. **See it**: `npm run pitch -- look <codename>` saves a picture of every slide in
-   `pitch/look/`. Look at each one. Too much text, something cut off, a wrong picture? Fix and build
-   again. Every slide should be readable from the back of the room. Then the student opens
-   `apps/<codename>/pitch/index.html` (double-click works) and clicks through it.
-7. **Fresh eyes**: give a subagent (or a new chat) only the deck and ask "What does this app do,
-   for whom, and what's the moment?". A wrong answer means the pitch is unclear: fix the slides.
+Then `pitch_create`.
 
-**Presenting** (tell the student): → or click to go on, ← to go back, **F** full screen,
-**P** opens a presenter window (notes, next slide, timer) for the laptop screen while the deck is on
-the projector, **N** shows notes on one screen, **D** opens the live app for the demo. Come back to
-the deck tab when the demo is done. `npm run pitch -- build <codename> --publish` also puts it at
-`/pitch.html` on their app, so the deck itself can be shared after `/ship`.
+## 3. Context: what only the code knows (your part)
 
-**The honesty floor.** Numbers and quotes only from `docs/feedback.md` or the app's real data;
-every `numbers` slide names its `source`. No made-up users, no "1,000 downloads" that didn't happen.
-A small true number ("4 of 6 testers finished without help") beats a big invented one.
+Students forget half of what they built, and undersell the rest. Read `apps/<codename>/`: `docs/idea.md`,
+`docs/feedback.md` (from `/playtest`), the README, the screens and routes, the seed data, the providers
+(real or simulator), and `locker_status` if it's on the Locker. Write **one note**,
+"What <App> does today (from its code)":
 
-## 4. Make the demo path unbreakable
+- What works end to end, in user words ("you see the wait before you leave class"), most important first.
+- What's **simulated** (payments, messages, AI on the simulator), labelled as simulated. Never present
+  a simulator as real.
+- The live address after `/ship`, and real numbers with where they come from (Locker users, playtest
+  counts). No number you can't point to.
+- Playtest quotes, word for word, with who said them ("Year 9 tester").
+- What's next on their list, if `docs/` says.
 
-Go through the demo steps once and fix or avoid anything that could fail on stage:
+Show it to the student first: "This is what I'll tell Pitch Lab about your app. Anything wrong or
+missing?" Fix it, then `pitch_add_source` (a note: `title` + `text`). Live already? Add the address
+too (`pitch_add_source` with `url`). The Grill starts from these, so it asks about what's missing
+instead of what the app already shows.
 
-- **Use the live address** (after `/ship`), already open in a tab, already signed in. No typing passwords on stage.
-- **Real-looking data** already in the app (seed data), so the first screen isn't empty.
-- **AI steps:** anything that takes more than about 3 seconds needs a loading state that looks
-  intentional. Check `npm run locker:status` so the AI budget isn't used up.
-- **Phone demo?** Practise with screen mirroring before, or demo from the laptop at phone size.
-- **Backup:** the `demo` slide's `backup` shots are the plan B: if anything breaks, say "here's
-  what it looks like" and go on. A 30–60 s screen recording of the demo path is even better.
-  If the Wi-Fi dies, the deck still works: everything is inside the file.
+## 4. The Grill: theirs, in Pitch Lab
+
+Send them to the Grill link from the tools (`…/p/<id>?step=grill`). Tell them how it works: each round
+is three questions from people in their audience; they answer in their own words, then **Judge my
+answers** for honest verdicts and pushback; two or three rounds make a strong pitch. **Hints** and
+**Structure** buttons help when they're stuck, without answering for them.
+
+While they're there, you help only like this:
+
+- A question needs a fact from the code ("how many screens", "what happens offline")? Find it, tell
+  them, and if it's useful later, add it to the note (`pitch_add_source`).
+- A question needs evidence nobody has ("would anyone use it?")? That's what `/playtest` is for.
+- When they come back, `pitch_status` shows the rounds, readiness and what's still open.
+
+## 5. The pitch: in Pitch Lab
+
+After one judged round (two or three is better), they press **Write my pitch**. Show them what it
+can do: pick a **look**, **Ask for a change** ("make slide 3 punchier", or something bigger like "lead
+with the cost"), edit slides by hand, keep or discard each change, go back to an older version.
+**Present full screen** for the talk, **Copy share link** for anyone else (it never shows their
+answers or their name). The pitch's **gaps** are their homework: things a sharp judge will ask that
+they haven't established yet. Added answers or sources later? The pitch says it's out of date and
+**Update my pitch** folds them in.
+
+## 6. Make the demo unbreakable
+
+The pitch frames the live demo; the demo is the moment people remember. Go through it once and fix or
+avoid anything that could fail on stage:
+
+- **Live address** (after `/ship`), already open in a tab, already signed in. No passwords on stage.
+- **Real-looking data** in the app (seed data), so the first screen isn't empty.
+- **AI steps** longer than ~3 seconds need a loading state that looks intentional. `locker_status`:
+  is the AI budget OK?
+- **Phone demo?** Practise the mirroring, or demo from the laptop at phone size.
+- **Backup:** a 30–60 s screen recording of the demo path. If anything breaks: "here's what it looks
+  like", and go on.
 
 Run `reality-checker` on the demo path: no fake buttons, no fake numbers presented as real.
 
-## 5. Rehearse
+## 7. Rehearse
 
-Ask them to present it out loud with the deck and a timer (the presenter window has one; **T**
-restarts it), twice. Over time? Cut words or slides, not the demo. Common fixes: skip the tech
-("I used React and…" nobody needs it), say the problem as a story, and stop talking while the app
-does its moment. Last check: the first and the last sentence, memorised.
+Out loud, with Present full screen and a timer, twice. Pitch Lab's **What to say** has the 60-second
+version and notes for each slide. Over time? Cut words, not the demo. Last check: the first and the
+last sentence, memorised.
 
-Suggest `/wrap` to save `pitch.md`, `pitch.json` and the deck.
+Suggest `/wrap` to save what changed.
+
+## Optional: a deck of screenshots, offline
+
+Want the app's real screens on the slides, a key that jumps into the live demo, or a deck that works
+with no Wi-Fi? The kit can also build one from `docs/pitch.json` (`npm run pitch -- shots | build | look
+<codename>`). See `references/pitch-json.md`. Use the words from their Pitch Lab pitch.

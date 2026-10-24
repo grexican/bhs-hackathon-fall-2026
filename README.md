@@ -51,7 +51,7 @@ No Docker, no database to install: your app's database is a file, built into Nod
 | `/playtest` | Swap with another team: watch them use it, fix one thing, repeat |
 | `/share-it` | Nice link previews, a QR code, and a count of who came back |
 | `/whats-next` | Picks the next thing to build, from what testers did |
-| `/pitch` | Your Demo Day script and slides, made from screenshots of your app |
+| `/pitch` | Your pitch, through Pitch Lab: get grilled by the people you'll pitch to, then present and share the deck |
 | `/wrap` | Saves your work (`/wrap push` also uploads it) |
 | `/caveman` | Short answers, saves credits |
 

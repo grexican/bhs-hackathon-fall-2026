@@ -67,7 +67,9 @@ Details: `providers-and-services` → "Incubator services".
 **AI tools (MCP):** the kit registers a local `bhs-locker` server (`scripts/locker-mcp.mjs`, in `.mcp.json`
 and `.cursor/mcp.json`). Its tools (`locker_status`, `locker_connect`, `locker_create_project`, `locker_join_project`,
 `locker_pull_env`, `locker_set`, `locker_deploy`, `locker_logs`, `locker_list_app`, `locker_feedback`, `locker_bring_app`, `new_app`) write `.env` files themselves and
-never return keys. Prefer them over the npm commands when they're available.
+never return keys. Prefer them over the npm commands when they're available. A second local server, `pitch-lab`
+(`scripts/pitch-lab-mcp.mjs`), connects the editor to Pitch Lab for `/pitch` (`pitch_connect`, `pitch_list`,
+`pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`). It never answers the Grill for the student.
 
 ## AI in apps
 
@@ -95,7 +97,7 @@ never return keys. Prefer them over the npm commands when they're available.
 | `/think-it-through` · `/council` · `/research` | Decide before a big feature · five advisor takes · web research with sources. |
 | `/on-my-phone` · `/share-it` | Open it on a phone and make it installable · link preview, QR code, Locker listing, visit counter. |
 | `/playtest` · `/whats-next` | Swap with another team: watch a real person use it, fix one thing, repeat (`docs/feedback.md`) · choose the next thing from evidence. |
-| `/pitch` | Demo Day: the spoken pitch, a slide deck built from real screenshots (`npm run pitch`), a demo that can't break, a rehearsal. |
+| `/pitch` | Through Pitch Lab: sets up or continues the pitch, adds what the code shows as context; the student is grilled and gets a deck there. Then a demo that can't break, a rehearsal. |
 | `/demo <idea>` | The fair demo: a no-skills control build vs. the full build, revealed side by side. |
 | `/wrap [push]` | Review the diff, write a clear commit, optionally push. |
 
@@ -157,7 +159,7 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 | "What next?" | `/whats-next`: one pick, from evidence. |
 | "Upload a photo" / "save images" | `save-files`: files next to the database on `/data`, never elsewhere. |
 | "Add a map" / "near me" | `maps`: Leaflet + OpenStreetMap, no key; location only on a tap, over https. |
-| "I have to present" / "make slides" | `/pitch`: slides come from `docs/pitch.json` via `npm run pitch`, never hand-written. |
+| "I have to present" / "make slides" | `/pitch`: the pitch and deck come from Pitch Lab (the student answers the Grill, never you). Screenshot slides: `npm run pitch`, never hand-written. |
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
 | "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). If it reads users' text or the app's data: `ai-safety`. |

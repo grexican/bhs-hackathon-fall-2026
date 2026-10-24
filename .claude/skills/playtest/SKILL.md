@@ -91,4 +91,4 @@ asked), and **wishes** (they asked for more). Recommend **one** change, almost a
 If the riskiest guess looks wrong, say so kindly and offer `/council` on what to do about it.
 
 The student decides. Build the one fix with `start-simple`, fill in "We changed", then: **"Find the
-next tester."** Two or three rounds before Demo Day is the goal; `/pitch` turns them into a slide.
+next tester."** Two or three rounds before Demo Day is the goal; `/pitch` adds them to the pitch as evidence.
