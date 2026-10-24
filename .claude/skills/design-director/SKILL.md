@@ -47,6 +47,8 @@ Preset aesthetics you can hand off to when the direction matches:
 - Motion: decide with `animate` (should it move, why, which curve, how it exits). GSAP work:
   `gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-react`, `gsap-plugins`, `gsap-performance`, `gsap-utils`.
   Craft philosophy and the small details: `emil-design-eng`. Can't name an effect? `animation-vocabulary`.
+  Retro screens (terminal, CRT, arcade): never step opacity (0 → 1 → 0.3 → 1) for a "flicker". People read it
+  as a glitch, not a style. Fade in with a blur clearing instead; let a blinking cursor or scanlines carry the era.
 - 3D and shaders: `threejs-fundamentals` first, then `threejs-materials`, `threejs-lighting`,
   `threejs-shaders`, `threejs-postprocessing`, `threejs-interaction`, `threejs-animation`, `threejs-loaders`.
 - Games: `game-feel` (screen shake, hit-stop, squash and stretch, juice) and `game-ui-ux` (HUD, menus, safe areas).
