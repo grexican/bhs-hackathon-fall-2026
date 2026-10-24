@@ -22,6 +22,11 @@ export interface AskOptions {
    * The answer then cites what it found: result.sources lists the pages. Costs about half a cent per call.
    */
   web?: boolean | { maxResults?: number };
+  /**
+   * askJson only: what a real answer looks like, e.g. (d) => d.questions.length > 0. An answer that fails it is
+   * asked for once more, like a cut-off one. Use it for the fields your app can't do without.
+   */
+  valid?: (data: any) => boolean;
 }
 
 /** A page the answer used, when web search was on. */
@@ -36,6 +41,8 @@ export interface AskResult {
   ms: number;
   cost: number;
   simulated: boolean;
+  /** Which provider OpenRouter sent the call to (one model can be served by several). */
+  via?: string;
   /** The web pages the answer cited (only with opts.web). */
   sources?: Source[];
 }
@@ -59,7 +66,9 @@ const openRouterProvider: LlmProvider = {
       max_tokens: opts.maxTokens ?? 2000,
       ...(opts.temperature !== undefined && { temperature: opts.temperature }),
       ...(cfg.reasoning && { reasoning: { effort: cfg.reasoning, exclude: true } }),
-      ...(cfg.sort && { provider: { sort: cfg.sort, require_parameters: Boolean(opts.schema) } }),
+      // With a schema, only providers that honor it: one that ignores response_format can answer in the right
+      // shape with nothing in it ("...", empty strings), which looks like a working answer.
+      ...((cfg.sort || opts.schema) && { provider: { ...(cfg.sort && { sort: cfg.sort }), ...(opts.schema && { require_parameters: true }) } }),
       ...(opts.schema && {
         response_format: { type: "json_schema", json_schema: { name: "result", strict: true, schema: opts.schema } },
       }),
@@ -94,6 +103,7 @@ const openRouterProvider: LlmProvider = {
       ms: Date.now() - t0,
       cost: json.usage?.cost ?? 0,
       simulated: false,
+      ...(json.provider && { via: json.provider }),
       ...(opts.web && { sources }),
     };
   },
@@ -240,20 +250,26 @@ export function hollow(data: unknown): boolean {
 }
 
 export async function askJson<T = unknown>(tier: Tier, input: string | Message[], schema: JsonSchema, opts: AskOptions = {}): Promise<AskResult & { data: T }> {
-  const parse = (text: string) => {
+  // The simulator's stand-in answers are minimal on purpose, so only real answers get the hollow and valid checks.
+  const parse = (text: string, simulated: boolean) => {
     const data = JSON.parse(text.trim().replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
-    if (hollow(data)) throw new Error("hollow");
+    if (simulated) return data;
+    if (hollow(data)) throw new Error('hollow (fields were "...")');
+    if (opts.valid && !opts.valid(data)) throw new Error("not valid (failed the app's check)");
     return data;
   };
   const result = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema });
   try {
-    return { ...result, data: parse(result.text) };
-  } catch {
+    return { ...result, data: parse(result.text, result.simulated) };
+  } catch (err) {
+    // Says which provider misbehaved, so the logs show it when one model keeps failing online.
+    const why = err instanceof SyntaxError ? "cut off" : (err as Error).message;
+    console.warn(`[ai] ${tier} answer ${why} (${result.model}${result.via ? ` via ${result.via}` : ""}); asked once more.`);
     // Cut off (thinking models spend part of maxTokens on reasoning, so the JSON can stop mid-string) or hollow.
     // Once more with twice the room; then a plain message instead of a JSON parse error or an answer of "...".
     const again = await provider().chat(tier, toMessages(input, opts.system), { ...opts, schema, maxTokens: (opts.maxTokens ?? 2000) * 2 });
     try {
-      return { ...again, cost: result.cost + again.cost, data: parse(again.text) };
+      return { ...again, cost: result.cost + again.cost, data: parse(again.text, again.simulated) };
     } catch {
       throw new Error(`The AI's answer came back empty or cut off twice (${tier} tier). Try again; if it keeps happening, give it a bigger maxTokens or another model for this tier.`);
     }

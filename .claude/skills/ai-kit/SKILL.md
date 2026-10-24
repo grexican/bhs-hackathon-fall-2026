@@ -106,7 +106,10 @@ team at 80% and 100% of the budget; an organizer can raise it. Before a demo: `n
   `ai-safety` (outside text is data, text never triggers actions, each person sees only their own data).
 
 - **Structured output:** use `askJson` with a JSON schema (`additionalProperties: false`, every field
-  `required`). Don't regex JSON out of prose.
+  `required`). Don't regex JSON out of prose. Pass `valid: (d) => …` for what a real answer must have
+  (e.g. at least two questions with text): an answer in the right shape but empty inside is asked for
+  once more instead of reaching the user. The kit already retries cut-off answers and "..." placeholders,
+  and only uses providers that honor the schema.
 - **AI edits a document? Ask for operations, not a rewrite.** Schema a short list like
   `{op: "set_item" | "insert_item" | "delete_item" | "move_item", at, item}` and apply it in code. Faster
   and cheaper than copying the whole document back, and the parts the user didn't ask about can't drift.

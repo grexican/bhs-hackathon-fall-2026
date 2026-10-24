@@ -111,3 +111,29 @@ test("askJson with a hollow answer (every field \"...\"): asked once more, and t
   assert.equal(hollow({ op: "delete_slide", title: "", text: "", note: "Removed slide 3." }), false, "unused empty fields are not hollow");
   assert.equal(hollow({ title: "Wait...", note: "Hmm... ok" }), false, "an ellipsis inside real text is fine");
 });
+
+test("askJson asks only providers that honor the schema, and an answer failing opts.valid is asked once more", async () => {
+  const realFetch = globalThis.fetch;
+  const realWarn = console.warn;
+  const bodies = [];
+  const warned = [];
+  process.env.OPENROUTER_API_KEY = "sk-or-test-not-real";
+  delete process.env.AI_PROVIDER;
+  const answers = ['{"items":[]}', '{"items":["a real one"]}'];
+  globalThis.fetch = async (_url, init) => {
+    bodies.push(JSON.parse(init.body));
+    return new Response(JSON.stringify({ model: "m", provider: "SomeHost", choices: [{ message: { content: answers[bodies.length - 1] } }] }), { status: 200 });
+  };
+  console.warn = (m) => warned.push(m);
+  try {
+    const schema = { type: "object", properties: { items: { type: "array", items: { type: "string" } } }, required: ["items"], additionalProperties: false };
+    const { data } = await askJson("smart", "hi", schema, { valid: (d) => d.items.length > 0 });
+    assert.deepEqual(data.items, ["a real one"]);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+  }
+  assert.equal(bodies.length, 2);
+  assert.equal(bodies[0].provider.require_parameters, true, "a tier without sort still requires schema support");
+  assert.match(warned[0], /not valid.*via SomeHost/);
+});
