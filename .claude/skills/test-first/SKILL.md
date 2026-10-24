@@ -30,9 +30,10 @@ test("only tasks due in the next 7 days", () => {
 });
 ```
 
-3. **Run it and watch it fail:** `node --test tests/` (add `"test": "node --test tests/"` to `package.json`).
-   A test that passes before the code exists tests nothing.
-4. **Write the smallest code** that makes it pass. Run it again: green.
+3. **Run just that file and watch it fail:** `node --test tests/tasks.test.js` (or one test by name:
+   `node --test --test-name-pattern="next 7 days" tests/`). A test that passes before the code exists tests nothing.
+4. **Write the smallest code** that makes it pass. Run that same file again: green. Seconds, not minutes:
+   this loop never runs the whole suite.
 5. **One or two edge cases** only if they're real: empty list, today itself, a date in the past.
 
 Pass "today" in as an argument (like above) so the test doesn't change answer tomorrow.
@@ -51,5 +52,6 @@ Quick proof: break the code on purpose (change `7` to `70`), run the test, see i
 
 ## Done means
 
-The test failed first, passes now, runs with `npm test`, and the student can read it out loud as a
-sentence about the app. Then `/wrap`.
+The test failed first, passes now, and the student can read it out loud as a sentence about the app. The
+whole suite (`npm test`) runs once when the feature is finished (`verification-loop`), not after each test.
+Then `/wrap`.

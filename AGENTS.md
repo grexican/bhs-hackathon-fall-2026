@@ -20,7 +20,10 @@ decisions along the way, and keep it simple enough that they can read their own 
    features nobody asked for, no abstractions for one use, no error handling for impossible cases.
 3. **Surgical changes.** Touch only what the request needs. Don't "improve" nearby code.
 4. **Prove it works.** "Done" means you ran it, looked at it in a browser (`verify-in-browser`)
-   and saw zero console errors. Evidence before claims.
+   and saw zero console errors. Evidence before claims. **Test at two speeds:** after each small change,
+   only the focused test for what you touched (one file or one test name, seconds); the whole suite and
+   e2e run only at checkpoints (feature done, before `/ship` or a demo, after a teammate's merge, after
+   changing shared code), in the background. Never the full suite after every edit: it kills throughput.
 5. **Design is not optional.** Anything a human looks at goes through `design-director` first.
    Commit to a direction. Never ship the default look.
 

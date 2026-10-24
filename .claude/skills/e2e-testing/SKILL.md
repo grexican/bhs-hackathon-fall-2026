@@ -8,6 +8,11 @@ license: MIT
 
 Comprehensive Playwright patterns for building stable, fast, and maintainable E2E test suites.
 
+**When to run what:** while building, run only the spec for the flow you changed
+(`npx playwright test tests/e2e/checkout.spec.ts`, or `-g "pays with a test card"`). The whole e2e run is
+for checkpoints only (feature done, before `/ship` or a demo, after a teammate's merge), in the background.
+See `verification-loop`.
+
 ## Test File Organization
 
 ```

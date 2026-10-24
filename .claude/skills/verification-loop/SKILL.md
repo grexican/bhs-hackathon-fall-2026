@@ -1,6 +1,6 @@
 ---
 name: verification-loop
-description: "Run before saying any change is done: build, typecheck, lint, tests, secret grep, and diff review, then a PASS/FAIL report. Use when a feature or fix is finished, before a commit, or whenever you are about to claim something works."
+description: "The full check (build, typecheck, lint, the WHOLE test suite, secret grep, diff review, PASS/FAIL report), run only at checkpoints: a feature finished, before /ship or a demo, after pulling a teammate's work, after changing shared code (a provider, service, schema or the kit). NOT after every small change: between checkpoints run only the focused test for what you touched. Use when a feature is done, before a commit you will ship, or when asked to verify."
 license: MIT
 ---
 
@@ -8,13 +8,28 @@ license: MIT
 
 A comprehensive verification system for Claude Code sessions.
 
-## When to Use
+## When to run it (and when not)
 
-Invoke this skill:
-- After completing a feature or significant code change
-- Before creating a PR
-- When you want to ensure quality gates pass
-- After refactoring
+**The whole suite is slow; the focused test is fast. At a hackathon, throughput is the product.** Running
+everything after every edit turns a 2-second loop into minutes and kills the build. Two speeds:
+
+**Inner loop: every small change. Focused only, seconds:**
+- The test file for what you touched: `node --test tests/score.test.js`, or one test by name:
+  `node --test --test-name-pattern="due this week" tests/`. One e2e spec, if the change is in that flow:
+  `npx playwright test tests/checkout.spec.ts`.
+- `npx tsc --noEmit` if you changed types. A UI change: a look in the browser (`verify-in-browser`), not the suite.
+- Never the whole suite, never the whole e2e run here.
+
+**Checkpoints: the full run (this skill), and only then:**
+- A feature or fix is finished and about to be called done.
+- Before `/ship`, before a demo, before a commit someone else will build on.
+- After pulling or merging a teammate's work.
+- After changing something many parts depend on: a provider or service interface, the database schema,
+  shared components, the kit itself, a dependency upgrade.
+- A focused test went red in a way that suggests something wider broke.
+
+Run the full suite **in the background** and keep working; check the result before you claim done.
+If it fails, go back to the inner loop on the failing test only, then re-run the full suite once at the end.
 
 ## Verification Phases
 
@@ -51,18 +66,14 @@ ruff check . 2>&1 | head -30
 
 ### Phase 4: Test Suite
 ```bash
-# Run tests with coverage
-npm run test -- --coverage 2>&1 | tail -50
-
-# Check coverage threshold
-# Target: 80% minimum
+# The whole suite, once, here at the checkpoint
+npm test 2>&1 | tail -50
 ```
 
 Report:
 - Total tests: X
 - Passed: X
 - Failed: X
-- Coverage: X%
 
 ### Phase 5: Security Scan
 ```bash
@@ -97,7 +108,7 @@ VERIFICATION REPORT
 Build:     [PASS/FAIL]
 Types:     [PASS/FAIL] (X errors)
 Lint:      [PASS/FAIL] (X warnings)
-Tests:     [PASS/FAIL] (X/Y passed, Z% coverage)
+Tests:     [PASS/FAIL] (X/Y passed)
 Security:  [PASS/FAIL] (X issues)
 Diff:      [X files changed]
 
@@ -108,18 +119,10 @@ Issues to Fix:
 2. ...
 ```
 
-## Continuous Mode
+## Between checkpoints
 
-For long sessions, run verification every 15 minutes or after major changes:
-
-```markdown
-Set a mental checkpoint:
-- After completing each function
-- After finishing a component
-- Before moving to next task
-
-Run: this skill again (and `verify-in-browser` for anything with a UI)
-```
+Not this skill. After each function or component: its focused test (seconds), and a browser look if it has a
+UI. Save the full run for the checkpoints above.
 
 ## Pair with the browser check
 

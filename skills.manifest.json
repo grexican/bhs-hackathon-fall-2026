@@ -305,7 +305,8 @@
       "patches": [
         "frontmatter: drop metadata.origin, add license: MIT",
         "description sharpened",
-        "replace /verify + hooks section with verify-in-browser pairing"
+        "replace /verify + hooks section with verify-in-browser pairing",
+        "two-speed testing: full suite at checkpoints only, focused tests in the inner loop; no coverage threshold"
       ]
     },
     {
@@ -316,7 +317,8 @@
       "ref": "e482e579415fde18357cafce70f177ae19fd7f03",
       "license": "MIT",
       "patches": [
-        "frontmatter: drop metadata.origin, add license: MIT"
+        "frontmatter: drop metadata.origin, add license: MIT",
+        "when-to-run note: one spec while building, the whole run at checkpoints"
       ]
     },
     {
