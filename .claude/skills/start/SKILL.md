@@ -11,6 +11,22 @@ The student makes the decisions. You make them *good* decisions: you show the op
 what each one costs, and recommend one. Never silently pick for them on things that change
 what gets built.
 
+## What the app gets for real (plan with these from the first question)
+
+Every app here gets **real services from the BHS Locker** through `/connect`, in about a minute. Build
+the first version on the real ones, so the student does real work from day one:
+
+- **AI:** the app's own OpenRouter key with a monthly budget. Real answers, not a simulator.
+- **Email:** real emails sent through the Locker's relay (50 a day, one recipient per email): sign-up
+  confirmations, reminders, receipts.
+- **Sign in with BHS:** real school Google accounts (and guests, if the app is open to everyone).
+- **Hosting:** a real web address, a database that survives redeploys, and a disk for uploaded files.
+- **The vault** for passwords and keys from the app's users, and a **Feedback button** for testers.
+
+So when an idea needs AI, email, accounts or a web address, say **"yes, for real"**, not "simulated for
+now". Simulators are only for what the Locker can't give (payments, WhatsApp/SMS, a third-party API
+with no key yet), and they stay as the fallback when the laptop is offline or in tests.
+
 ## 0. Do they know what to build?
 
 If `$ARGUMENTS` already holds an idea or an Idea Lab link, skip to the matching step. Otherwise ask
@@ -39,8 +55,9 @@ and one line on **why it matters**. Only ask questions whose answers change the 
 - What makes it **different** from what exists?
 - A **hard trade-off** with a cost on each side (fun or realistic, solo or shared, saved or instant).
 - Does it need to **remember** things (accounts, saved data)? Default: no accounts in version 1.
-- Does it talk to the **outside world** (WhatsApp, payments, email)? Explain that we'll build a
-  simulator first so they can test everything today. Does it need a **password or key from its users**
+- Does it talk to the **outside world**? AI, email and sign-in are **real** once connected (see above).
+  WhatsApp, SMS, payments and other services get a simulator so they can test everything today, and
+  go real when there's a key. Does it need a **password or key from its users**
   (log in to a portal for them, their own API key)? That's fine: it goes in the vault (`keep-secrets-safe`).
 - How will we know it works? "A friend can ___ in 30 seconds."
 
@@ -53,6 +70,12 @@ Confirm the app's **name** ("Lunch Line") and **codename** (`lunch-line`: lowerc
 `npm run new-app -- <codename> --name "<Name>"` and write the result to `apps/<codename>/docs/idea.md`:
 the decisions, what was cut to "later", the 30-second test, and the Idea Lab link if there is one.
 Everything from here is built in `apps/<codename>/`.
+
+**Then connect it now, before building** (`/connect`: the `bhs-locker` tools, or
+`npm run locker:connect` + `npm run locker:project`). About a minute, and the app's `.env` gets its real
+AI key, email and sign-in settings, so the first version uses them. Already connected on this laptop?
+It's just the project step. No internet or the hub is down? Build on the simulators and connect later:
+switching is automatic once the keys are in `.env`.
 
 ## 2. Pick the stack
 
@@ -84,11 +107,13 @@ headline, a background, a card) from the galleries instead of hand-writing them.
 ## 4. Architect it: providers, services, simulators
 
 Before feature code, use **`providers-and-services`**: list every outside capability the idea touches
-(messaging, payments, email, AI, maps…). Each gets a provider interface and a **simulator** that works
-today, plus seed data. If it uses AI, copy `kit/ai` into the server code (`ai-kit`); decisions and
-routing go to Jev (`jev-decisions`). If the AI reads what users type or other outside text, follow
-`ai-safety` from the first version. Tell the student which parts are simulated and what "going real"
-will take later.
+(messaging, payments, email, AI, maps…). Each gets a provider interface. **AI, email and sign-in use the
+real Locker services from the start** (the app is connected); their simulators are only the offline and
+test fallback. Capabilities the Locker doesn't provide (payments, WhatsApp/SMS, other APIs) get a
+**simulator** that works today, labelled "Simulated" on screen. Plus seed data. If it uses AI, `kit/ai`
+already reads the app's key (`ai-kit`); decisions and routing go to Jev (`jev-decisions`). If the AI
+reads what users type or other outside text, follow `ai-safety` from the first version. Tell the student
+which parts are real now, which are simulated, and what "going real" will take for those.
 
 ## 5. Build the smallest impressive version
 
@@ -101,8 +126,8 @@ Use **`verify-in-browser`**: run it, take screenshots at desktop and phone size,
 console errors, and fix what looks wrong. Then show the student the screenshots and ask:
 "What's the next thing you want it to do?"
 
-Once the first version works, offer once: "Want it online with a real web address? `/connect`
-gets you a hosting slot, then `/ship` puts it live." Before a big next feature, offer `/think-it-through`.
+Once the first version works, offer once: "Want it online with a real web address? `/ship` puts it
+live." (Not connected yet because the hub was unreachable? `/connect` first.) Before a big next feature, offer `/think-it-through`.
 Before adding more features, offer `/playtest`: one real person using it beats any guess.
 
 ## 7. Save

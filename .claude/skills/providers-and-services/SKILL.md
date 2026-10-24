@@ -5,9 +5,15 @@ description: Core architecture for every app here. Every outside capability (Wha
 
 # Providers and Services: real or simulated, never fake
 
-Students must be able to build, run and fully test an app **locally, today**, before any account,
-API key, phone number or payment setup exists. So every outside dependency gets a **simulator**:
-a working stand-in, clearly labelled, that behaves like the real thing through the same interface.
+**Real first, wherever the BHS Locker provides it.** After `/connect` (do it right after `/start` makes the
+folder) the app has a real AI key, real email through the Locker relay, Sign in with BHS, hosting, the
+vault and a Feedback button: build on those from the first version, so students do real work from day one.
+
+Students must also be able to build, run and fully test an app **locally, today**, before any other
+account, API key, phone number or payment setup exists. So every outside dependency also gets a
+**simulator**: a working stand-in, clearly labelled, that behaves like the real thing through the same
+interface. It's the starting point for what the Locker doesn't provide (payments, WhatsApp/SMS,
+third-party APIs), and the fallback for everything when there's no key (offline, tests).
 
 > Someone wants a WhatsApp bot? Build the bot against a `MessagingProvider`. Ship a **simulated
 > WhatsApp** (an in-app phone-style chat panel) as the first provider. The real WhatsApp provider is
@@ -86,8 +92,10 @@ Worked examples (interface, simulator, real provider; messaging adds a service a
 
 ## Incubator services (after `/connect`)
 
-The BHS Incubator hub gives each app real versions of the common providers. Each still has a
-simulator, which stays the default locally. Settings land in `apps/<codename>/.env`.
+The BHS Incubator hub gives each app real versions of the common providers. **Use them from the first
+version.** Each still has a simulator, used only when its key is missing (offline, tests, before
+`/connect`). Settings land in `apps/<codename>/.env`; the providers pick the real one automatically when
+its key is there.
 
 | Need | Real one | Notes |
 |---|---|---|

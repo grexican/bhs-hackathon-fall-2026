@@ -29,11 +29,16 @@ decisions along the way, and keep it simple enough that they can read their own 
 
 ## Core architecture: Providers, Services, Simulators
 
-Every app is built so a student can run and test **all of it locally, with zero accounts or keys**.
-Full guide: `providers-and-services`. The non-negotiables:
+Every app uses **real services from the start** wherever the BHS Locker provides them, and can still run
+and test **all of it locally, with zero accounts or keys**. Full guide: `providers-and-services`. The non-negotiables:
 
+- **Real first.** `/connect` (about a minute, right after `/start` makes the folder) gives the app a real AI
+  key, real email (the Locker relay), Sign in with BHS, hosting, the vault and a Feedback button. The first
+  version uses them. Never tell a student "simulated for now" for something the Locker provides.
 - **Providers** wrap each outside capability (messaging, email, payments, auth, maps, AI, any API)
-  behind an interface. Every provider has a **simulator** implementation, and the simulator is the default.
+  behind an interface. Every provider has a **simulator** too: the fallback when there's no key (offline,
+  tests, before `/connect`), and the starting point for what the Locker doesn't provide (payments,
+  WhatsApp/SMS, third-party APIs without a key yet).
 - **Services** hold the app's rules and depend on provider *interfaces*, passed in, never imported
   concretely. The UI calls services, never providers.
 - **Can't do the real integration?** Build the simulator, not a shortcut. A WhatsApp bot ships with a
@@ -45,7 +50,8 @@ Full guide: `providers-and-services`. The non-negotiables:
 ## Incubator services
 
 After `/connect`, every app gets real services from the BHS Incubator hub (settings in
-`apps/<codename>/.env`, never committed). Simulators stay the default locally.
+`apps/<codename>/.env`, never committed). Once those settings exist, the real services are what the app uses,
+on the laptop too; the simulators take over only when a key is missing.
 
 - **Hosting:** its own Railway slot. `/ship` → `npm run deploy -- <codename>`. Listen on `PORT`, add `/health`.
 - **AI:** `OPENROUTER_API_KEY`, the app's own capped key. `kit/ai` reads it as is.
