@@ -3,6 +3,6 @@
     "context7": { "type": "http", "url": "https://mcp.context7.com/mcp" },
     "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] },
     "bhs-locker": { "command": "node", "args": ["scripts/locker-mcp.mjs"] },
-    "pitch-lab": { "command": "node", "args": ["scripts/pitch-lab-mcp.mjs"] }
+    "pitch-lab": { "type": "http", "url": "https://pitch-lab.apps.bhslabs.org/mcp" }
   }
 }

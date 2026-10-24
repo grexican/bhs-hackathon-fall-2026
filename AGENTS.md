@@ -67,9 +67,9 @@ Details: `providers-and-services` → "Incubator services".
 **AI tools (MCP):** the kit registers a local `bhs-locker` server (`scripts/locker-mcp.mjs`, in `.mcp.json`
 and `.cursor/mcp.json`). Its tools (`locker_status`, `locker_connect`, `locker_create_project`, `locker_join_project`,
 `locker_pull_env`, `locker_set`, `locker_deploy`, `locker_logs`, `locker_list_app`, `locker_feedback`, `locker_bring_app`, `new_app`) write `.env` files themselves and
-never return keys. Prefer them over the npm commands when they're available. A second local server, `pitch-lab`
-(`scripts/pitch-lab-mcp.mjs`), connects the editor to Pitch Lab for `/pitch` (`pitch_connect`, `pitch_list`,
-`pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`). It never answers the Grill for the student.
+never return keys. Prefer them over the npm commands when they're available. `pitch-lab` is Pitch Lab's own
+hosted MCP server (`https://pitch-lab.apps.bhslabs.org/mcp`, OAuth: the student signs in with BHS once) for `/pitch`
+(`pitch_list`, `pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`). Never answer the Grill for the student.
 
 ## AI in apps
 

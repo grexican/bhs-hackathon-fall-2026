@@ -1,6 +1,6 @@
 ---
 name: pitch
-description: Get the student ready to pitch their app, through Pitch Lab (the school's pitch coach at pitch-lab.apps.bhslabs.org). Connects Pitch Lab to the editor (the pitch-lab MCP tools), starts a new pitch or continues one, feeds it what only the code knows (what really works, what's simulated, the live address, real numbers, playtest quotes), then sends the student to Pitch Lab to be grilled by the people they'll pitch to and to get a deck they can present and share. Then makes the live demo unbreakable and rehearses it. Use when a student types /pitch, says "I have to present", "demo day", "help me pitch", "make slides", "make a deck", "what do I say", or the event is in its last few hours. Not the /demo workshop (that one compares two builds).
+description: Get the student ready to pitch their app, through Pitch Lab (the school's pitch coach at pitch-lab.apps.bhslabs.org). Connects the editor to Pitch Lab's MCP server (the pitch-lab tools), starts a new pitch or continues one, feeds it what only the code knows (what really works, what's simulated, the live address, real numbers, playtest quotes), then sends the student to Pitch Lab to be grilled by the people they'll pitch to and to get a deck they can present and share. Then makes the live demo unbreakable and rehearses it. Use when a student types /pitch, says "I have to present", "demo day", "help me pitch", "make slides", "make a deck", "what do I say", or the event is in its last few hours. Not the /demo workshop (that one compares two builds).
 argument-hint: "[codename]"
 ---
 
@@ -19,13 +19,17 @@ Short lines, one question at a time.
 
 ## 1. Connect Pitch Lab (once per laptop)
 
-- Use the `pitch-lab` tools (`pitch_connect`, `pitch_list`, …). Not there?
-  - **Cursor:** Settings → MCP (Tools & Integrations) → switch on **pitch-lab**. Still missing: Command
-    Palette → "Reload Window".
-  - **Claude Code:** approve the `pitch-lab` server when asked, or run `/mcp`.
-  - Still not listed: the kit is older than the tools. Update it: `git pull origin main`, then reload.
-- `pitch_connect` → show the student the code it gives you → they sign in with their school account,
-  check the code matches and click **Allow** → `pitch_connect_check`.
+Pitch Lab is an MCP server (`https://pitch-lab.apps.bhslabs.org/mcp`), already listed as `pitch-lab` in the
+kit's `.cursor/mcp.json` and `.mcp.json`. The first time, the editor signs in to it:
+
+- **Cursor:** Settings → MCP (Tools & Integrations): **pitch-lab** shows a Connect / Needs login button. Click it.
+- **Claude Code:** `/mcp` → **pitch-lab** → Authenticate.
+- The browser opens Pitch Lab: the student signs in with their school account and clicks **Allow**. Then the
+  tools work: `pitch_list`, `pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`.
+- **pitch-lab** not listed at all? The kit is older than this: `git pull origin main`, then reload the editor.
+
+The same server works in ChatGPT, Claude, Gemini and any AI app that takes MCP servers; the Pitch Lab home page
+shows how, for students who aren't in the kit.
 
 ## 2. New pitch, or carry on?
 
