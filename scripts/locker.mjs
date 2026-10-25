@@ -385,7 +385,7 @@ export function refreshKitFiles(codename) {
     fs.copyFileSync(from, to);
     done.push(rel);
   };
-  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs", "browser.mjs"]) {
+  for (const f of ["gate.mjs", "feedback.mjs", "feedback.js", "vault.mjs", "browser.mjs", "install.mjs", "install.js"]) {
     const to = path.join(dir, "locker", f);
     if (fs.existsSync(to)) refresh(kit(`locker/${f}`), to, `locker/${f}`);
   }

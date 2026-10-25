@@ -11,6 +11,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, normalize, posix, resolve } from "node:path";
 import { currentUser, gate, requireUser } from "./gate.mjs";
 import { feedback } from "./feedback.mjs";
+import { install } from "./install.mjs";
 
 const root = resolve(process.argv[2] || ".");
 const PRIVATE = (process.env.LOCKER_GATE_PATHS ?? "").split(",").map((p) => `/${p.trim()}`.replace(/^\/+/, "/").replace(/\/+$/, "")).filter(Boolean);
@@ -19,6 +20,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": 
 http
   .createServer(async (req, res) => {
     if (req.url === "/health") return res.end("ok");
+    if (install(req, res)) return; // "Add to Home Screen": <script src="/locker/install.js"></script>, mode from LOCKER_INSTALL
     if (await feedback(req, res)) return; // the "Feedback" button: <script src="/locker/feedback.js" defer></script>
     if ((await gate(req, res)) === null) return;
     const path = decodeURIComponent(new URL(req.url, "http://x").pathname);
