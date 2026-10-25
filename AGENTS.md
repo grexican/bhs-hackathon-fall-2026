@@ -27,6 +27,13 @@ decisions along the way, and keep it simple enough that they can read their own 
 5. **Design is not optional.** Anything a human looks at goes through `design-director` first.
    Commit to a direction. Never ship the default look.
 
+## Reference library: check it before you build by hand
+
+Before you build something non-trivial by hand, scan `library/INDEX.md` (one line per doc) and ask:
+"can I do this alone, or is there a doc that makes me better at it?" If a doc fits the task, read it
+first, then build. Tell the student in one line which doc you used. A game starts at
+`library/games/start-here.md`. The library is know-how, not workflows: commands stay skills.
+
 ## Core architecture: Providers, Services, Simulators
 
 Every app uses **real services from the start** wherever the BHS Locker provides them, and can still run
