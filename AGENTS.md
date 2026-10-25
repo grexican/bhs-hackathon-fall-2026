@@ -180,6 +180,8 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 | "What next?" | `/whats-next`: one pick, from evidence. |
 | "Upload a photo" / "save images" | `save-files`: files next to the database on `/data`, never elsewhere. |
 | "Add a map" / "near me" | `maps`: Leaflet + OpenStreetMap, no key; location only on a tap, over https. |
+| "Talk to it" / "voice input" / "voice commands" | `speech-to-text`: the kit's speech toolkit (`kit/speech`): browser, cloud or offline Vosk engine, a hold-to-talk button. |
+| "High scores" / "leaderboard" | `leaderboard`: `kit/locker/leaderboard.mjs` in the app's own SQLite, with the server's stopwatch and a name filter. |
 | "I have to present" / "make slides" | `/pitch`: the pitch and deck come from Pitch Lab (the student answers the Grill, never you). Screenshot slides: `npm run pitch`, never hand-written. |
 | "Commit it" / "save it" | `/wrap`. |
 | "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
