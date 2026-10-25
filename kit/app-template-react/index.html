@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0a" />
     <title>{{name}}</title>
+    <!-- "Add to Home Screen" on phones (does nothing until LOCKER_INSTALL is set; see make-it-an-app). Keep it in <head>. -->
+    <script src="/locker/install.js"></script>
   </head>
   <body>
     <div id="root"></div>

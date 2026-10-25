@@ -6,6 +6,7 @@ import path from "node:path";
 import { db } from "./db.js";
 import { feedback } from "./locker/feedback.mjs";
 import { push } from "./locker/push.mjs";
+import { install } from "./locker/install.mjs";
 import { gate } from "./locker/gate.mjs";
 import { AiBudgetError, ask } from "./locker/ai/index.ts";
 
@@ -101,6 +102,8 @@ http
     try {
       // The host checks this to know the app is up. Keep it first, before the sign-in.
       if (url === "/health") return res.end("ok");
+      // "Add to Home Screen" on phones: off until you set LOCKER_INSTALL=nudge (or required). See make-it-an-app.
+      if (install(req, res)) return;
 
       // Sign-in gate: OFF until you set LOCKER_GATE (npm run locker:set -- <codename> LOCKER_GATE=1;
       // it goes in .env too, to try it here). =1: every page needs sign-in. =lazy: the app is public and
