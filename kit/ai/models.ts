@@ -42,7 +42,7 @@ export const TIERS: Record<Tier, TierConfig> = {
     reasoning: "high",
   },
   vision: {
-    model: "qwen/qwen3.8-omni-flash", // $0.15 / $0.47
+    model: "openai/gpt-6-luna", // $0.10 / $0.50; 2026-10-25: 3.6-3.8 s per photo vs 6-23 s for qwen3.8-omni-flash
     use: "Reading images, screenshots, PDFs, video frames",
     reasoning: "low",
     sort: "latency",
