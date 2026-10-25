@@ -152,3 +152,22 @@ test("routes: start, submit, table with me, friendly errors", async () => {
     server.close();
   }
 });
+
+test("removing scores: by name, only with the app secret over HTTP, never everything by accident", async () => {
+  const c = clock();
+  const lb = leaderboard(new DatabaseSync(":memory:"), { now: c.now, boards: { main: { perMinute: 100 } } });
+  await lb.submitScore({ board: "main", user: "device:aaaaaaaa", name: "test", score: 1234 });
+  await lb.submitScore({ board: "main", user: "device:bbbbbbbb", name: "Pixel", score: 300 });
+  assert.equal(lb.removeScores({ board: "main" }), 0, "no filter removes nothing");
+  process.env.LOCKER_APP_SECRET = "s3cret";
+  const server = http.createServer(async (req, res) => (await lb.route(req, res)) || (res.writeHead(404), res.end()));
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const base = `http://127.0.0.1:${server.address().port}/api/scores/main?name=TEST`;
+  assert.equal((await fetch(base, { method: "DELETE" })).status, 403);
+  assert.equal((await fetch(base, { method: "DELETE", headers: { Authorization: "Bearer wrong" } })).status, 403);
+  const ok = await fetch(base, { method: "DELETE", headers: { Authorization: "Bearer s3cret" } });
+  assert.deepEqual(await ok.json(), { removed: 1 });
+  server.close();
+  delete process.env.LOCKER_APP_SECRET;
+  assert.deepEqual(lb.top("main").map((x) => x.name), ["Pixel"]);
+});

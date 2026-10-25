@@ -232,6 +232,20 @@ export function leaderboard(db, { boards = {}, noul, timeZone = "Europe/Madrid",
     return better + 1;
   }
 
+  /**
+   * Takes scores off a board (a test entry, a cheat, a name that slipped through). Pick by `id`, `name` or
+   * `player`; with none of them it removes nothing. Returns how many were removed.
+   */
+  function removeScores({ board, id, name, player } = {}) {
+    if (!board || (id === undefined && !name && !player)) return 0;
+    const where = ["board = ?"];
+    const args = [board];
+    if (id !== undefined) where.push("id = ?"), args.push(Number(id));
+    if (name) where.push("lower(name) = lower(?)"), args.push(String(name));
+    if (player) where.push("player = ?"), args.push(String(player));
+    return Number(db.prepare(`delete from scores where ${where.join(" and ")}`).run(...args).changes);
+  }
+
   /** Answers the score routes for the page (scores.js). Returns true when it handled the request. */
   async function route(req, res, user) {
     const url = new URL(req.url ?? "/", "http://x");
@@ -260,6 +274,15 @@ export function leaderboard(db, { boards = {}, noul, timeZone = "Europe/Madrid",
         const input = await body();
         return send(201, await submitScore({ ...input, user })), true;
       }
+      // Only the app's owner: the app secret from .env (never in the page). DELETE /api/scores/<board>?name=test
+      const removing = req.method === "DELETE" && url.pathname.match(/^\/api\/scores\/([^/]+)$/);
+      if (removing) {
+        const secret = process.env.LOCKER_APP_SECRET;
+        if (!secret || req.headers.authorization !== `Bearer ${secret}`) throw fail(403, "Only the app's owner can remove scores.");
+        const board = decodeURIComponent(removing[1]);
+        const q = Object.fromEntries(["id", "name", "player"].map((k) => [k, url.searchParams.get(k) ?? undefined]));
+        return send(200, { removed: removeScores({ board, ...q }) }), true;
+      }
       const match = req.method === "GET" && url.pathname.match(/^\/api\/scores\/([^/]+)$/);
       if (match) {
         const board = decodeURIComponent(match[1]);
@@ -275,5 +298,5 @@ export function leaderboard(db, { boards = {}, noul, timeZone = "Europe/Madrid",
     return false;
   }
 
-  return { startRun, submitScore, top, best, rank, route, checkName };
+  return { startRun, submitScore, top, best, rank, removeScores, route, checkName };
 }

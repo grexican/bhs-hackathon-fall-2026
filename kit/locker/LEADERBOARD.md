@@ -117,8 +117,22 @@ On the server you can also call `scores.top("main", { limit: 10, period: "week" 
 | `POST /api/scores` | `{ board, score, name, run, device, meta }` | `{ score, best, isBest, rank, name }` |
 | `GET /api/scores/:board?period=week&limit=10&device=…` | | `{ scores: [{ rank, name, score, at, me }], me }` |
 
+| `DELETE /api/scores/:board?name=…` (or `id=`, `player=`) | header `Authorization: Bearer <LOCKER_APP_SECRET>` | `{ removed }` |
+
 Errors are `{ error }` with a message to show the player (400 refused, 409 already saved, 429 too many).
 `meta` is anything small you want to keep with a score (level, character), up to 500 characters.
+
+## Take a score off the board
+
+A test score, a cheat, or a name that slipped past the filter. Only you can do it: it needs the app secret
+from your app's `.env`. From the app folder (PowerShell users: run it in Git Bash):
+
+```bash
+curl -X DELETE "https://<codename>.apps.bhslabs.org/api/scores/all-time?name=test"   -H "Authorization: Bearer $(grep ^LOCKER_APP_SECRET .env | cut -d= -f2)"
+```
+
+It answers `{ "removed": 1 }`. In server code: `scores.removeScores({ board, name })` (or `id`, `player`).
+Never put the secret in the page.
 
 ## Privacy
 
