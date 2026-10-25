@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { db } from "./db.js";
 import { feedback } from "./locker/feedback.mjs";
+import { push } from "./locker/push.mjs";
 import { gate } from "./locker/gate.mjs";
 import { AiBudgetError, ask } from "./locker/ai/index.ts";
 
@@ -117,6 +118,10 @@ const server = http.createServer(async (req, res) => {
 
     // The tester "Feedback" button (POST /api/feedback, sent on to the hub). Turn the button on in index.html.
     if (await feedback(req, res)) return;
+
+    // Notifications: the "Turn on notifications" button's routes (/api/push/*) and its service worker. Send one
+    // from your own routes with sendPush({ user: user.sub, title, body, url }) (push-notifications skill).
+    if (await push(req, res, user)) return;
 
     const route = findRoute(req.method, url);
     if (route) return await route.handler(req, res, user, route.params);
