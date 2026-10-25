@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react"
 
 import SplitText from "@/components/SplitText"
 import { AskBox } from "@/components/AskBox"
+import { PushButton } from "@/components/PushButton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +15,10 @@ import { Spotlight } from "@/components/ui/spotlight-new"
 // The "Ask the AI" box (src/components/AskBox.tsx; the AI call is in server.js). Set this to true to turn it on.
 // Before /connect it answers with a labelled simulated reply; online it uses the app's monthly AI budget.
 const SHOW_ASK_THE_AI = false
+
+// A "Turn on notifications" button (src/components/PushButton.tsx, /push-notifications). Set this to true to turn it on.
+// Before /connect the notifications are simulated (printed in the terminal).
+const SHOW_NOTIFICATIONS = false
 
 export default function App() {
   const [count, setCount] = useState<number | null>(null)
@@ -64,9 +69,11 @@ export default function App() {
 
         {SHOW_ASK_THE_AI ? <AskBox /> : null}
 
+        {SHOW_NOTIFICATIONS ? <PushButton /> : null}
+
         {/* A hint for you, the builder. Delete it when your real page is here. */}
         <p className="text-sm text-muted-foreground">
-          Turn on: <b>Ask the AI</b> (src/App.tsx) · <b>Feedback button</b> (index.html)
+          Turn on: <b>Ask the AI</b> · <b>Notifications</b> (src/App.tsx) · <b>Feedback button</b> (index.html)
         </p>
 
         {/* The main action sits low, where a thumb reaches it on a phone. */}
