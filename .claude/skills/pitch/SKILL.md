@@ -17,19 +17,35 @@ nothing and the judges will hear it. You *can* find facts in the code when a que
 
 Short lines, one question at a time.
 
-## 1. Connect Pitch Lab (once per laptop)
+## 1. Connect Pitch Lab (do it, don't just describe it)
 
-Pitch Lab is an MCP server (`https://pitch-lab.apps.bhslabs.org/mcp`), already listed as `pitch-lab` in the
-kit's `.cursor/mcp.json` and `.mcp.json`. The first time, the editor signs in to it:
+Pitch Lab is an MCP server: `https://pitch-lab.apps.bhslabs.org/mcp`, named `pitch-lab`. Get it working
+before anything else, in this order:
 
-- **Cursor:** Settings → MCP (Tools & Integrations): **pitch-lab** shows a Connect / Needs login button. Click it.
-- **Claude Code:** `/mcp` → **pitch-lab** → Authenticate.
-- The browser opens Pitch Lab: the student signs in with their school account and clicks **Allow**. Then the
-  tools work: `pitch_list`, `pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`.
-- **pitch-lab** not listed at all? The kit is older than this: `git pull origin main`, then reload the editor.
+1. **Already working?** If you have the `pitch_list` tool, call it. It answers: skip to step 2.
+2. **Make sure it's in the editor's MCP list.** Add it yourself if it's missing; never remove or change
+   the other servers in the file.
+   - **Cursor:** `.cursor/mcp.json` at the kit root needs, inside `"mcpServers"`:
+     `"pitch-lab": { "url": "https://pitch-lab.apps.bhslabs.org/mcp" }`
+   - **Claude Code:** `.mcp.json` at the kit root needs, inside `"mcpServers"`:
+     `"pitch-lab": { "type": "http", "url": "https://pitch-lab.apps.bhslabs.org/mcp" }`.
+     If the student opened Claude Code somewhere else, or the project servers weren't approved, run
+     `claude mcp add --transport http --scope user pitch-lab https://pitch-lab.apps.bhslabs.org/mcp`.
+   - Either file missing or old: `git pull origin main` first (the kit ships both), then check again.
+3. **Sign in (once per laptop).** Pitch Lab asks who the student is, so the editor opens a sign-in:
+   - **Cursor:** Settings → MCP (Tools & Integrations) → **pitch-lab** → **Connect** (or "Needs login").
+     Just added it? Reload the window first (Ctrl/Cmd+Shift+P → "Reload Window").
+   - **Claude Code:** type `/mcp` → **pitch-lab** → **Authenticate**. Just added it? Restart Claude Code first.
+   - The browser opens Pitch Lab: sign in with the school account, click **Allow**, come back.
+   Tell the student exactly that, one line at a time, and wait for "done".
+4. **Prove it.** Call `pitch_list`. It answers (even with an empty list): connected. Say "Pitch Lab is
+   connected." A sign-in error: do step 3 again. Still stuck after two tries: send them to
+   https://pitch-lab.apps.bhslabs.org to use Pitch Lab in the browser, and keep helping from here
+   (you write the context note in the chat for them to paste as a note).
 
-The same server works in ChatGPT, Claude, Gemini and any AI app that takes MCP servers; the Pitch Lab home page
-shows how, for students who aren't in the kit.
+The tools: `pitch_list`, `pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`. The same
+server works in ChatGPT, Claude, Gemini and any AI app that takes MCP servers; the Pitch Lab home page shows
+how, for students who aren't in the kit.
 
 ## 2. New pitch, or carry on?
 
