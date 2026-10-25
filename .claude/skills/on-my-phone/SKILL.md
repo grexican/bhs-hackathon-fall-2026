@@ -46,6 +46,7 @@ It also checks the manifest and lists what's missing.
 
 Don't add a service worker or offline mode unless the student asks for "works without internet".
 It's the source of most "my change doesn't show up" confusion. If they do want it, say that cost first.
+(The notifications service worker, `push-notifications`, is fine: it only shows notifications and never caches.)
 
 ## 3. Fix what feels wrong
 

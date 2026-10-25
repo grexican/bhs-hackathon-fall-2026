@@ -61,6 +61,9 @@ on the laptop too; the simulators take over only when a key is missing.
 - **Tester feedback:** a "Feedback" button (`kit/locker/feedback.mjs` + `feedback.js`; off by default in the starter app,
   one line in `public/index.html` turns it on). Messages go to the team's inbox on the hub; read them with
   `npm run locker:feedback -- <codename>`. Offline it's simulated (`data/feedback.jsonl`).
+- **Push notifications:** `kit/locker/push.mjs` + `push.js` + `push-sw.js` (in every starter app, button off by default):
+  a "Turn on notifications" button (asks only on a tap) and `sendPush({ user, title, body, url })` on the server. The hub
+  holds the Web Push keys: no extra account. iPhone needs the app on the Home Screen. See `push-notifications`.
 - **Install on phones:** `kit/locker/install.mjs` + `install.js`: one `<script src="/locker/install.js">` tag, then
   `LOCKER_INSTALL=nudge` (a dismissible "Install" card) or `required` (phones install before using it; desktop never).
   See `make-it-an-app`.
@@ -106,6 +109,7 @@ hosted MCP server (`https://pitch-lab.apps.bhslabs.org/mcp`, OAuth: the student 
 | `/think-it-through` · `/council` · `/research` | Decide before a big feature · five advisor takes · web research with sources. |
 | `/on-my-phone` · `/share-it` | Open it on a phone and make it installable · link preview, QR code, Locker listing, visit counter. |
 | `/make-it-an-app` | An "Install" card on phones (nudge), or install-before-use (required); laptops never blocked. Play Store later. |
+| `/push-notifications` | "Tell me when…": a notification on the phone, even with the app closed. |
 | `/playtest` · `/whats-next` | Swap with another team: watch a real person use it, fix one thing, repeat (`docs/feedback.md`) · choose the next thing from evidence. |
 | `/pitch` | Through Pitch Lab: sets up or continues the pitch, adds what the code shows as context; the student is grilled and gets a deck there. Then a demo that can't break, a rehearsal. |
 | `/demo <idea>` | The fair demo: a no-skills control build vs. the full build, revealed side by side. |

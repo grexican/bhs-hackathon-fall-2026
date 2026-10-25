@@ -84,7 +84,7 @@ Worked examples (interface, simulator, real provider; messaging adds a service a
 | Payments / checkout | `PaymentProvider` | Test checkout sheet with good and declined test cards; ledger table |
 | Login / accounts | `AuthProvider` (`sim`, `locker`, or own) | "Sign in as…" picker over seeded users |
 | Maps / places / delivery tracking | `GeoProvider` | Seeded places; route simulated along a fixed path with a timer |
-| Push notifications | `NotifyProvider` | In-app toast tray + notification log |
+| Push notifications | `NotifyProvider` (or the Locker's, below) | In-app toast tray + notification log |
 | Scraping / 3rd-party data API | `DataProvider` | Recorded fixture responses in `seed/fixtures/`, replayed |
 | Hardware / sensors / IoT | `DeviceProvider` | Sliders that generate readings; scripted scenarios |
 | AI (chat, JSON, images, decisions) | `kit/ai` | Built in: `AI_PROVIDER=sim`, or no key |
@@ -102,6 +102,7 @@ its key is there.
 | Hosting | The app's Railway slot | `/ship`. Listens on `PORT`, has `/health`. |
 | AI | `OPENROUTER_API_KEY` | The app's own key with a monthly cap. `kit/ai` already reads it. |
 | Email | `locker` provider: hub relay | `examples/email/`. 50 a day, one recipient per call. Uses `LOCKER_APP_SECRET`, server-side only. |
+| Push notifications | `locker/push.mjs`: hub Web Push | `push-notifications`. `sendPush({ user, title, body, url })`, 500 a day. Simulated (terminal + `data/push.jsonl`) before `/connect`. |
 | Sign-in | See below | `sim` provider ("Sign in as…") locally. |
 | Database | `node:sqlite` | Built into Node 22.18+: no install, no Docker. File at `DATABASE_PATH` (`./data/app.db` locally, `/data/app.db` on Railway). |
 
