@@ -4,11 +4,13 @@
 //   npm run ai -- bench [tier…]                 same prompt through each tier, side by side
 //   npm run ai -- decide "i was charged twice"  a Jev demo: yes/no + pick-one + scale in one call
 //   npm run ai -- image "a neon skateboard" [out.png]
+//   npm run ai -- transcribe clip.webm [es|ca|en] [best]   speech to text, with time and cost
 import fs from "node:fs";
 import path from "node:path";
 import { choice, decide, jevEnabled } from "./jev.ts";
 import { ask, image, provider } from "./llm.ts";
-import { JEV_MODEL, resolveTier, TIERS, type Tier } from "./models.ts";
+import { JEV_MODEL, resolveTier, TIERS, transcribeModel, type Tier } from "./models.ts";
+import { transcribe } from "./transcribe.ts";
 
 const [cmd = "models", ...rest] = process.argv.slice(2);
 const money = (n: number) => `$${n.toFixed(6)}`;
@@ -23,6 +25,7 @@ async function main() {
       console.log(`${tier.padEnd(9)} ${cfg.model.padEnd(34)} ${cfg.use}`);
     }
     console.log(`${"decide".padEnd(9)} ${JEV_MODEL().padEnd(34)} Fast decisions: yes/no, pick-one, scales (see jev.ts)`);
+    console.log(`${"hear".padEnd(9)} ${transcribeModel("fast").padEnd(34)} Speech to text (transcribe.ts); quality "best": ${transcribeModel("best")}`);
     return;
   }
 
@@ -78,7 +81,17 @@ async function main() {
     return;
   }
 
-  console.log("Usage: npm run ai -- <models|ask|bench|decide|image> …");
+  if (cmd === "transcribe") {
+    const [file, language, quality] = rest;
+    if (!file) return console.log("Usage: npm run ai -- transcribe <audio file> [es|ca|en] [best]");
+    const r = await transcribe(fs.readFileSync(file), { language, quality: quality === "best" ? "best" : "fast" });
+    console.log(r.text, `
+
+— ${r.model}, ${r.seconds}s of audio, ${r.ms}ms, ${money(r.cost)}`);
+    return;
+  }
+
+  console.log("Usage: npm run ai -- <models|ask|bench|decide|image|transcribe> …");
 }
 
 main().catch((e: Error) => {

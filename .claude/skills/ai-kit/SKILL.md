@@ -12,6 +12,7 @@ description: How apps here use AI. Ask for a KIND of model (lite, fast, smart, t
 | `models.ts` | The **tier router**: `lite · fast · smart · thinking · vision · image · auto` → a configured OpenRouter model |
 | `llm.ts` | `ask(tier, prompt)`, `askJson(tier, prompt, schema)`, `image(prompt)`, with OpenRouter + **simulator** providers |
 | `jev.ts` | `decide / noul / choice / score / pickMany`: fast decisions (see `jev-decisions`) |
+| `transcribe.ts` | `transcribe(audio, { language, quality })`: speech to text, server side (the voice toolkit, `kit/speech`, uses it: `speech-to-text`) |
 | `env.ts` | Finds the nearest `.env` walking up, so apps inside this repo share the root key |
 | `cli.ts` | `npm run ai -- models | ask | bench | decide | image` |
 
@@ -36,6 +37,7 @@ description: How apps here use AI. Ask for a KIND of model (lite, fast, smart, t
 | `image` | Generating images: **cache results, never loop** | per image |
 | `auto` | Let a router pick model + effort per request | varies |
 | (`jev.ts`) | Yes/no, pick-one, scales: routing, guards, triage | ~0.5 s, ~$0.00002 |
+| (`transcribe.ts`) | Speech to text: `fast` (default) or `quality: "best"` | ~$0.0035 per minute of audio, ~0.5 s |
 
 **Web search (fresh facts, with sources).** Any tier can search the web first: pass `web: true` (up to 5
 results) or `web: { maxResults: 3 }`. The answer cites what it found, and `result.sources` lists the pages
@@ -68,6 +70,7 @@ Never edit code to change models. In `.env`:
 MODEL_FAST=z-ai/glm-5.3-flash      # try a different fast model
 MODEL_SMART=openai/gpt-6-sol
 MODEL_DECIDE=typesafe/jev-1.13     # pin Jev instead of ~latest
+MODEL_TRANSCRIBE=openai/gpt-4o-mini-transcribe   # a cheaper speech-to-text model
 AI_PROVIDER=sim                    # force the offline simulator
 ```
 

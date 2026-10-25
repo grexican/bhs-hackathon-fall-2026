@@ -57,6 +57,18 @@ export const TIERS: Record<Tier, TierConfig> = {
   },
 };
 
+/**
+ * Speech to text (transcribe.ts) has its own models: they hear audio and write it down, nothing else.
+ * Chosen 2026-10 on Spanish, Catalan and English clips, clean and noisy. Swap with MODEL_TRANSCRIBE / MODEL_TRANSCRIBE_BEST.
+ */
+export const TRANSCRIBE_MODELS = {
+  fast: "mistralai/voxtral-mini-transcribe-3-0", // ~$0.0035 a minute of audio, ~0.5 s for a short clip
+  best: "elevenlabs/scribe-v2", // ~$0.0037 a minute, 90+ languages, a touch slower
+} as const;
+
+export const transcribeModel = (quality: "fast" | "best" = "fast"): string =>
+  (quality === "best" ? env("MODEL_TRANSCRIBE_BEST") : env("MODEL_TRANSCRIBE")) ?? TRANSCRIBE_MODELS[quality];
+
 /** Jev (a decision model, not a chat model) lives in jev.ts; its id is configurable too. */
 export const JEV_MODEL = (): string => env("MODEL_DECIDE") ?? "~typesafe/jev-latest";
 
