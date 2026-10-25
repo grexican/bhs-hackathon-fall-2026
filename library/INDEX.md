@@ -18,6 +18,10 @@ first. One line per doc: `path — when to read it`.
 - `library/games/playtest-with-a-bot.md` — tune difficulty with numbers, find crashes and exploits: Playwright bots and a `?debug` hook
 - `library/games/multiplayer.md` — two or more players: same device first, then turn-based, then real-time
 
+## Web app features
+
+- `library/web/camera.md` — taking a photo in the app: phone camera vs laptop webcam, the NotFoundError-without-a-prompt trap, error messages
+
 Skills already in the kit for games (`.claude/skills/<name>/SKILL.md`):
 
 - `stack-picker` — before scaffolding: plain canvas, Phaser, or three.js
