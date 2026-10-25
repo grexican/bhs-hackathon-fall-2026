@@ -41,6 +41,9 @@ Installing only works over **https**, so test it on the live address after `/shi
 - **iPhone (Safari):** Share button, then "Add to Home Screen".
 - **Android (Chrome):** the menu, then "Add to Home screen" or "Install app".
 
+Want people to actually install it (an "Install" card, or install before use)? That's `/make-it-an-app`.
+It also checks the manifest and lists what's missing.
+
 Don't add a service worker or offline mode unless the student asks for "works without internet".
 It's the source of most "my change doesn't show up" confusion. If they do want it, say that cost first.
 
