@@ -7,6 +7,11 @@ description: Use before building or restyling ANY UI — a page, app screen, lan
 
 You are the design director. Your job: no UI in this repo looks like a default AI template.
 Run the five phases in order. Do not skip phase 1. Do not write UI code before phase 2 is done.
+The always-on minimum is the design floor (`.claude/rules/ui.md`). Games: `game-director` instead.
+
+**Routed skills.** The specialist design skills below are not loaded automatically, so they don't compete for
+attention. When a phase names one, read its file: `.claude/skills/<name>/SKILL.md` (for example
+`.claude/skills/impeccable/SKILL.md`). Read only the ones the current step needs.
 
 ## Phase 1 — Commit to a direction
 
@@ -24,12 +29,15 @@ Run the five phases in order. Do not skip phase 1. Do not write UI code before p
 5. Write the choice at the top of `DESIGN.md` in the project (direction, fonts, palette tokens,
    signature move, motion stance). Every later decision must trace back to it.
 
-Preset aesthetics you can hand off to when the direction matches:
+Preset aesthetics you can hand off to when the direction matches (routed: read their SKILL.md):
 `high-end-visual-design` (soft, premium agency), `minimalist-ui` (warm editorial monochrome),
 `industrial-brutalist-ui` (raw Swiss / terminal), `design-taste-frontend` (anti-slop landing pages).
 
 ## Phase 2 — Type, color, tokens
 
+- **Fastest path (no Python needed):** the kit's theme presets, curated from the `ui-ux-pro-max` data: `npm run theme`
+  lists 6 (palette + font pair + type and spacing scales). Apply one with `npm run theme -- <preset> <codename>`, then
+  tune `src/theme.css` (or `public/theme.css`) toward the direction. Every starter already begins on one.
 - Full system in one shot: `python .claude/skills/ui-ux-pro-max/scripts/search.py "<product> <mood>" --design-system -p "<Name>"`
 - Targeted lookups: `--domain typography`, `--domain color`, `--domain google-fonts`, `--domain landing`, `--domain ux`; stack notes with `--stack react|nextjs|html-tailwind|threejs|...`.
 - Verify the result fits the direction from phase 1. Reject a result that drags you back to generic.
@@ -39,25 +47,25 @@ Preset aesthetics you can hand off to when the direction matches:
 
 ## Phase 3 — Build with conviction
 
-- Follow `frontend-design`: commit to the tone, make bold choices on purpose, no timid middle.
+- Follow `frontend-design` (routed): commit to the tone, make bold choices on purpose, no timid middle.
 - Ready-made beautiful pieces (React Bits, Magic UI, Aceternity UI, shadcn/ui, Uiverse), fonts, palettes and
   shader backgrounds: `beautiful-components`. Take 2 or 3 standout pieces, then unify them with the tokens.
-- Components and Tailwind/shadcn setup: `ui-styling`. Modern CSS/HTML patterns (dialogs, popovers,
+- Components and Tailwind/shadcn setup: `ui-styling` (routed). Modern CSS/HTML patterns (dialogs, popovers,
   container queries, view transitions): `modern-web-guidance`.
 - Motion: decide with `animate` (should it move, why, which curve, how it exits). GSAP work:
   `gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-react`, `gsap-plugins`, `gsap-performance`, `gsap-utils`.
-  Craft philosophy and the small details: `emil-design-eng`. Can't name an effect? `animation-vocabulary`.
+  Craft philosophy and the small details: `emil-design-eng` (routed). Can't name an effect? `animation-vocabulary`.
   Retro screens (terminal, CRT, arcade): never step opacity (0 → 1 → 0.3 → 1) for a "flicker". People read it
   as a glitch, not a style. Fade in with a blur clearing instead; let a blinking cursor or scanlines carry the era.
 - 3D and shaders: `threejs-fundamentals` first, then `threejs-materials`, `threejs-lighting`,
   `threejs-shaders`, `threejs-postprocessing`, `threejs-interaction`, `threejs-animation`, `threejs-loaders`.
-- Games: `game-feel` (screen shake, hit-stop, squash and stretch, juice) and `game-ui-ux` (HUD, menus, safe areas).
+- Games: hand off to `game-director` (it routes to `game-feel` and `game-ui-ux`).
 - Generative art / p5.js: `algorithmic-art`. Posters and static art: `canvas-design`.
   Demo-day deck: `slides`. Phone polish (100vh, tap highlight, input zoom): `mobile-native`.
 
 ## Phase 4 — Audit and polish
 
-Run the `impeccable` skill against what you built:
+Run the `impeccable` skill (routed: `.claude/skills/impeccable/SKILL.md`) against what you built:
 - `critique` — hierarchy, clarity, emotional fit. `audit` — accessibility, performance, responsive.
 - Then the fix you need: `typeset`, `colorize`, `layout`, `bolder` or `quieter`, `harden`, `onboard`, `delight`.
 - Finish with `polish`. Review motion with `review-animations`.
@@ -65,11 +73,13 @@ Fix every high-severity finding before phase 5.
 
 ## Phase 5 — Screenshot review
 
-1. Start the app, then capture both widths: `npm run shot -- <url>` (desktop and mobile).
-2. Open the images and look at them. Judge like a stranger seeing it for 5 seconds:
-   what do I look at first? Is the signature move visible? Does anything look default?
-3. Check the anti-slop list below against the screenshots, not against your memory of the code.
-4. Fix, re-shoot, repeat until every box passes. Show the student the final shots.
+1. Start the app, then capture both widths: `npm run shot -- <url>` (desktop and mobile). Zero console errors.
+2. **Score it:** `npm run critique -- <url>` from the kit root. A vision model looks at the shots and answers in
+   text: a score out of 10 and three concrete fixes. This works even if you can't see images yourself.
+3. If you can see images, open the shots too. Judge like a stranger seeing it for 5 seconds: what do I look at
+   first? Is the signature move visible? Check the anti-slop list below against the screenshots, not your memory.
+4. Apply the fixes, re-shoot, re-run the critique. **Done = 7/10 or more**, or the student accepts a lower score
+   with a reason (`--accept "<reason>"`, logged in `docs/critique.md`). Show the student the final shots.
 
 ## Anti-slop checklist (every box must pass)
 

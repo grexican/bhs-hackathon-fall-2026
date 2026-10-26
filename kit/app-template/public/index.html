@@ -3,9 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
   <title>{{name}}</title>
   <!-- "Add to Home Screen" on phones (does nothing until LOCKER_INSTALL is set; see make-it-an-app). Keep it in <head>. -->
   <script src="/locker/install.js"></script>
+  <!-- The theme: palette, fonts and scales (public/theme.css, a kit preset; npm run theme switches it). -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="" data-theme-fonts>
+  <link rel="stylesheet" href="/theme.css">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>

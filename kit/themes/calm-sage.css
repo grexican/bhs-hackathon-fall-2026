@@ -1,0 +1,55 @@
+/* theme: calm-sage
+   mood: quiet and kind: bone white, sage green, a gentle serif
+   scheme: light
+   fonts: Lora (headings) + Nunito Sans (body)
+   fonts-href: https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap
+   A kit theme preset (kit/themes/). Change any value here; every screen follows. List or switch: npm run theme */
+:root, .dark {
+  color-scheme: light;
+  --background: #f6f5ef;
+  --foreground: #22302a;
+  --card: #fdfdf9;
+  --card-foreground: #22302a;
+  --popover: #fdfdf9;
+  --popover-foreground: #22302a;
+  --primary: #4f7a5f; /* the one accent: buttons, links, the thing to tap */
+  --primary-foreground: #f6fbf7;
+  --secondary: #e7ece3;
+  --secondary-foreground: #22302a;
+  --muted: #e9ebe1;
+  --muted-foreground: #64736b;
+  --accent: #d08c60; /* a second color, used sparingly: highlights, badges */
+  --accent-foreground: #22302a;
+  --destructive: #b3261e;
+  --border: #d7ddd0;
+  --input: #d7ddd0;
+  --ring: #4f7a5f;
+  --chart-1: #4f7a5f;
+  --chart-2: #d08c60;
+  --chart-3: #8fa9c2;
+  --chart-4: #c9a227;
+  --chart-5: #9b6b9e;
+  --radius: 0.875rem;
+
+  /* Fonts: headings get the display face, everything else the body face. */
+  --theme-font-display: "Lora", system-ui, sans-serif;
+  --theme-font-body: "Nunito Sans", system-ui, sans-serif;
+
+  /* Type scale (grows a little on big screens). Headings at least 2x body. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.8vw, 2rem);
+  --step-3: clamp(1.95rem, 1.7rem + 1.3vw, 2.75rem);
+  --step-4: clamp(2.44rem, 2rem + 2.2vw, 3.75rem);
+
+  /* Spacing scale (4px steps). Use these, never random margins. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

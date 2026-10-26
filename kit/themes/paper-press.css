@@ -1,0 +1,55 @@
+/* theme: paper-press
+   mood: editorial calm: warm paper, ink-black type, a vermilion accent (the plain starter's default)
+   scheme: light
+   fonts: Playfair Display (headings) + Source Sans 3 (body)
+   fonts-href: https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Source+Sans+3:wght@400;600;700&display=swap
+   A kit theme preset (kit/themes/). Change any value here; every screen follows. List or switch: npm run theme */
+:root, .dark {
+  color-scheme: light;
+  --background: #f7f3ea;
+  --foreground: #1c1a17;
+  --card: #fffdf8;
+  --card-foreground: #1c1a17;
+  --popover: #fffdf8;
+  --popover-foreground: #1c1a17;
+  --primary: #d9381e; /* the one accent: buttons, links, the thing to tap */
+  --primary-foreground: #fffaf3;
+  --secondary: #efe9dc;
+  --secondary-foreground: #1c1a17;
+  --muted: #ece6d8;
+  --muted-foreground: #6b645a;
+  --accent: #1f6f78; /* a second color, used sparingly: highlights, badges */
+  --accent-foreground: #1c1a17;
+  --destructive: #b42318;
+  --border: #d9d1c0;
+  --input: #d9d1c0;
+  --ring: #d9381e;
+  --chart-1: #d9381e;
+  --chart-2: #1f6f78;
+  --chart-3: #c99a2e;
+  --chart-4: #4a4a8a;
+  --chart-5: #7a8f5b;
+  --radius: 0.25rem;
+
+  /* Fonts: headings get the display face, everything else the body face. */
+  --theme-font-display: "Playfair Display", system-ui, sans-serif;
+  --theme-font-body: "Source Sans 3", system-ui, sans-serif;
+
+  /* Type scale (grows a little on big screens). Headings at least 2x body. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.8vw, 2rem);
+  --step-3: clamp(1.95rem, 1.7rem + 1.3vw, 2.75rem);
+  --step-4: clamp(2.44rem, 2rem + 2.2vw, 3.75rem);
+
+  /* Spacing scale (4px steps). Use these, never random margins. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

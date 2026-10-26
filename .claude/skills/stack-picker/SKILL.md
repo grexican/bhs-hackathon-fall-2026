@@ -40,8 +40,8 @@ Ask these in order. Take the first match.
 | A tiny page or toy with a little JS | **Vite + vanilla TS** | Nothing to learn; you hand-roll every UI update. |
 | An interactive app (tools, quizzes, planners, dashboards) with no accounts | **Vite + React + TS** | Huge ecosystem and instant HMR; data lives in the browser only. |
 | Needs accounts, a shared database, or server-side secrets (API keys) | **Next.js (App Router) + SQLite** | Full-stack in one app; more concepts (server vs client components). |
-| A 2D game (platformer, shooter, puzzle with sprites) | **Phaser** on Vite | Physics, sprites, input, and scenes built in; its own way of doing things. |
-| A simple 2D game (pong, snake, clicker) | **Plain canvas** on Vite | Zero dependencies and full control; you write the game loop yourself. |
+| A 2D game (platformer, shooter, puzzle with sprites) | **Phaser**: `npm run new-app -- <codename> --game` | Screens, juice, CC0 art and a palette already built; its own way of doing things. |
+| A tiny 2D toy (pong, snake, clicker) done in under an hour | **Plain canvas** (the `--plain` starter) | Zero dependencies and full control; you write the loop and the polish yourself. |
 | 3D scene or 3D game | **three.js** on Vite (or **react-three-fiber** inside React) | Real 3D in the browser; 3D math and asset loading take time. |
 | Charts, maps, data stories | **Observable Plot** (quick) or **D3** (custom) on Vite | Plot gives good charts in one line; D3 is unlimited but verbose. |
 | Realtime multiplayer or live chat | **Vite client + Socket.IO server** | Simple rooms and events; you run a second process on its own port. |
@@ -137,6 +137,9 @@ Use a hosted database only when the app must be online for other people.
 Keep API keys in `.env.local` and read them only in server code.
 
 ### Phaser (2D game)
+
+Use the game starter: `npm run new-app -- <codename> --game` (Phaser 3 on Vite, on the kit's server; see
+`game-director`). Only for an existing folder, scaffold by hand:
 
 ```bash
 npm create vite@latest my-game -- --template vanilla-ts --no-interactive --no-immediate

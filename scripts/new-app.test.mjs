@@ -245,3 +245,57 @@ test("by default it makes the React starter, with the component galleries wired 
   assert.match(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /beautiful-components/);
   assert.match(out, /npm install && npm run dev/, "with --no-install it says to install first");
 });
+
+test("every starter begins on a theme preset, never the default gray", () => {
+  const react = path.join(root, "apps", "react-app");
+  assert.match(fs.readFileSync(path.join(react, "src", "theme.css"), "utf8"), /theme: citrus-night/);
+  assert.match(fs.readFileSync(path.join(react, "src", "index.css"), "utf8"), /@import "\.\/theme\.css"/);
+  assert.match(fs.readFileSync(path.join(react, "index.html"), "utf8"), /<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com\/[^"]+" data-theme-fonts>/);
+  const plain = path.join(root, "apps", "lunch-line");
+  assert.match(fs.readFileSync(path.join(plain, "public", "theme.css"), "utf8"), /theme: paper-press/);
+  assert.match(fs.readFileSync(path.join(plain, "public", "index.html"), "utf8"), /<html lang="en">/, "a light theme drops the dark class");
+  newApp("themed", "--plain", "--theme", "terminal-green");
+  assert.match(fs.readFileSync(path.join(root, "apps", "themed", "public", "theme.css"), "utf8"), /theme: terminal-green/);
+  assert.match(fs.readFileSync(path.join(root, "apps", "themed", "public", "index.html"), "utf8"), /<html lang="en" class="dark">/);
+  assert.throws(() => newApp("bad-theme", "--plain", "--theme", "nope"), /No theme called "nope"/);
+  assert.ok(!fs.existsSync(path.join(root, "apps", "bad-theme")), "nothing is made with a wrong theme");
+});
+
+test("--game makes the Phaser starter: scenes, juice, palette, CC0 art copied byte for byte, license recorded", () => {
+  const out = newApp("star-dodge", "--game", "--name", 'Star "Dodge"', "--no-install");
+  const dir = path.join(root, "apps", "star-dodge");
+  for (const f of ["server.js", "db.js", "index.html", "vite.config.ts", "src/main.ts", "src/theme.css", "src/game/juice.ts", "src/game/palette.ts", "src/game/scenes/Title.ts", "src/game/scenes/Play.ts", "src/game/scenes/Hud.ts", "src/game/scenes/Pause.ts", "src/game/scenes/GameOver.ts", "public/assets/LICENSE.md", "locker/otel.mjs", "locker/ai/index.ts"]) {
+    assert.ok(fs.existsSync(path.join(dir, f)), `missing ${f}`);
+  }
+  const kitAssets = path.join(path.dirname(SCRIPT), "..", "kit", "app-template-game", "public", "assets");
+  for (const f of ["sprites/ship_G.png", "audio/hit.ogg", "audio/hit.mp3"]) {
+    assert.ok(fs.readFileSync(path.join(dir, "public", "assets", f)).equals(fs.readFileSync(path.join(kitAssets, f))), `${f} is copied unchanged`);
+  }
+  assert.match(fs.readFileSync(path.join(dir, "public", "assets", "LICENSE.md"), "utf8"), /CC0/);
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+  assert.match(pkg.dependencies.phaser, /^~3\./, "Phaser 3: the API models know");
+  assert.equal(pkg.scripts.start, "node server.js");
+  assert.equal(pkg.scripts.build, "vite build");
+  assert.match(fs.readFileSync(path.join(dir, "src/game/scenes/Title.ts"), "utf8"), /GAME_TITLE: string = "Star \\"Dodge\\""/);
+  assert.match(fs.readFileSync(path.join(dir, "src/theme.css"), "utf8"), /theme: arcade-neon/);
+  for (const f of ["server.js", "package.json", "index.html", "src/game/scenes/Title.ts"]) assert.doesNotMatch(fs.readFileSync(path.join(dir, f), "utf8"), /\{\{(name|codename|nameJson)\}\}/);
+  assert.match(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /juice\.ts/);
+  assert.match(out, /Phaser game/);
+});
+
+test("the game starter's server: /health, scores saved in SQLite, the best comes back", async () => {
+  const dir = path.join(root, "apps", "star-dodge");
+  const env = { PORT: String(await freePort()), DATABASE_PATH: path.join(root, "game-volume", "app.db") };
+  const app = await boot(dir, env);
+  try {
+    assert.equal(await (await fetch(`${app.base}/health`)).text(), "ok");
+    assert.deepEqual(await (await fetch(`${app.base}/api/best`)).json(), { best: 0 });
+    const post = (score) => fetch(`${app.base}/api/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }) });
+    assert.deepEqual(await (await post(1200)).json(), { best: 1200 });
+    assert.deepEqual(await (await post(300)).json(), { best: 1200 });
+    assert.equal((await post(-5)).status, 400);
+    assert.deepEqual(await (await fetch(`${app.base}/api/best`)).json(), { best: 1200 });
+  } finally {
+    await app.stop();
+  }
+});

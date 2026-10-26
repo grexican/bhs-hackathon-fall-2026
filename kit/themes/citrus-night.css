@@ -1,0 +1,55 @@
+/* theme: citrus-night
+   mood: night-market energy: deep ink, one loud citrus accent (the React starter's default)
+   scheme: dark
+   fonts: Space Grotesk (headings) + DM Sans (body)
+   fonts-href: https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Space+Grotesk:wght@500;700&display=swap
+   A kit theme preset (kit/themes/). Change any value here; every screen follows. List or switch: npm run theme */
+:root, .dark {
+  color-scheme: dark;
+  --background: #10131c;
+  --foreground: #f3f1ea;
+  --card: #191d29;
+  --card-foreground: #f3f1ea;
+  --popover: #191d29;
+  --popover-foreground: #f3f1ea;
+  --primary: #f5d547; /* the one accent: buttons, links, the thing to tap */
+  --primary-foreground: #1d1a05;
+  --secondary: #262b3c;
+  --secondary-foreground: #f3f1ea;
+  --muted: #222737;
+  --muted-foreground: #a3a7b6;
+  --accent: #5ee0c4; /* a second color, used sparingly: highlights, badges */
+  --accent-foreground: #f3f1ea;
+  --destructive: #ff6b5e;
+  --border: #2c3245;
+  --input: #2c3245;
+  --ring: #f5d547;
+  --chart-1: #f5d547;
+  --chart-2: #5ee0c4;
+  --chart-3: #ff8a5c;
+  --chart-4: #8aa4ff;
+  --chart-5: #c58cff;
+  --radius: 0.75rem;
+
+  /* Fonts: headings get the display face, everything else the body face. */
+  --theme-font-display: "Space Grotesk", system-ui, sans-serif;
+  --theme-font-body: "DM Sans", system-ui, sans-serif;
+
+  /* Type scale (grows a little on big screens). Headings at least 2x body. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.8vw, 2rem);
+  --step-3: clamp(1.95rem, 1.7rem + 1.3vw, 2.75rem);
+  --step-4: clamp(2.44rem, 2rem + 2.2vw, 3.75rem);
+
+  /* Spacing scale (4px steps). Use these, never random margins. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

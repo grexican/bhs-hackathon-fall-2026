@@ -80,6 +80,46 @@ export function checkHub(root = ROOT) {
     : { ok: null, label: "Not connected to the incubator hub yet", fix: "Not needed to build. When you want your app online: /connect (or npm run locker:connect)." };
 }
 
+/**
+ * Python runs the design data lookups (palettes, font pairings, styles: .claude/skills/ui-ux-pro-max/scripts/search.py).
+ * Windows often has a fake "python" that opens the Microsoft Store, so try the real launchers in order.
+ * probe(cmd) returns the version text or null; injectable for tests.
+ */
+export function checkPython(probe = (cmd) => run(cmd, ["--version"])) {
+  const tries = WINDOWS ? ["py -3", "python", "python3"] : ["python3", "python"];
+  for (const cmd of tries) {
+    const out = probe(cmd);
+    const version = out?.match(/Python (3\.\d+(?:\.\d+)?)/)?.[1];
+    if (version) return { ok: true, label: `Python ${version} (for the design lookups; use \`${cmd}\`)` };
+  }
+  return {
+    ok: false,
+    label: "Python 3 isn't installed (the design skills use it to look up palettes and font pairings)",
+    fix: WINDOWS ? "Run: winget install -e --id Python.Python.3.13   then open a new terminal (and use py -3)." : "Run: brew install python   (or install from https://www.python.org/downloads/)",
+  };
+}
+
+/** Says whether this copy of the kit is behind the event's branch online (new skills, fixes). Never pulls. */
+export function kitStaleness(behind, branch) {
+  if (behind === null) return null;
+  return behind > 0
+    ? { ok: null, label: `The kit is ${behind} update${behind === 1 ? "" : "s"} behind (new skills or fixes)`, fix: `Save your work first (/wrap), then: git pull origin ${branch}   (ask your AI if it says "conflict").` }
+    : { ok: true, label: "The kit is up to date" };
+}
+
+export function checkKitFresh(root = ROOT) {
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8", timeout: 10_000 });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  if (git("rev-parse", "--is-inside-work-tree") !== "true" || git("rev-parse", "--show-toplevel") === null) return null;
+  // The event's branch is what the clone started from (origin/HEAD). Offline or no remote: skip quietly.
+  const head = git("rev-parse", "--abbrev-ref", "origin/HEAD");
+  if (!head || git("fetch", "--quiet", "origin") === null) return null;
+  const behind = Number(git("rev-list", "--count", `HEAD..${head}`));
+  return kitStaleness(Number.isFinite(behind) ? behind : null, head.replace(/^origin\//, ""));
+}
+
 /** Windows only: PowerShell's default policy blocks npm with "running scripts is disabled on this system". */
 export function checkPowerShell() {
   if (!WINDOWS) return null;
@@ -92,7 +132,7 @@ export function checkPowerShell() {
 }
 
 export async function checks(root = ROOT) {
-  return [checkNode(), await checkSqlite(), checkNpm(), checkInstalled(root), checkGit(), checkPowerShell(), checkRailway(root), checkHub(root)].filter(Boolean);
+  return [checkNode(), await checkSqlite(), checkNpm(), checkInstalled(root), checkGit(), checkPowerShell(), checkPython(), checkRailway(root), checkHub(root), checkKitFresh(root)].filter(Boolean);
 }
 
 async function main() {

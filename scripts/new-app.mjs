@@ -1,22 +1,29 @@
 #!/usr/bin/env node
 // Creates apps/<codename>/ as its own git repo, ready for /start to build in.
-//   npm run new-app -- lunch-line [--name "Lunch Line"] [--plain | --bare] [--no-install]
+//   npm run new-app -- lunch-line [--name "Lunch Line"] [--plain | --game | --bare] [--theme <preset>] [--no-install]
 // By default it holds the React starter (kit/app-template-react): Vite + React + TypeScript + Tailwind +
 // shadcn/ui, with the component galleries (React Bits, Magic UI, Aceternity) ready to add, on the same small
 // Node server as always (/health, SQLite at DATABASE_PATH, the AI route, the sign-in gate). It runs with
 // `npm run dev` and passes every /ship check before anything else is built. It installs its packages
 // (--no-install skips that). --plain: the no-packages starter (kit/app-template: plain HTML, CSS and JS).
-// --bare: just the folder (for another scaffolder).
+// --game: a Phaser 2D game (kit/app-template-game): title, HUD, pause and game over screens, juice built in,
+// CC0 sprites and sounds. --bare: just the folder (for another scaffolder).
+// Every starter begins on a theme preset (kit/themes/, --theme <name>; `npm run theme` lists them): never gray.
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { freePort } from "./port.mjs";
+import { applyTheme, readTheme } from "./theme.mjs";
 
 // LOCKER_KIT_ROOT: the same test hook as locker.mjs (the MCP tests scaffold into a throwaway folder).
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = process.env.LOCKER_KIT_ROOT ?? KIT;
-const TEMPLATES = { react: path.join(KIT, "kit", "app-template-react"), plain: path.join(KIT, "kit", "app-template") };
+const TEMPLATES = { react: path.join(KIT, "kit", "app-template-react"), plain: path.join(KIT, "kit", "app-template"), game: path.join(KIT, "kit", "app-template-game") };
+// The theme each starter begins on (any preset works with any starter: --theme <name>).
+export const DEFAULT_THEME = { react: "citrus-night", plain: "paper-press", game: "arcade-neon" };
+// Art, sound and fonts are copied byte for byte (the name fill-in is for text files only).
+const BINARY = /\.(png|jpe?g|gif|webp|ico|ogg|mp3|wav|woff2?|ttf|otf)$/i;
 
 export const CODENAME = /^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/;
 export const titleCase = (codename) => codename.split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -44,12 +51,16 @@ function copyTemplate(dir, { codename, name, template }) {
     if (!entry.isFile()) continue;
     const from = path.join(entry.parentPath, entry.name);
     const to = path.join(dir, path.relative(TEMPLATE, from));
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    if (BINARY.test(entry.name)) {
+      fs.copyFileSync(from, to);
+      continue;
+    }
     const text = fs
       .readFileSync(from, "utf8")
       .replaceAll("{{codename}}", codename)
       .replaceAll("{{nameJson}}", JSON.stringify(name))
       .replaceAll("{{name}}", escapeHtml(name));
-    fs.mkdirSync(path.dirname(to), { recursive: true });
     fs.writeFileSync(to, text);
   }
   // The same request logging the app gets online (npm run deploy refreshes this copy).
@@ -94,14 +105,42 @@ const REACT_STARTER_DOC = `
 Keep \`PORT\`, \`/health\`, \`DATABASE_PATH\` and the \`build\` + \`start\` scripts: the host needs them.
 `;
 
+/** The app's AGENTS.md section for the game starter (kit/app-template-game). */
+const GAME_STARTER_DOC = `
+## The starter game (Phaser)
+
+\`npm run dev\` in this folder runs it on the port in \`.env\`. It's a complete little game on purpose: replace the
+idea, keep the structure and the polish. Read \`library/games/start-here.md\` (in the kit) before changing it.
+
+- \`src/main.ts\`: one Phaser 3 game, a scene per screen: \`Boot\` (loads art and sound) → \`Title\` → \`Play\` + \`Hud\`
+  → \`Pause\` → \`GameOver\`, in \`src/game/scenes/\`. Phaser 3 on purpose: AI models know its API best. Don't upgrade to 4.
+- \`src/game/scenes/Play.ts\`: the game. The player dodges (drag or arrow keys) and fires on its own; four enemy kinds
+  that behave differently (straight, weave, telegraph-then-dive, a rock that splits), a difficulty curve, a +1 life drop.
+- \`src/game/juice.ts\`: screen shake, hit-stop, flash, particles, squash, popping text and sounds, scaled by importance
+  in one table (\`FEEL\`). Every new event calls \`feel(scene, "kill", x, y, color)\`: never a hit without feedback.
+- \`src/game/palette.ts\`: every color in the game. The sprites are white and take the palette through \`setTint\`,
+  so one palette = one look. It matches the page theme (\`src/theme.css\`).
+- \`public/assets/\`: the sprites and sounds (Kenney, CC0). **Every new file gets a row in \`public/assets/LICENSE.md\`.**
+  More art: \`library/games/art-and-assets.md\`. Never draw the player or enemies as plain rectangles or circles.
+- \`server.js\`: \`/health\` (keep it), \`GET /api/best\` + \`POST /api/runs\` (scores in SQLite, \`db.js\`), \`POST /api/ask\` (AI).
+  A leaderboard with names: the \`leaderboard\` skill.
+- \`?debug\` in the address exposes \`window.__game\` for bot playtests (\`library/games/playtest-with-a-bot.md\`).
+- \`locker/\`: kit files. The deploy refreshes them; don't edit. \`npm run typecheck\` finds TypeScript mistakes.
+
+Before calling it done: the game floor (\`.claude/rules/game.md\`) and \`npm run critique -- <url>\` from the kit root.
+Keep \`PORT\`, \`/health\`, \`DATABASE_PATH\` and the \`build\` + \`start\` scripts: the host needs them.
+`;
+
 async function main() {
   const args = process.argv.slice(2);
   const codename = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--"));
-  if (!codename) fail('Usage: npm run new-app -- <codename> [--name "Lunch Line"] [--plain | --bare] [--no-install]');
+  if (!codename) fail('Usage: npm run new-app -- <codename> [--name "Lunch Line"] [--plain | --game | --bare] [--theme <preset>] [--no-install]');
   if (!CODENAME.test(codename)) fail(`"${codename}" won't work as a codename. Use 3–30 lowercase letters, digits or dashes, like lunch-line.`);
   const name = flag(args, "name") ?? titleCase(codename);
   const bare = args.includes("--bare");
-  const template = args.includes("--plain") ? "plain" : "react";
+  const template = args.includes("--plain") ? "plain" : args.includes("--game") ? "game" : "react";
+  const theme = flag(args, "theme") ?? DEFAULT_THEME[template];
+  if (!bare) readTheme(theme); // a wrong --theme fails here, before any folder is made
   const dir = path.join(ROOT, "apps", codename);
   if (fs.existsSync(dir)) fail(`apps/${codename}/ already exists. Pick another codename, or keep building in that folder.`);
   // The codename becomes the app's web address, so it must be free on the hub. Ask now, not at /connect.
@@ -125,7 +164,7 @@ This app lives inside the hackathon kit. Follow the kit's rules in \`../../AGENT
 - This folder is its **own git repo**: run git commands here, not in the kit.
 - Deploy from the kit root: \`npm run deploy -- ${codename}\` (see \`/ship\`).
 - Secrets go in \`.env\` in this folder (written by \`npm run locker:project\`). Never commit it.
-${bare ? "" : template === "react" ? REACT_STARTER_DOC : `
+${bare ? "" : template === "react" ? REACT_STARTER_DOC : template === "game" ? GAME_STARTER_DOC : `
 ## The starter app
 
 \`npm run dev\` in this folder runs it on the port in \`.env\`. It's plain Node, no packages:
@@ -159,6 +198,8 @@ Switching to Vite, Next.js or another stack is fine (\`stack-picker\`): keep \`P
   };
   if (!bare) {
     copyTemplate(dir, { codename, name, template });
+    // The palette, fonts and scales (kit/themes/): the app never starts on a default gray look.
+    applyTheme(dir, theme);
     // A free port of its own, so several apps (and demos) can run side by side.
     files[".env"] = `# Local settings for this app. Never commit this file.
 PORT=${await freePort()}
@@ -171,9 +212,9 @@ PORT=${await freePort()}
 
   // The React starter needs its packages (Vite, React, Tailwind, the UI pieces). Installed now, so
   // `npm run dev` works the first time; package-lock.json goes in the first commit.
-  let installed = template !== "react" || bare;
+  let installed = template === "plain" || bare;
   if (!installed && !args.includes("--no-install")) {
-    console.log("Installing the starter's packages (React, Vite, Tailwind, UI pieces). About a minute…");
+    console.log(template === "game" ? "Installing the game's packages (Phaser, Vite). About a minute…" : "Installing the starter's packages (React, Vite, Tailwind, UI pieces). About a minute…");
     // On Windows npm is a .cmd, which needs a shell; one command string (no args array) keeps Node quiet about it.
     const npm =
       process.platform === "win32"
@@ -195,8 +236,10 @@ PORT=${await freePort()}
   git(...id, "commit", "-q", "-m", `Start ${name}`);
 
   console.log(`Created apps/${codename}/ (${name}), its own git repo with a first commit.`);
-  if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in ${template === "react" ? "index.html and src/App.tsx" : "public/index.html"} (or start over with --name "…").`);
+  if (!flag(args, "name") && !bare) console.log(`The app is called "${name}" (made from the codename). Want different spacing or capitals, like "LunchLine"? Change it in ${template === "react" ? "index.html and src/App.tsx" : template === "game" ? "index.html and src/game/scenes/Title.ts" : "public/index.html"} (or start over with --name "…").`);
   if (!bare && template === "react") console.log(`Try it: cd apps/${codename} && ${installed ? "" : "npm install && "}npm run dev   (a React starter with a database and UI galleries ready to add)`);
+  if (!bare && template === "game") console.log(`Try it: cd apps/${codename} && ${installed ? "" : "npm install && "}npm run dev   (a Phaser game with title, HUD, pause and game over screens, juice and CC0 art)`);
+  if (!bare) console.log(`Theme: ${theme} (npm run theme lists the others; npm run theme -- <preset> ${codename} switches).`);
   if (!bare && template === "plain") console.log(`Try it: cd apps/${codename} && npm run dev   (a starter app with a database, ready to change)`);
   console.log(`Next: build in apps/${codename}/. When you want it online: /connect, then /ship.`);
   if (unchecked) console.log(unchecked);

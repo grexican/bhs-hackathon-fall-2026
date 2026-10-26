@@ -19,7 +19,8 @@
       ],
       "patches": [
         "SKILL.md: replace \"${CLAUDE_PLUGIN_ROOT}/.claude/skills/ui-ux-pro-max/scripts/search.py\" with .claude/skills/ui-ux-pro-max/scripts/search.py",
-        "data/stacks/{react-native,swiftui,avalonia,jetpack-compose}.csv + data/phosphor-icons-upstream.json: provenance rewording (re-run scripts/check-provenance.mjs after sync and reword any hit)"
+        "data/stacks/{react-native,swiftui,avalonia,jetpack-compose}.csv + data/phosphor-icons-upstream.json: provenance rewording (re-run scripts/check-provenance.mjs after sync and reword any hit)",
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
       ]
     },
     {
@@ -30,6 +31,9 @@
       "license": "MIT",
       "exclude": [
         "scripts/tests/"
+      ],
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
       ]
     },
     {
@@ -44,7 +48,8 @@
         "scripts/.coverage"
       ],
       "patches": [
-        "references/canvas-design-system.md: ./canvas-fonts -> .claude/skills/canvas-design/canvas-fonts (fonts deduped; identical copy lives in canvas-design)"
+        "references/canvas-design-system.md: ./canvas-fonts -> .claude/skills/canvas-design/canvas-fonts (fonts deduped; identical copy lives in canvas-design)",
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
       ]
     },
     {
@@ -59,14 +64,20 @@
       "source": "https://github.com/pbakaus/impeccable",
       "path": ".claude/skills/impeccable",
       "ref": "9d715cc4f5564a990ca8345abfdd5df6dc9b41c8",
-      "license": "Apache-2.0"
+      "license": "Apache-2.0",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "frontend-design",
       "source": "https://github.com/anthropics/skills",
       "path": "skills/frontend-design",
       "ref": "33375500bcea98d610eb30ce10ac4e59b89c390d",
-      "license": "Apache-2.0"
+      "license": "Apache-2.0",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "canvas-design",
@@ -89,7 +100,8 @@
       "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
       "license": "MIT",
       "patches": [
-        "SKILL.md: one brand-name example reworded for provenance (re-run scripts/check-provenance.mjs after sync)"
+        "SKILL.md: one brand-name example reworded for provenance (re-run scripts/check-provenance.mjs after sync)",
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
       ]
     },
     {
@@ -97,28 +109,40 @@
       "source": "https://github.com/Leonxlnx/taste-skill",
       "path": "skills/soft-skill",
       "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
-      "license": "MIT"
+      "license": "MIT",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "minimalist-ui",
       "source": "https://github.com/Leonxlnx/taste-skill",
       "path": "skills/minimalist-skill",
       "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
-      "license": "MIT"
+      "license": "MIT",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "industrial-brutalist-ui",
       "source": "https://github.com/Leonxlnx/taste-skill",
       "path": "skills/brutalist-skill",
       "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
-      "license": "MIT"
+      "license": "MIT",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "emil-design-eng",
       "source": "https://github.com/emilkowalski/skills",
       "path": "skills/emil-design-eng",
       "ref": "d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
-      "license": "MIT"
+      "license": "MIT",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: design-director` (loaded by design-director, not auto-picked)"
+      ]
     },
     {
       "name": "animate",
@@ -286,14 +310,20 @@
       "source": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
       "path": "skills/disciplines/game-feel",
       "ref": "d4b0e35550c55ae70bdfcab4ef5a0e94610438a9",
-      "license": "Apache-2.0"
+      "license": "Apache-2.0",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: game-director` (loaded by game-director, not auto-picked)"
+      ]
     },
     {
       "name": "game-ui-ux",
       "source": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
       "path": "skills/disciplines/game-ui-ux",
       "ref": "d4b0e35550c55ae70bdfcab4ef5a0e94610438a9",
-      "license": "Apache-2.0"
+      "license": "Apache-2.0",
+      "patches": [
+        "SKILL.md frontmatter: add `disable-model-invocation: true` and `routed-by: game-director` (loaded by game-director, not auto-picked)"
+      ]
     },
     {
       "name": "verification-loop",

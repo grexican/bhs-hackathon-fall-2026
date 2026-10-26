@@ -7,6 +7,8 @@ description: >
   neutral patterns that pair with the detected engine's UI skill. Use when the user mentions
   HUD, health bar, main menu, pause menu, settings screen, UI layout, anchors, UI scaling,
   aspect ratio, safe area, controller/keyboard menu navigation, or wiring UI to game state.
+disable-model-invocation: true
+routed-by: game-director
 ---
 
 # Game UI/UX

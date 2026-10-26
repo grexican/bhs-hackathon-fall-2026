@@ -14,6 +14,8 @@
     "new-app": "node scripts/new-app.mjs",
     "port": "node scripts/port.mjs",
     "shot": "node scripts/shot.mjs",
+    "critique": "node scripts/critique.mjs",
+    "theme": "node scripts/theme.mjs",
     "demo:new": "node scripts/demo.mjs new",
     "demo:list": "node scripts/demo.mjs list",
     "demo:status": "node scripts/demo.mjs status",

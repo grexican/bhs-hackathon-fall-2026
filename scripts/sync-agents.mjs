@@ -30,7 +30,10 @@ function frontmatter(raw) {
     if (/^[>|][-+]?$/.test(value) || value === "") {
       const block = [];
       while (i + 1 < lines.length && /^\s+\S/.test(lines[i + 1])) block.push(lines[++i].trim());
-      value = block.join(" ");
+      // A YAML list (`paths:` in a rule) becomes Cursor's comma-separated globs.
+      value = block.length && block.every((l) => l.startsWith("- "))
+        ? block.map((l) => l.slice(2).trim().replace(/^["']|["']$/g, "")).join(",")
+        : block.join(" ");
     }
     meta[kv[1]] = value.replace(/^["']|["']$/g, "");
   }
@@ -57,7 +60,8 @@ function skills() {
     if (!meta.name) problems.push(`.claude/skills/${name}/SKILL.md: missing name`);
     else if (meta.name !== name) problems.push(`.claude/skills/${name}/SKILL.md: name "${meta.name}" does not match its folder`);
     if (!meta.description) problems.push(`.claude/skills/${name}/SKILL.md: missing description`);
-    rows.push({ name, description: meta.description ?? "", command: meta["disable-model-invocation"] === "true" });
+    // routed-by: not auto-picked; a director skill reads it when the task needs it.
+    rows.push({ name, description: meta.description ?? "", command: meta["disable-model-invocation"] === "true" && !meta["routed-by"], routedBy: meta["routed-by"] });
   }
   return rows;
 }
@@ -108,9 +112,12 @@ emit(
   `# Skills and agents\n\n${GENERATED}\n\nType \`/name\` in Cursor or Claude Code to run a workflow. Other skills load on their own when the task matches their description.\n\n## Workflows (slash commands)\n\n| Command | What it does |\n|---|---|\n${skillRows
     .filter((r) => r.command)
     .map((r) => `| \`/${r.name}\` | ${cell(r.description)} |`)
-    .join("\n")}\n\n## Skills (${skillRows.filter((r) => !r.command).length})\n\n| Skill | Use it when |\n|---|---|\n${skillRows
-    .filter((r) => !r.command)
+    .join("\n")}\n\n## Skills (${skillRows.filter((r) => !r.command && !r.routedBy).length})\n\n| Skill | Use it when |\n|---|---|\n${skillRows
+    .filter((r) => !r.command && !r.routedBy)
     .map((r) => `| \`${r.name}\` | ${cell(r.description)} |`)
+    .join("\n")}\n\n## Routed skills (${skillRows.filter((r) => r.routedBy).length})\n\nNot picked automatically: a director skill reads them (\`.claude/skills/<name>/SKILL.md\`) when the task needs them. Each still runs as \`/name\`.\n\n| Skill | Routed by | What it covers |\n|---|---|---|\n${skillRows
+    .filter((r) => r.routedBy)
+    .map((r) => `| \`${r.name}\` | \`${r.routedBy}\` | ${cell(r.description)} |`)
     .join("\n")}\n\n## Subagents\n\n| Agent | Role |\n|---|---|\n${agentRows.map((r) => `| \`${r.name}\` | ${cell(r.description)} |`).join("\n")}\n`,
 );
 

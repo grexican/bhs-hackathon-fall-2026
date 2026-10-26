@@ -1,39 +1,35 @@
 /* Phone first: this is how most people will see the app. Bigger screens just get more room. */
-:root {
-  --bg: #fbfaf7;
-  --text: #1d1b18;
-  --accent: #2f5bff;
-  font-family: system-ui, sans-serif;
-}
+:root { font-family: var(--theme-font-body); font-size: var(--step-0); line-height: 1.5; }
+/* Colors, fonts and the type and spacing scales come from theme.css (a kit preset). */
 * { box-sizing: border-box; }
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--background);
+  color: var(--foreground);
   display: grid;
   place-items: center;
   padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
 }
 main { width: 100%; max-width: 32rem; text-align: center; }
-h1 { font-size: clamp(2rem, 8vw, 3rem); margin: 0 0 0.5rem; }
+h1 { font-family: var(--theme-font-display); font-size: var(--step-4); line-height: 1.1; margin: 0 0 var(--space-3); }
 button {
   font: inherit;
   font-size: 1.25rem;
   min-height: 48px; /* big enough for a thumb */
   padding: 0 2rem;
   border: 0;
-  border-radius: 999px;
-  background: var(--accent);
-  color: white;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--primary-foreground);
   cursor: pointer;
 }
 .count { font-size: 1.1rem; }
-.hello { color: #5f5a52; }
-.starter-hint { margin-top: 2.5rem; font-size: 0.9rem; color: #5f5a52; border-top: 1px dashed #c9c4ba; padding-top: 0.75rem; }
+.hello { color: var(--muted-foreground); }
+.starter-hint { margin-top: 2.5rem; font-size: 0.9rem; color: var(--muted-foreground); border-top: 1px dashed var(--border); padding-top: 0.75rem; }
 
 /* The "Ask the AI" box (public/ask.js). */
 .ask { display: grid; gap: 8px; margin-top: 2rem; text-align: left; }
 .ask-row { display: flex; gap: 8px; }
-.ask input { flex: 1; min-width: 0; font: inherit; font-size: 16px; /* 16px stops phones from zooming in */ padding: 0 12px; min-height: 48px; border: 1px solid #c9c4ba; border-radius: 12px; }
+.ask input { flex: 1; min-width: 0; font: inherit; font-size: 16px; /* 16px stops phones from zooming in */ padding: 0 12px; min-height: 48px; border: 1px solid var(--input); border-radius: var(--radius); background: var(--card); color: var(--foreground); }
 .ask-answer { min-height: 1.5em; }

@@ -405,15 +405,16 @@ server.registerTool(
   "new_app",
   {
     description:
-      "Creates apps/<codename>/ (its own git repo with a first commit), ready to build in. By default it holds the starter app (Node server with /health, SQLite, a phone-first page; npm run dev runs it). bare: true makes just the folder, for a scaffolder like Vite. Do this before locker_create_project.",
+      "Creates apps/<codename>/ (its own git repo with a first commit), ready to build in. By default it holds the starter app (Node server with /health, SQLite, a phone-first page; npm run dev runs it). game: true makes a Phaser 2D game instead (title, HUD, pause, game over, juice, CC0 sprites). bare: true makes just the folder, for a scaffolder like Vite. Do this before locker_create_project.",
     inputSchema: {
       codename,
       name: z.string().min(1).max(60).optional().describe("Display name, like Lunch Line. Defaults to the codename in title case."),
       bare: z.boolean().optional().describe("true: no starter app, just the folder (when another stack will be scaffolded into it)."),
+      game: z.boolean().optional().describe("true: the Phaser game starter (any 2D game with sprites)."),
     },
   },
-  tool(async ({ codename, name, bare }) => {
-    const run = spawnSync(process.execPath, [NEW_APP, codename, ...(name ? ["--name", name] : []), ...(bare ? ["--bare"] : [])], { cwd: ROOT, encoding: "utf8" });
+  tool(async ({ codename, name, bare, game }) => {
+    const run = spawnSync(process.execPath, [NEW_APP, codename, ...(name ? ["--name", name] : []), ...(bare ? ["--bare"] : game ? ["--game"] : [])], { cwd: ROOT, encoding: "utf8" });
     if (run.status !== 0) throw new HubError((run.stderr || run.stdout || "new-app failed.").replace(/^✗ /, "").trim(), 0);
     return `${run.stdout.split(/\r?\n/)[0]} Next: build in apps/${codename}/; when it should go online, locker_create_project.`;
   }),

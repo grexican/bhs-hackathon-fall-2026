@@ -1,0 +1,55 @@
+/* theme: arcade-neon
+   mood: loud arcade: deep violet night, hot magenta and cyan (the game starter's default)
+   scheme: dark
+   fonts: Press Start 2P (headings) + Space Grotesk (body)
+   fonts-href: https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap
+   A kit theme preset (kit/themes/). Change any value here; every screen follows. List or switch: npm run theme */
+:root, .dark {
+  color-scheme: dark;
+  --background: #140b2e;
+  --foreground: #f4ecff;
+  --card: #1e1242;
+  --card-foreground: #f4ecff;
+  --popover: #1e1242;
+  --popover-foreground: #f4ecff;
+  --primary: #ff3dbb; /* the one accent: buttons, links, the thing to tap */
+  --primary-foreground: #1a0014;
+  --secondary: #2a1b5c;
+  --secondary-foreground: #f4ecff;
+  --muted: #281a55;
+  --muted-foreground: #b3a3d9;
+  --accent: #2de2e6; /* a second color, used sparingly: highlights, badges */
+  --accent-foreground: #f4ecff;
+  --destructive: #ff4d4d;
+  --border: #3a2a75;
+  --input: #3a2a75;
+  --ring: #ff3dbb;
+  --chart-1: #ff3dbb;
+  --chart-2: #2de2e6;
+  --chart-3: #ffd23f;
+  --chart-4: #8c5cff;
+  --chart-5: #5cff9d;
+  --radius: 0.5rem;
+
+  /* Fonts: headings get the display face, everything else the body face. */
+  --theme-font-display: "Press Start 2P", system-ui, sans-serif;
+  --theme-font-body: "Space Grotesk", system-ui, sans-serif;
+
+  /* Type scale (grows a little on big screens). Headings at least 2x body. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.8vw, 2rem);
+  --step-3: clamp(1.95rem, 1.7rem + 1.3vw, 2.75rem);
+  --step-4: clamp(2.44rem, 2rem + 2.2vw, 3.75rem);
+
+  /* Spacing scale (4px steps). Use these, never random margins. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

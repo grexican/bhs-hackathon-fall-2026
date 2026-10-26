@@ -1,0 +1,55 @@
+/* theme: soft-pop
+   mood: friendly and bouncy: rounded type, coral and teal on a warm white
+   scheme: light
+   fonts: Fredoka (headings) + Nunito (body)
+   fonts-href: https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap
+   A kit theme preset (kit/themes/). Change any value here; every screen follows. List or switch: npm run theme */
+:root, .dark {
+  color-scheme: light;
+  --background: #fff8f1;
+  --foreground: #2a2233;
+  --card: #ffffff;
+  --card-foreground: #2a2233;
+  --popover: #ffffff;
+  --popover-foreground: #2a2233;
+  --primary: #d4304c; /* the one accent: buttons, links, the thing to tap */
+  --primary-foreground: #ffffff;
+  --secondary: #ffe7d6;
+  --secondary-foreground: #2a2233;
+  --muted: #fbeee2;
+  --muted-foreground: #776b80;
+  --accent: #13b6a8; /* a second color, used sparingly: highlights, badges */
+  --accent-foreground: #2a2233;
+  --destructive: #d92d20;
+  --border: #f1dccb;
+  --input: #f1dccb;
+  --ring: #d4304c;
+  --chart-1: #d4304c;
+  --chart-2: #13b6a8;
+  --chart-3: #ffb020;
+  --chart-4: #7a5cff;
+  --chart-5: #3aa0ff;
+  --radius: 1.25rem;
+
+  /* Fonts: headings get the display face, everything else the body face. */
+  --theme-font-display: "Fredoka", system-ui, sans-serif;
+  --theme-font-body: "Nunito", system-ui, sans-serif;
+
+  /* Type scale (grows a little on big screens). Headings at least 2x body. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.8vw, 2rem);
+  --step-3: clamp(1.95rem, 1.7rem + 1.3vw, 2.75rem);
+  --step-4: clamp(2.44rem, 2rem + 2.2vw, 3.75rem);
+
+  /* Spacing scale (4px steps). Use these, never random margins. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}

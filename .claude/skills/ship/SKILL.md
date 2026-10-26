@@ -55,6 +55,12 @@ Read the code and fix what's missing (one line each on what you changed):
 
 Run it once the production way (`npm run build`, then `npm start` with a `PORT`) and open it.
 
+**The look is part of done.** Before the deploy, the latest entry in `apps/<codename>/docs/critique.md` must say
+`PASS` (7/10 or more) or `ACCEPTED: <reason>`. If it doesn't, or the UI changed since, run
+`npm run critique -- <local url>` (add `--tap` for a game), apply the three fixes, and run it again. Out of time?
+Ask the student whether to ship anyway; if yes, record their words: `npm run critique -- <url> --accept "<their reason>"`.
+Never write the reason for them. A first deploy of the untouched starter is fine without it.
+
 ## 2. Deploy
 
 From the kit root: `npm run deploy -- <codename>`. It uploads the folder; Railway builds it in 1–3

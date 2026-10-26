@@ -24,8 +24,23 @@ decisions along the way, and keep it simple enough that they can read their own 
    only the focused test for what you touched (one file or one test name, seconds); the whole suite and
    e2e run only at checkpoints (feature done, before `/ship` or a demo, after a teammate's merge, after
    changing shared code), in the background. Never the full suite after every edit: it kills throughput.
-5. **Design is not optional.** Anything a human looks at goes through `design-director` first.
-   Commit to a direction. Never ship the default look.
+5. **Design is not optional.** Anything a human looks at goes through `design-director` first (games:
+   `game-director`). Commit to a direction. Never ship the default look. "Done" includes the look:
+   `npm run critique -- <url>` scores it; 7/10 or more, or the student accepts a lower score with a reason.
+
+## Look and feel floor (every screen, every game)
+
+The full floors attach on their own when you edit UI or game files (`.claude/rules/ui.md`, `.claude/rules/game.md`).
+The short version:
+
+- **Apps:** start from the theme preset (`src/theme.css`; `npm run theme` lists 6). Use its tokens, never raw gray
+  or hex. A real type scale (display font for headings, 2x body), spacing from the scale, one accent, designed
+  loading / empty / error states, 375px first, tap targets 44px+, no lorem ipsum, no purple-to-pink defaults.
+- **Games:** decide the art style, palette and asset source before the game loop. Sprites, never rectangles.
+  Juice on every hit (shake, hit-stop, flash, particles, sound). Title, HUD, pause and game over screens.
+
+**"Make me a game"** → `game-director`, then `npm run new-app -- <codename> --game` (Phaser, with juice, screens,
+a palette and CC0 sprites and sounds built in). Any 2D game with sprites starts there; 3D uses three.js.
 
 ## Reference library: check it before you build by hand
 
@@ -56,39 +71,17 @@ and test **all of it locally, with zero accounts or keys**. Full guide: `provide
 
 ## Incubator services
 
-After `/connect`, every app gets real services from the BHS Incubator hub (settings in
-`apps/<codename>/.env`, never committed). Once those settings exist, the real services are what the app uses,
-on the laptop too; the simulators take over only when a key is missing.
+After `/connect`, every app gets real services from the BHS Incubator hub, with settings in `apps/<codename>/.env`
+(never committed). Once a setting exists the real service is used, on the laptop too; simulators only fill in for a
+missing key. **Full details (read before touching any of them): `docs/locker.md`.**
 
-- **Hosting:** its own Railway slot. `/ship` → `npm run deploy -- <codename>`. Listen on `PORT`, add `/health`.
-- **AI:** `OPENROUTER_API_KEY`, the app's own capped key. `kit/ai` reads it as is.
-- **Email:** the hub relay, as an `email` provider with `sim` and `locker` implementations.
-- **Users' passwords and keys:** the vault (`kit/locker/vault.mjs`, in every starter app): encrypted on the hub,
-  read just in time with `vault.use(user, name, purpose, fn)`, deletable by the person. See `keep-secrets-safe`.
-- **Tester feedback:** a "Feedback" button (`kit/locker/feedback.mjs` + `feedback.js`; off by default in the starter app,
-  one line in `public/index.html` turns it on). Messages go to the team's inbox on the hub; read them with
-  `npm run locker:feedback -- <codename>`. Offline it's simulated (`data/feedback.jsonl`).
-- **Push notifications:** `kit/locker/push.mjs` + `push.js` + `push-sw.js` (in every starter app, button off by default):
-  a "Turn on notifications" button (asks only on a tap) and `sendPush({ user, title, body, url })` on the server. The hub
-  holds the Web Push keys: no extra account. iPhone needs the app on the Home Screen. See `push-notifications`.
-- **Install on phones:** `kit/locker/install.mjs` + `install.js`: one `<script src="/locker/install.js">` tag, then
-  `LOCKER_INSTALL=nudge` (a dismissible "Install" card) or `required` (phones install before using it; desktop never).
-  See `make-it-an-app`.
-- **Database:** `node:sqlite` (built into Node 22.18+), file at `DATABASE_PATH`. Never anywhere else in production.
-- **Sign-in:** none until the app needs it. Then the **BHS sign-in gate** (`kit/locker/gate.mjs`):
-  `LOCKER_GATE=1` = every page needs sign-in; `LOCKER_GATE=lazy` = a public app where only the pages you
-  pick need it (`requireUser(req, res)`, "Sign in" links via `signInUrl()`). Who may sign in is the app's
-  audience on the hub: "school" (school accounts) or "everyone" (parents, guests too), so check
-  `user.domain` before assuming a student. Details: `/ship`. Locally: `LOCKER_GATE_USER`.
-
-Details: `providers-and-services` → "Incubator services".
-
-**AI tools (MCP):** the kit registers a local `bhs-locker` server (`scripts/locker-mcp.mjs`, in `.mcp.json`
-and `.cursor/mcp.json`). Its tools (`locker_status`, `locker_connect`, `locker_create_project`, `locker_join_project`,
-`locker_pull_env`, `locker_set`, `locker_deploy`, `locker_whats_new`, `locker_logs`, `locker_list_app`, `locker_feedback`, `locker_bring_app`, `new_app`) write `.env` files themselves and
-never return keys. Prefer them over the npm commands when they're available. `pitch-lab` is Pitch Lab's own
-hosted MCP server (`https://pitch-lab.apps.bhslabs.org/mcp`, OAuth: the student signs in with BHS once) for `/pitch`
-(`pitch_list`, `pitch_create`, `pitch_add_source`, `pitch_status`, `pitch_update_setup`). Never answer the Grill for the student.
+- **What's there:** hosting (`/ship`, listen on `PORT`, keep `/health`), AI (`OPENROUTER_API_KEY`, the app's capped key,
+  read by `kit/ai`), email (the hub relay), the vault for users' passwords and keys (`keep-secrets-safe`), a tester
+  Feedback button, push notifications, install-on-phone, SQLite at `DATABASE_PATH`, and the sign-in gate
+  (`LOCKER_GATE=1` or `lazy`; check `user.domain` before assuming a student).
+- **AI tools (MCP):** the local `bhs-locker` server's tools write `.env` files themselves and never return keys:
+  prefer them over the npm commands when available. `pitch-lab` is Pitch Lab's hosted server for `/pitch`.
+  Never answer the Grill for the student.
 
 ## AI in apps
 
@@ -132,7 +125,8 @@ Extra packs to add later (video, phone apps, documents): `docs/skill-shelf.md`.
 **The default stack is the React starter**, and agents should lean students toward it: `npm run new-app`
 makes Vite + React + TypeScript + Tailwind + shadcn/ui with the component galleries (React Bits, Magic UI,
 Aceternity UI) one command away (`beautiful-components`). Switch only for a strong preference or a product
-that is clearly another shape (2D game, 3D world, content site): `stack-picker`. **Phone first:** most
+that is clearly another shape (2D game: `--game`; 3D world, content site: `stack-picker`). Every starter begins on a
+theme preset (`kit/themes/`), never the default gray. **Phone first:** most
 users open these apps on a phone; design the 375px screen first. Both starters share the same server:
 Node `server.js` with `/health`, `node:sqlite` at `DATABASE_PATH`, its port in `.env`, request logging in
 `locker/otel.mjs`, a working AI route `POST /api/ask` that already handles "no key yet" and "budget used up", the
@@ -156,13 +150,15 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 |---|---|
 | `npm run setup` | One-time: install tools, the Playwright browser, and git hooks. |
 | `npm run doctor` | Checks the laptop (Node, git, npm, Railway tool, hub connection) and gives one fix per problem. |
-| `npm run new-app -- <codename>` | Make `apps/<codename>/`, its own git repo, with the starter app (`--bare`: empty). |
+| `npm run new-app -- <codename>` | Make `apps/<codename>/`, its own git repo, with the starter app (`--game`: a Phaser game, `--plain`: no packages, `--bare`: empty, `--theme <preset>`). |
 | `npm run locker:connect / project / env / status / logs / list / feedback / bring / whatsnew` | Talk to the incubator hub (`/connect`). |
 | `npm run deploy -- <codename> [--note "…"]` | Upload the app to its hosting slot (`/ship`); `--note` is the one-line "What's new" people see. |
 | `npm test` | The kit's own tests. |
 | `npm run port` | Print a free random port. |
 | `npm run ai -- models / ask / bench / decide / image` | Try the AI kit: see tiers, compare models, test Jev. |
 | `npm run shot -- <url>` | Desktop + phone screenshots into `tmp/shots/`, and list console errors. |
+| `npm run critique -- <url> [--tap]` | A vision model scores the screenshots /10 and gives 3 fixes as text (`--tap`: a game). Done = 7+ or `--accept "<why>"`. |
+| `npm run theme [-- <preset> <codename>]` | List the theme presets, or switch an app to one (palette, fonts, type and spacing scales). |
 | `npm run demo:new / list / status / up / reveal / down / clean` | Manage `/demo` builds. |
 | `npm run agents:sync` | Rebuild Cursor rule mirrors and the skill catalog. |
 | `npm run skills:sync` | Refresh vendored third-party skills from `skills.manifest.json`. |
@@ -173,8 +169,9 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 | The student says | You do |
 |---|---|
 | "Build me a [thing]" | `/start`. Interview first, smallest version first, show it, then ask what's next. |
+| "Make me a game" | `game-director`: the verb, then `npm run new-app -- <codename> --game`, art direction before the loop. |
 | "It's broken" | Get the exact error or a screenshot (`debug-preventer`), say a hypothesis in plain English, then fix. |
-| "Make it look better" | `design-director`. Name the direction before touching CSS. |
+| "Make it look better" | `npm run critique -- <url>` for a score and 3 fixes, then `design-director`. Name the direction before touching CSS. |
 | "Moving on to…" | Offer a fresh-chat handoff summary (`fresh-chat-coach`). |
 | "Is it good?" / "Would people use it?" | `/playtest`. Watch a real person; never ask "would you use it?". |
 | "What next?" | `/whats-next`: one pick, from evidence. |
@@ -184,7 +181,7 @@ sign-in gate off until `LOCKER_GATE=1` or `lazy`, and the Feedback button. The R
 | "High scores" / "leaderboard" | `leaderboard`: `kit/locker/leaderboard.mjs` in the app's own SQLite, with the server's stopwatch and a name filter. |
 | "I have to present" / "make slides" | `/pitch`: the pitch and deck come from Pitch Lab (the student answers the Grill, never you). Screenshot slides: `npm run pitch`, never hand-written. |
 | "Commit it" / "save it" | `/wrap`. |
-| "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. |
+| "Add [a service]" | Build the provider interface + **simulator** first (`providers-and-services`), so it works today. Add the real provider when there's a key in `.env`. Which service, and the safety rules: `library/web/integrations.md`. |
 | "Add AI" | `kit/ai`: pick the tier by job; decisions go to Jev (`ai-kit`, `jev-decisions`). If it reads users' text or the app's data: `ai-safety`. |
 | "Log in with my school account" | Starter app: `LOCKER_GATE=1` (every page) or `lazy` (only the pages you pick). Any other app or stack, or hosted elsewhere: `school-sign-in`. |
 | "Calculate / count / check if…" | `test-first`: one small test that says what right looks like, then the code. |

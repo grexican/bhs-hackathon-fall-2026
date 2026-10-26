@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkHub, checkInstalled, checkNode, checkSqlite } from "./doctor.mjs";
+import { checkHub, checkInstalled, checkNode, checkPython, checkSqlite, kitStaleness } from "./doctor.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "doctor.mjs");
 
@@ -46,4 +46,23 @@ test("the report lists every check with a mark, and never prints the hub token",
   assert.match(out, /✗ Kit packages aren't installed yet\n {4}Fix: Run: npm install/);
   assert.doesNotMatch(out, /lkr_secret_value/);
   fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("Python: finds the real launcher (py -3 on Windows), or says how to install it", () => {
+  const found = checkPython((cmd) => (cmd === "python3" || cmd === "py -3" ? "Python 3.13.1" : null));
+  assert.equal(found.ok, true);
+  assert.match(found.label, /Python 3\.13\.1/);
+  // The Windows Store alias prints nothing useful: that's "not installed".
+  const missing = checkPython(() => null);
+  assert.equal(missing.ok, false);
+  assert.match(missing.fix, /winget|brew/);
+});
+
+test("kit staleness: behind = a pull command for the event branch, up to date = ✓, offline = skipped", () => {
+  assert.equal(kitStaleness(null, "fall-2026"), null);
+  assert.equal(kitStaleness(0, "fall-2026").ok, true);
+  const behind = kitStaleness(3, "fall-2026");
+  assert.equal(behind.ok, null, "being behind is a warning, not a failure");
+  assert.match(behind.label, /3 updates behind/);
+  assert.match(behind.fix, /git pull origin fall-2026/);
 });

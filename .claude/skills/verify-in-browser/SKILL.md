@@ -52,6 +52,17 @@ Read the console output that `npm run shot` prints. The target is **0 errors**.
 - A warning is not a blocker, but mention it if it is about your change.
 - A failed network request (404, 500) counts as an error.
 
+## 4b. Score the look (text, no image reading needed)
+
+```bash
+npm run critique -- http://localhost:$PORT          # an app
+npm run critique -- http://localhost:$PORT --tap    # a game (also shoots a moment of play)
+```
+
+A vision model scores the screenshots out of 10 and gives three concrete fixes as text. Apply them. The look is
+done at **7/10 or more**, or when the student accepts a lower score with a reason (`--accept "<reason>"`).
+It costs about a cent of the app's AI budget; run it at checkpoints, not after every small edit.
+
 ## 5. Click through the core flow
 
 Screenshots show the first view only. Use Playwright to do what a user does.
@@ -83,6 +94,7 @@ VERIFIED
 - Desktop: tmp/shots/<file>.png - start screen shows, button visible
 - Mobile:  tmp/shots/<file>.png - fits 390px, no horizontal scroll
 - Console: 0 errors
+- Look:    npm run critique - 7/10 (fixes applied: CTA contrast, heading size)
 - Flow:    Start -> play -> score shows 312 ms -> reload -> best score kept
 ```
 

@@ -1,0 +1,24 @@
+/* The page around the game: the theme's background edge to edge, no scrolling or zooming while playing. */
+html, body {
+  margin: 0;
+  height: 100%;
+  /* On a wide screen the portrait game sits in a soft glow of the palette, not in empty bars. */
+  background:
+    radial-gradient(60% 50% at 50% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),
+    radial-gradient(50% 60% at 50% 100%, color-mix(in srgb, var(--primary) 18%, transparent), transparent),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--theme-font-body);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+#game {
+  width: 100vw;
+  height: 100dvh;
+  touch-action: none; /* a finger drags the ship instead of scrolling the page */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}

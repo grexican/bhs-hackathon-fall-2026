@@ -5,7 +5,8 @@ first. One line per doc: `path — when to read it`.
 
 ## Games
 
-- `library/games/start-here.md` — any game: reading order, the fun checklist, a game's definition of done
+- `library/games/start-here.md` — any game: engine choice, reading order, the fun checklist, a game's definition of done
+- `library/games/art-and-assets.md` — before gameplay code; the game shows rectangles or emoji; picking a style, palette, CC0 packs, AI sprites, licenses
 - `library/games/game-loop-and-input.md` — writing the game loop; keyboard, touch or gamepad controls; a sharp canvas on phones
 - `library/games/physics-and-collision.md` — things move and touch: hitboxes, jumping and landing, bullets through walls
 - `library/games/enemy-ai.md` — anything chases, flees, patrols or attacks; enemy types that differ; the Pac-Man ghost targeting pattern
@@ -21,11 +22,13 @@ first. One line per doc: `path — when to read it`.
 ## Web app features
 
 - `library/web/camera.md` — taking a photo in the app: phone camera vs laptop webcam, the NotFoundError-without-a-prompt trap, error messages
+- `library/web/integrations.md` — the app needs another service: free keyless APIs, one API key, users' own accounts (Nango, Activepieces, Composio, n8n), safety rules
 
 Skills already in the kit for games (`.claude/skills/<name>/SKILL.md`):
 
-- `stack-picker` — before scaffolding: plain canvas, Phaser, or three.js
-- `game-feel` · `game-ui-ux` — the principles behind the game-feel and game-ui docs, in depth
+- `game-director` — any game: engine, art direction, juice, screens, a scored look (start here)
+- `stack-picker` — before scaffolding: plain canvas, Phaser (`new-app --game`), or three.js
+- `game-feel` · `game-ui-ux` — the principles behind the game-feel and game-ui docs, in depth (routed by `game-director`: read their SKILL.md)
 - `threejs-fundamentals` — any 3D game; then `threejs-geometry`, `-materials`, `-lighting`, `-textures`, `-loaders` (models), `-animation`, `-interaction` (picking, controls), `-shaders`, `-postprocessing` (bloom, glow) as needed
 - `gsap-core` · `gsap-timeline` · `gsap-performance` — animated menus, title screens, score pops (`gsap-react` in the React starter)
 - `animate` · `animation-vocabulary` · `review-animations` — designing motion that feels right, naming it, critiquing it

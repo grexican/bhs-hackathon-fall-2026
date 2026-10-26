@@ -6,24 +6,30 @@ that makes a game fun, and what "done" means for a game in this kit.
 ## 1. Pick the shape, then the stack
 
 Ask one question: "What does the player DO, second to second?" (dodge, aim, jump, match, steer).
-Build only that verb first. Then pick the stack with `stack-picker`:
+Build only that verb first. The engine (same answer as `stack-picker` and `game-director`):
 
 | The game is | Use |
 |---|---|
-| Small 2D (snake, dodger, clicker, top-down arena) | Plain `<canvas>` in one HTML file, or the starter's `--plain` page |
-| 2D with menus, accounts, a leaderboard page around it | The React starter, with the game in one `<canvas>` component |
+| Any 2D game with characters, enemies or pickups (dodger, shooter, platformer, arena) | **Phaser**: `npm run new-app -- <codename> --game`. Title, HUD, pause, game over, juice, CC0 sprites and a palette are already there |
+| A tiny toy finished in under an hour (one mechanic, no menus) | Plain `<canvas>` in the `--plain` starter |
+| 2D inside an app with accounts and pages around it | The React starter, the game in one component |
 | 3D (a world, a runner, an obstacle course) | three.js (`threejs-fundamentals` first) |
 
-One HTML file is a fine game. Don't add a framework to draw rectangles.
+Don't hand-roll a 2D engine to draw sprites: Phaser already does loading, scenes, input, physics, tweens,
+particles and sound. And never ship rectangles as characters, whatever the engine: decide the look first
+(`art-and-assets.md`).
 
 ## 2. Reading order for a first game
 
 Read only what the current step needs:
 
-1. `game-loop-and-input.md`: the loop, delta time, keyboard + touch + gamepad, a sharp canvas on phones. Always.
+0. `art-and-assets.md`: one style, one palette, one asset source. Before any gameplay code. Always.
+1. `game-loop-and-input.md`: the loop, delta time, keyboard + touch + gamepad, a sharp canvas on phones. Always
+   for plain canvas; with Phaser (the `--game` starter) the loop and input are done, read it for the ideas.
 2. `physics-and-collision.md`: as soon as things move and touch.
 3. `enemy-ai.md`: when anything chases, flees or shoots.
-4. `game-feel.md`: right after the first playable version. This is where "works" becomes "fun".
+4. `game-feel.md`: from the first playable version (the `--game` starter already has `juice.ts`). This is where
+   "works" becomes "fun".
 5. `difficulty-and-variety.md`: when it plays, but every run feels the same or it's too easy or too hard.
 6. `level-design.md`: if the game has authored levels or rooms.
 7. `game-ui.md`: score, health, start screen, pause, game over.
@@ -63,5 +69,7 @@ A game is done for a checkpoint when all of these are true. Show the evidence, d
       finishes with a survival time (`playtest-with-a-bot.md`).
 - [ ] **Starts, ends, restarts.** A start screen, a game over with the score, a restart that doesn't need a page reload.
 - [ ] **Pauses when hidden.** Switching tabs or locking the phone pauses the game.
+- [ ] **Looks like a game.** Sprites, one palette, the juice checklist in `.claude/rules/game.md` (8 of 12), and
+      `npm run critique -- <url> --tap` at 7/10 or more (or the student's accepted reason).
 
 After that, a real person: `/playtest`.
