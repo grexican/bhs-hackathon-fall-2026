@@ -53,6 +53,7 @@ test("lists every tool, each with a description", async () => {
     "locker_pull_env",
     "locker_set",
     "locker_status",
+    "locker_whats_new",
     "new_app",
   ]);
   for (const t of tools) assert.ok(t.description?.length > 20, `${t.name} has a description`);
@@ -139,6 +140,17 @@ test("deploy uploads and points at the live URL and the build logs", async () =>
   assert.match(r.text, /locker_logs/);
   assert.match(r.text, /may say "Application not found"[\s\S]*\/health says ok/);
   assert.match(r.text, /token present/);
+});
+
+test("deploy with a note, and locker_whats_new: the student's line goes to the hub; too long is refused before uploading", async () => {
+  const r = await call("locker_deploy", { codename: "lunch-line", note: "Added a leaderboard" });
+  assert.equal(r.isError, false, r.text);
+  assert.match(r.text, /What's new saved: "Added a leaderboard"/);
+  const long = await call("locker_deploy", { codename: "lunch-line", note: "x".repeat(141) });
+  assert.equal(long.isError, true);
+  const w = await call("locker_whats_new", { codename: "lunch-line", note: "Dark mode" });
+  assert.equal(w.isError, false, w.text);
+  assert.match(w.text, /What's new for lunch-line: "Dark mode"\. 2 notes/);
 });
 
 test("logs fetch a fixed number of lines instead of streaming", async () => {

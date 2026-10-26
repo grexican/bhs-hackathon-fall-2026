@@ -8,7 +8,8 @@
 //   npm run locker:env -- <codename>
 //   npm run locker:status -- [codename]
 //   npm run locker:logs -- <codename> [--build] [--errors] [--find "text"]
-//   npm run deploy -- <codename>
+//   npm run deploy -- <codename> [--note "Added a leaderboard"]
+//   npm run locker:whatsnew -- <codename> "Added a leaderboard"   (the line people see for your latest deploy)
 // LOCKER_URL (env or kit .env) overrides the hub address. Tokens are written to .env files, never printed.
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -303,6 +304,37 @@ export function formatFeedback(codename, { summary, feedback }) {
   return [head, ...lines].join("\n");
 }
 
+// ---------- what's new (one line per deploy, shown on the app's hub page and in Apps) ----------
+
+export const NOTE_MAX = 140;
+
+/** One line of plain text, 1 to 140 characters (the hub checks the same). */
+export function checkNote(note) {
+  const s = String(note ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!s) throw new HubError(`Write one line about what's new, like: "Added a leaderboard".`, 0);
+  if ([...s].length > NOTE_MAX) throw new HubError(`Keep it to one line: ${NOTE_MAX} characters at most (that one has ${[...s].length}).`, 0);
+  return s;
+}
+
+/** Sets the line for the app's latest deploy (a second one for the same deploy replaces it). Returns { note, notes }. */
+export async function setWhatsNew(codename, note) {
+  checkCodename(codename, { mustExist: false });
+  return (await api("PUT", `/api/projects/${codename}/whats-new`, { note: checkNote(note) })).json;
+}
+
+/**
+ * Tells the hub a deploy just went up (it then shows "Updated …" within minutes), with the optional note.
+ * Never throws: the deploy already happened. { ok: true, notes } or { ok: false, why }.
+ */
+export async function reportDeploy(codename, note) {
+  if (!token()) return { ok: false, why: "this laptop isn't connected: npm run locker:connect" };
+  try {
+    return { ok: true, ...(await api("POST", `/api/projects/${codename}/deployed`, note ? { note } : {})).json };
+  } catch (err) {
+    return { ok: false, why: err.message };
+  }
+}
+
 // ---------- deploying ----------
 
 export const HUB_OWNED = new Set(["RAILWAY_TOKEN", "OPENROUTER_API_KEY", "LOCKER_APP_SECRET", "LOCKER_APP_ID", "LOCKER_URL"]);
@@ -570,10 +602,13 @@ async function status(args) {
   for (const p of json.projects) printProject(p);
 }
 
-function deploy(args) {
+async function deploy(args) {
   const codename = needCodename(args);
+  const note = args.includes("--note") ? checkNote(flag(args, "note")) : null; // checked before uploading
   const { appUrl } = deployApp(codename, cli);
   console.log(`\n✓ Uploaded. The build takes 1–3 minutes.`);
+  const told = await reportDeploy(codename, note);
+  if (note) console.log(told.ok ? `✓ What's new: "${note}". People see it on the app's hub page and in Apps.` : `  Couldn't save your note (${told.why}). Try again later: npm run locker:whatsnew -- ${codename} "${note}"`);
   if (appUrl) {
     console.log(`  Until it's built, the address may say "Application not found" (or show the old version). That's normal.`);
     console.log(`  Then open: ${appUrl}  (it's live when ${appUrl}/health says ok)`);
@@ -632,6 +667,18 @@ async function list(args) {
   if (!l.listed) return console.log(`✓ ${codename} isn't listed in Apps anymore. List it again with: npm run locker:list -- ${codename}`);
   console.log(`✓ ${codename} is listed in Apps: ${l.icon ? `${l.icon} ` : ""}${l.tagline} (${l.category}).`);
   console.log(`  Everyone finds it at ${hubUrl()}/apps. Opens and installs: ${hubUrl()}/p/${codename}`);
+}
+
+async function whatsnew(args) {
+  const codename = needCodename(args, { mustExist: false });
+  const text = args.filter((a) => a !== codename).join(" ");
+  if (!text.trim()) {
+    const notes = (await getProject(codename)).whatsNew ?? [];
+    if (!notes.length) return console.log(`No notes yet. Add one: npm run locker:whatsnew -- ${codename} "Added a leaderboard"`);
+    return console.log(notes.map((n) => `- ${new Date(n.at).toISOString().slice(0, 10)}  ${n.text}`).join("\n"));
+  }
+  const { note } = await setWhatsNew(codename, text);
+  console.log(`✓ What's new for ${codename}: "${note.text}". People see it on ${hubUrl()}/p/${codename} and in Apps.`);
 }
 
 async function feedbackCmd(args) {
@@ -719,13 +766,13 @@ function logs(args) {
 
 // ---------- main ----------
 
-const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list, feedback: feedbackCmd, bring };
+const COMMANDS = { connect, project, join, set, env, status, deploy, logs, list, feedback: feedbackCmd, bring, whatsnew };
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (process.argv[1]?.endsWith("locker.mjs")) {
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list|feedback|bring> [codename]");
+    console.log("Usage: node scripts/locker.mjs <connect|project|join|set|env|status|deploy|logs|list|feedback|bring|whatsnew> [codename]");
     process.exit(1);
   }
   Promise.resolve().then(() => fn(rest)).catch((err) => {

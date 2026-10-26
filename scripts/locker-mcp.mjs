@@ -37,6 +37,9 @@ import {
   saveListing,
   setIcon,
   setSettings,
+  checkNote,
+  reportDeploy,
+  setWhatsNew,
 } from "./locker.mjs";
 import { CODENAME } from "./new-app.mjs";
 
@@ -279,16 +282,35 @@ server.registerTool(
   {
     description:
       "Uploads apps/<codename>/ to its hosting slot and returns right away; the build then takes 1–3 minutes. Returns the live URL. Check progress with locker_logs (build: true).",
-    inputSchema: { codename },
+    inputSchema: {
+      codename,
+      note: z.string().max(140).optional().describe("Optional one-line \"What's new\" for this deploy, in the student's own words (never a commit message). People see it on the app's hub page and in Apps."),
+    },
   },
-  tool(async ({ codename }) => {
+  tool(async ({ codename, note }) => {
+    const line = note ? checkNote(note) : null; // checked before uploading
     const { output, appUrl, refreshed } = deployApp(codename);
+    const told = await reportDeploy(codename, line);
+    const noted = line ? (told.ok ? `\nWhat's new saved: "${line}".` : `\nCouldn't save the note (${told.why}). Try locker_whats_new later.`) : "";
     const said = lastLines(output, 3);
     const url = appUrl
       ? ` Until it's built, ${appUrl} may say "Application not found" (or show the old version): that's normal. Wait until ${appUrl}/health says ok before opening it or telling the student it's live.`
       : "";
     const kit = refreshed?.length ? `\nUpdated the kit's files in the app: ${refreshed.join(", ")}. Commit them in apps/${codename}/.` : "";
-    return `Uploaded apps/${codename}/. The build takes 1–3 minutes.${url} Check the build with locker_logs (codename ${codename}, build: true).${kit}${said ? `\nRailway said:\n${said}` : ""}`;
+    return `Uploaded apps/${codename}/. The build takes 1–3 minutes.${url} Check the build with locker_logs (codename ${codename}, build: true).${kit}${noted}${said ? `\nRailway said:\n${said}` : ""}`;
+  }),
+);
+
+server.registerTool(
+  "locker_whats_new",
+  {
+    description:
+      "Sets the one-line \"What's new\" for the app's latest deploy (a second call for the same deploy replaces it). Shown on the app's hub page as a short changelog and in Apps. Use the student's own words, never a commit message. One line, 140 characters max, plain text.",
+    inputSchema: { codename, note: z.string().min(1).max(140).describe("One line, like: Added a leaderboard") },
+  },
+  tool(async ({ codename, note }) => {
+    const { note: saved, notes } = await setWhatsNew(codename, note);
+    return `What's new for ${codename}: "${saved.text}". ${notes.length} note${notes.length === 1 ? "" : "s"} on its hub page, newest first.`;
   }),
 );
 

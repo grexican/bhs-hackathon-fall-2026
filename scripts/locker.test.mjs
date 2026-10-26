@@ -200,9 +200,44 @@ s.listen(0, async () => {
 });
 
 test('deploy: "Deploy failed" with exit 0 still counts as a failure', async () => {
-  const r = await run(["deploy", "lunch-line"], { FAKE_RAILWAY_FAIL: "1" });
+  const before = (mock.flags.deploys ?? []).length;
+  const r = await run(["deploy", "lunch-line", "--note", "Never sent"], { FAKE_RAILWAY_FAIL: "1" });
   assert.equal(r.code, 1);
   assert.match(r.out, /didn't go through/);
+  assert.equal((mock.flags.deploys ?? []).length, before, "a failed upload tells the hub nothing");
+});
+
+test("deploy --note: the hub hears about the deploy and gets the line; a too-long note stops before uploading", async () => {
+  const before = (mock.flags.deploys ?? []).length;
+  const plain = await run(["deploy", "lunch-line"]);
+  assert.equal(plain.code, 0, plain.out);
+  assert.deepEqual(mock.flags.deploys.at(-1), { codename: "lunch-line", note: null }, "every deploy pings the hub");
+  const r = await run(["deploy", "lunch-line", "--note", "Added a  leaderboard"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /railway up --service svc-123 --detach/, "the note isn't mistaken for the codename");
+  assert.match(r.out, /✓ What's new: "Added a leaderboard"/);
+  assert.deepEqual(mock.flags.deploys.at(-1), { codename: "lunch-line", note: "Added a leaderboard" });
+  const long = await run(["deploy", "lunch-line", "--note", "x".repeat(141)]);
+  assert.equal(long.code, 1);
+  assert.match(long.out, /140 characters at most/);
+  assert.doesNotMatch(long.out, /railway up/, "nothing uploaded");
+  assert.equal(mock.flags.deploys.length, before + 2);
+});
+
+test("whatsnew: sets the line for the latest deploy, checks it first, and lists the notes", async () => {
+  const r = await run(["whatsnew", "lunch-line", "Dark mode for night owls"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /✓ What's new for lunch-line: "Dark mode for night owls"/);
+  const words = await run(["whatsnew", "lunch-line", "Two", "words"]);
+  assert.match(words.out, /"Two words"/, "unquoted words still make one line");
+  const empty = await run(["whatsnew", "lunch-line", "x".repeat(141)]);
+  assert.equal(empty.code, 1);
+  assert.match(empty.out, /140 characters at most/);
+  const list = await run(["whatsnew", "lunch-line"]);
+  assert.match(list.out, /- 2026-10-26 {2}Two words\n- 2026-10-26 {2}Dark mode for night owls/);
+  const notMine = await run(["whatsnew", "taken-app", "Hi"]);
+  assert.equal(notMine.code, 1);
+  assert.match(notMine.out, /that you're on/);
 });
 
 test("project: a codename owned by someone else points to join or a new name", async () => {

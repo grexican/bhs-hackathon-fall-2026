@@ -123,6 +123,21 @@ export async function startMockHub() {
       p.icon = body;
       return send(200, { ...p.listing, iconHash: "abc123", iconType: "image/png" });
     }
+    // What's new (hub contract §5c): the deploy ping with an optional note, and the note for the latest deploy.
+    const dm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/(deployed|whats-new)$/);
+    if (dm && ((dm[2] === "deployed" && req.method === "POST") || (dm[2] === "whats-new" && req.method === "PUT"))) {
+      const p = projects.get(dm[1]);
+      if (!p || (p.owner !== "ana" && !p.members?.includes("ana"))) return send(404, { error: "No project with that codename that you're on. Ask its owner to add you." });
+      flags.deploys ??= [];
+      if (dm[2] === "deployed") flags.deploys.push({ codename: dm[1], note: body.note ?? null });
+      const text = body.note == null ? null : String(body.note).replace(/\s+/g, " ").trim();
+      if (dm[2] === "whats-new" && !text) return send(400, { error: "Write one line about what's new (or skip it)." });
+      if (text && text.length > 140) return send(400, { error: `Keep it to one line: 140 characters at most (that one has ${text.length}).` });
+      p.notes ??= [];
+      if (text) p.notes.unshift({ id: String(p.notes.length + 1), text, at: "2026-10-26T10:00:00.000Z" });
+      if (p.project) p.project.whatsNew = p.notes;
+      return send(200, { ok: true, note: text ? p.notes[0] : null, notes: p.notes });
+    }
     const lm = url.pathname.match(/^\/api\/projects\/([a-z0-9-]+)\/listing$/);
     if (req.method === "PUT" && lm) {
       const p = projects.get(lm[1]);

@@ -39,6 +39,7 @@
     "locker:list": "node scripts/locker.mjs list",
     "locker:feedback": "node scripts/locker.mjs feedback",
     "locker:bring": "node scripts/locker.mjs bring",
+    "locker:whatsnew": "node scripts/locker.mjs whatsnew",
     "deploy": "node scripts/locker.mjs deploy",
     "test": "node --test scripts/*.test.mjs",
     "pitch": "node scripts/pitch.mjs"
