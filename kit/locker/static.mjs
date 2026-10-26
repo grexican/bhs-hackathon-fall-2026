@@ -32,7 +32,8 @@ http
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
     if (!existsSync(file)) file = join(root, "index.html"); // single-page app fallback
     if (!existsSync(file)) return res.writeHead(404).end("Not found");
-    res.writeHead(200, { "Content-Type": TYPES[extname(file).toLowerCase()] ?? "application/octet-stream" });
+    // Pages are re-checked on every visit, so a new deploy shows up without a hard refresh.
+    res.writeHead(200, { "Content-Type": TYPES[extname(file).toLowerCase()] ?? "application/octet-stream", "Cache-Control": extname(file).toLowerCase() === ".html" ? "no-cache" : "public, max-age=300" });
     createReadStream(file).pipe(res);
   })
   .listen(Number(process.env.PORT || 3000), () => console.log(`Serving ${root} on port ${process.env.PORT || 3000}`));

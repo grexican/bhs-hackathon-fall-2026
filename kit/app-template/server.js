@@ -92,7 +92,8 @@ function serveFile(req, res) {
   let file = path.join(PUBLIC, urlPath === "/" ? "index.html" : urlPath);
   if (!file.startsWith(PUBLIC + path.sep)) return sendJson(res, 403, { error: "Not allowed" }); // no peeking outside public/
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(PUBLIC, "index.html");
-  res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] ?? "application/octet-stream" });
+  // Pages are re-checked on every visit, so a new deploy shows up without a hard refresh.
+  res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] ?? "application/octet-stream", "Cache-Control": path.extname(file).toLowerCase() === ".html" ? "no-cache" : "public, max-age=300" });
   fs.createReadStream(file).pipe(res);
 }
 
