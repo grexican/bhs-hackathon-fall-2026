@@ -83,6 +83,12 @@ Only after `/health` says ok, use **`verify-in-browser`** on the live address (`
 `/health` says ok, phone and desktop screenshots, zero console errors. Only then say "It's live" and
 give them the link to share.
 
+**What's new (one optional question).** Then ask exactly this, once: "Anything new people should know? (one
+line, or skip)". If they answer, send their words as they wrote them (trim to one line, 140 characters max):
+`locker_whats_new` tool, or `npm run locker:whatsnew -- <codename> "<their line>"`. It shows on the app's hub
+page ("What's new") and in Apps. Skip means skip: never write it for them, never use a commit message. (When they
+say the line before you deploy, `npm run deploy -- <codename> --note "<their line>"` sends it in one go.)
+
 **Reading what happened.** Every deploy turns on request logging (`locker/otel.mjs`, added for you):
 one line per page load and per call the app makes (AI, APIs), red-flagged when it fails, plus the
 full error when it crashes. `npm run locker:logs -- <codename> --errors` shows only what broke;
